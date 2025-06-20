@@ -7,7 +7,7 @@ from PIL import Image
 import os
 
 # Anzahl der Fehlerklassen im Modell – HIER ANPASSEN!
-NUM_CLASSES = 11
+NUM_CLASSES = 6
 
 # Modell laden
 @st.cache_resource

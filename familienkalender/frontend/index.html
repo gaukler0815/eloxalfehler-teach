@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#4f7cff" />
+  <title>Familienkalender</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Familie" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <!-- Anmeldung -->
+  <div id="auth-screen" class="auth-screen hidden">
+    <div class="auth-card">
+      <div class="auth-logo">📅</div>
+      <h1>Familienkalender</h1>
+      <p class="auth-sub">Ein gemeinsamer Kalender für die ganze Familie</p>
+
+      <div class="tabs">
+        <button class="tab active" data-authtab="login">Anmelden</button>
+        <button class="tab" data-authtab="register">Registrieren</button>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <input type="email" name="email" placeholder="E-Mail" required autocomplete="email" />
+        <input type="password" name="password" placeholder="Passwort" required autocomplete="current-password" />
+        <button type="submit" class="btn-primary">Anmelden</button>
+      </form>
+
+      <form id="register-form" class="auth-form hidden">
+        <input type="text" name="name" placeholder="Dein Name" required />
+        <input type="email" name="email" placeholder="E-Mail" required autocomplete="email" />
+        <input type="password" name="password" placeholder="Passwort (min. 6 Zeichen)" required minlength="6" autocomplete="new-password" />
+        <button type="submit" class="btn-primary">Konto erstellen</button>
+      </form>
+
+      <p id="auth-error" class="auth-error"></p>
+      <p class="auth-hint">Alle, die sich hier anmelden, teilen denselben Familienkalender.</p>
+    </div>
+  </div>
+
+  <!-- Haupt-App -->
+  <div id="app" class="app hidden">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="today-btn" class="chip">Heute</button>
+        <button id="prev-btn" class="icon-btn" aria-label="Zurück">‹</button>
+        <button id="next-btn" class="icon-btn" aria-label="Weiter">›</button>
+        <h2 id="period-label"></h2>
+      </div>
+      <div class="topbar-right">
+        <button id="search-btn" class="icon-btn" title="Suchen">🔍</button>
+        <button id="persons-btn" class="icon-btn" title="Personen">👥</button>
+        <button id="settings-btn" class="icon-btn" title="Einstellungen">⚙️</button>
+      </div>
+    </header>
+
+    <nav class="viewbar">
+      <button class="view-tab active" data-view="month">Monat</button>
+      <button class="view-tab" data-view="week">Woche</button>
+      <button class="view-tab" data-view="day">Tag</button>
+      <button class="view-tab" data-view="agenda">Liste</button>
+    </nav>
+
+    <div id="search-bar" class="search-bar hidden">
+      <input id="search-input" type="search" placeholder="Termine durchsuchen…" />
+      <button id="search-close" class="icon-btn">✕</button>
+    </div>
+
+    <main id="calendar" class="calendar"></main>
+
+    <button id="add-btn" class="fab" aria-label="Neuer Termin">＋</button>
+  </div>
+
+  <!-- Modal-Container -->
+  <div id="modal-root"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

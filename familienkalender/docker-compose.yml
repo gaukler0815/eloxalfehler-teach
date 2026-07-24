@@ -1,0 +1,16 @@
+services:
+  familienkalender:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - fk_data:/data
+    environment:
+      # WICHTIG: In Produktion einen langen, zufälligen Wert setzen!
+      FK_SECRET_KEY: "bitte-aendern-in-einen-langen-zufaelligen-wert"
+      FK_TIMEZONE: "Europe/Berlin"
+      FK_VAPID_CONTACT: "mailto:deine-familie@example.com"
+    restart: unless-stopped
+
+volumes:
+  fk_data:

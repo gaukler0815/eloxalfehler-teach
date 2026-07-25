@@ -356,6 +356,43 @@ $$(".view-tab").forEach((t) => t.addEventListener("click", () => {
 }));
 $("#add-btn").addEventListener("click", () => openEventForm(null, null));
 
+/* ------------------------- Termin abfotografieren --------------------- */
+$("#scan-btn").addEventListener("click", () => $("#scan-input").click());
+$("#scan-input").addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (file) startScan(file);
+});
+
+async function startScan(file) {
+  toast("📷 Foto wird ausgewertet…");
+  let res;
+  try {
+    const fd = new FormData(); fd.append("file", file);
+    res = await api("/scan", { method: "POST", body: fd });
+  } catch (err) { toast(err.message); return; }
+  const drafts = res.events || [];
+  if (!drafts.length) {
+    toast("Keine Termine erkannt – bitte von Hand anlegen"); return;
+  }
+  // Nutzer nacheinander durch die erkannten Termine führen
+  let i = 0;
+  const step = () => {
+    if (i >= drafts.length) { toast("Fertig – alle Termine geprüft"); render(); return; }
+    const draft = drafts[i];
+    const badge = `Termin ${i + 1} von ${drafts.length}`;
+    i += 1;
+    openEventForm(null, null, {
+      prefill: draft,
+      attachFiles: [file],   // Originalfoto an jeden Termin anhängen
+      badge,
+      onClose: step,
+    });
+  };
+  toast(`${drafts.length} Termin(e) erkannt – bitte prüfen`);
+  step();
+}
+
 /* ------------------------- Suche -------------------------------------- */
 $("#search-btn").addEventListener("click", () => {
   $("#search-bar").classList.toggle("hidden");
@@ -415,16 +452,20 @@ function reminderRow(minutes) {
     <button type="button" class="rm">✕</button></div>`;
 }
 
-async function openEventForm(eventId, presetDate) {
+async function openEventForm(eventId, presetDate, opts = {}) {
   let ev = null;
   if (eventId) { try { ev = await api("/events/" + eventId); } catch (e) {} }
   if (!State.persons.length) { try { State.persons = await api("/persons"); } catch (e) {} }
 
-  const start = ev ? parseLocal(ev.start) : (presetDate || roundedNow());
-  const end = ev && ev.end ? parseLocal(ev.end) : new Date(start.getTime() + 60 * 60 * 1000);
+  // base = bestehender Termin, sonst Vorbelegung (z. B. aus einem Foto)
+  const base = ev || opts.prefill || {};
+  const startSrc = ev ? ev.start : (opts.prefill && opts.prefill.start);
+  const start = startSrc ? parseLocal(startSrc) : (presetDate || roundedNow());
+  const endSrc = ev ? ev.end : (opts.prefill && opts.prefill.end);
+  const end = endSrc ? parseLocal(endSrc) : new Date(start.getTime() + 60 * 60 * 1000);
   const rec = parseRRule(ev ? ev.rrule : null);
   const selPersons = new Set(ev ? ev.person_ids : []);
-  const color = ev ? ev.color : COLORS[0];
+  const color = base.color || COLORS[0];
 
   const personPills = State.persons.map((p) =>
     `<button type="button" class="opt ${selPersons.has(p.id) ? "selected" : ""}" data-pid="${p.id}" style="${selPersons.has(p.id) ? `background:${p.color};border-color:${p.color}` : ""}">${escapeHtml(p.name)}</button>`).join("");
@@ -434,17 +475,17 @@ async function openEventForm(eventId, presetDate) {
 
   const body = `
     <div class="field"><label>Titel</label>
-      <input id="f-title" value="${escapeHtml(ev ? ev.title : "")}" placeholder="z. B. Zahnarzt Mia" /></div>
-    <div class="field checkbox-row"><input type="checkbox" id="f-allday" ${ev && ev.all_day ? "checked" : ""}/>
+      <input id="f-title" value="${escapeHtml(base.title || "")}" placeholder="z. B. Zahnarzt Mia" /></div>
+    <div class="field checkbox-row"><input type="checkbox" id="f-allday" ${base.all_day ? "checked" : ""}/>
       <label for="f-allday" style="margin:0">Ganztägig</label></div>
     <div class="row2">
       <div class="field"><label>Beginn</label><input type="datetime-local" id="f-start" value="${toLocalInput(start)}" /></div>
       <div class="field"><label>Ende</label><input type="datetime-local" id="f-end" value="${toLocalInput(end)}" /></div>
     </div>
     <div class="field"><label>Ort</label>
-      <input id="f-location" value="${escapeHtml(ev ? ev.location : "")}" placeholder="Ort (optional)" /></div>
+      <input id="f-location" value="${escapeHtml(base.location || "")}" placeholder="Ort (optional)" /></div>
     <div class="field"><label>Notiz</label>
-      <textarea id="f-desc" placeholder="Beschreibung (optional)">${escapeHtml(ev ? ev.description : "")}</textarea>
+      <textarea id="f-desc" placeholder="Beschreibung (optional)">${escapeHtml(base.description || "")}</textarea>
       <div class="agenda-meta" style="margin-top:6px">Sehen alle beteiligten Personen.</div></div>
     <div class="field"><label>🔒 Private Notiz</label>
       <textarea id="f-private" placeholder="Nur für dich sichtbar – z. B. Geschenkideen">${escapeHtml(ev ? (ev.private_note || "") : "")}</textarea>
@@ -482,7 +523,19 @@ async function openEventForm(eventId, presetDate) {
   const actions = `${eventId ? '<button class="btn-danger" id="f-delete">Löschen</button>' : ""}
     <button class="btn-primary" id="f-save">Speichern</button>`;
 
-  openModal(eventId ? "Termin bearbeiten" : "Neuer Termin", body, actions);
+  const heading = (eventId ? "Termin bearbeiten" : "Neuer Termin")
+    + (opts.badge ? ` · ${opts.badge}` : "");
+  openModal(heading, body, actions);
+
+  // Fortführung (z. B. nächster Termin aus einem Foto)
+  let finished = false;
+  function finish() { if (finished) return; finished = true; if (opts.onClose) opts.onClose(); }
+  if (opts.onClose) {
+    $("[data-close]").addEventListener("click", finish);
+    $(".modal-overlay").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) finish();
+    });
+  }
 
   // Interaktionen
   let selColor = color;
@@ -504,15 +557,15 @@ async function openEventForm(eventId, presetDate) {
     $("#f-start").type = on ? "date" : "datetime-local";
     $("#f-end").type = on ? "date" : "datetime-local";
   });
-  if (ev && ev.all_day) { $("#f-start").type = "date"; $("#f-end").type = "date"; }
+  if (base.all_day) { $("#f-start").type = "date"; $("#f-end").type = "date"; }
   $("#f-add-reminder").addEventListener("click", () => {
     $("#f-reminders").insertAdjacentHTML("beforeend", reminderRow(60));
     bindReminderRemovers();
   });
   bindReminderRemovers();
 
-  // Anhänge anzeigen (nur bei bestehendem Termin)
-  const pendingFiles = [];
+  // Anhänge – vorbelegte Dateien (z. B. das abfotografierte Bild) übernehmen
+  const pendingFiles = (opts.attachFiles || []).slice();
   renderAttachList(ev, pendingFiles);
   $("#f-file").addEventListener("change", (e) => {
     for (const f of e.target.files) pendingFiles.push(f);
@@ -523,7 +576,7 @@ async function openEventForm(eventId, presetDate) {
   if (eventId) $("#f-delete").addEventListener("click", async () => {
     if (!confirm("Diesen Termin wirklich löschen?")) return;
     await api("/events/" + eventId, { method: "DELETE" });
-    closeModal(); toast("Termin gelöscht"); render();
+    closeModal(); finish(); toast("Termin gelöscht"); render();
   });
 
   $("#f-save").addEventListener("click", async () => {
@@ -550,7 +603,7 @@ async function openEventForm(eventId, presetDate) {
         const fd = new FormData(); fd.append("file", f);
         await api(`/events/${saved.id}/attachments`, { method: "POST", body: fd });
       }
-      closeModal(); toast("Gespeichert"); render();
+      closeModal(); finish(); toast("Gespeichert"); render();
     } catch (err) { toast(err.message); }
   });
 
@@ -829,6 +882,12 @@ async function init() {
   } catch (e) { showAuth(); return; }
   showApp();
   render();
+  // Konfiguration laden (Foto-Erkennung nur zeigen, wenn eingerichtet)
+  try {
+    const cfg = await api("/config");
+    State.vapidKey = cfg.vapid_public_key;
+    $("#scan-btn").classList.toggle("hidden", !cfg.scan_enabled);
+  } catch (e) {}
   // Bei bestehender Erlaubnis Abo im Hintergrund erneuern
   if ("Notification" in window && Notification.permission === "granted"
       && "serviceWorker" in navigator) {

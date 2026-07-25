@@ -84,6 +84,25 @@ Familienkalender ist das die zuverlässige Variante.
 
 ---
 
+## 📷 Optional: Termine abfotografieren (KI-Erkennung)
+
+Damit die App aus einem Foto (Terminkarte, Zettel, E-Mail-Screenshot) die
+Termine automatisch ausliest, brauchst du einen Schlüssel von Anthropic:
+
+1. Auf **https://console.anthropic.com** anmelden, unter **API Keys** einen
+   Schlüssel erstellen (beginnt mit `sk-ant-…`).
+2. Im Render-Dashboard beim Dienst → **Environment** → den Wert für
+   **`ANTHROPIC_API_KEY`** eintragen und speichern.
+3. Nach dem Neustart erscheint in der App unten das **📷-Symbol**: Foto
+   aufnehmen → die App führt dich durch die erkannten Termine (bestätigen /
+   ändern), das Foto wird automatisch an den Termin angehängt.
+
+> Ohne Schlüssel funktioniert alles andere ganz normal – nur das 📷-Symbol
+> wird ausgeblendet. Für die Nutzung fallen bei Anthropic geringe Kosten pro
+> ausgelesenem Foto an (Abrechnung über dein Anthropic-Konto).
+
+---
+
 ## 🌐 Optional: eigene Adresse (z. B. kalender.jacobi-eloxal.de)
 
 Im Render-Dashboard beim Dienst → **Settings → Custom Domains** deine

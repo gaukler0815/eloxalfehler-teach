@@ -24,6 +24,13 @@ DATABASE_URL = os.environ.get("FK_DATABASE_URL", f"sqlite:///{DATA_DIR / 'famili
 SECRET_KEY = os.environ.get("FK_SECRET_KEY", "bitte-in-produktion-aendern-langer-zufaelliger-wert")
 TOKEN_TTL_SECONDS = int(os.environ.get("FK_TOKEN_TTL", 60 * 60 * 24 * 30))  # 30 Tage
 
+# KI-Terminerkennung (Foto abfotografieren) --------------------------------
+# Nutzt die Claude-API, um Termine aus einem Foto/Screenshot auszulesen.
+# Aktiv, sobald ein API-Schlüssel gesetzt ist (ANTHROPIC_API_KEY).
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+SCAN_MODEL = os.environ.get("FK_SCAN_MODEL", "claude-opus-5")
+SCAN_ENABLED = bool(ANTHROPIC_API_KEY)
+
 # Familien-Code -----------------------------------------------------------
 # Wenn gesetzt, ist dieses Codewort bei der Registrierung Pflicht. So kann
 # nur die eigene Familie beitreten. Leer = offene Registrierung.

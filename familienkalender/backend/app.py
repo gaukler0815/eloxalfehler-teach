@@ -16,7 +16,8 @@ from sqlalchemy.orm import Session
 
 import schemas
 from auth import (create_token, current_user, hash_password, verify_password)
-from config import (FRONTEND_DIR, MAX_UPLOAD_MB, UPLOAD_DIR)
+from config import (FAMILY_TZ, FRONTEND_DIR, MAX_UPLOAD_MB, SCAN_ENABLED,
+                    UPLOAD_DIR)
 from database import get_db, init_db
 from models import (Attachment, Event, EventPerson, Person, PushSubscription,
                     Reminder, User)
@@ -134,7 +135,8 @@ def _sync_birthday_event(db: Session, person: Person):
 def api_config():
     from config import FAMILY_CODE
     return {"vapid_public_key": get_public_key(),
-            "family_code_required": bool(FAMILY_CODE)}
+            "family_code_required": bool(FAMILY_CODE),
+            "scan_enabled": SCAN_ENABLED}
 
 
 @app.post("/api/auth/register", response_model=schemas.TokenOut)
@@ -356,6 +358,63 @@ def search(q: str = Query(..., min_length=1), user: User = Depends(current_user)
             hits.append(event_to_out(e, db, user.id))
     hits.sort(key=lambda x: x["start"])
     return hits
+
+
+# =========================================================================
+# KI-Terminerkennung (Foto abfotografieren)
+# =========================================================================
+_SCAN_MEDIA = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+
+
+def _drafts_from_raw(raw: list, today: str) -> list[dict]:
+    """Wandelt die von der KI erkannten Termine ins Termin-Format der App."""
+    drafts = []
+    for e in raw:
+        date = (e.get("date") or "").strip() or today
+        st = (e.get("start_time") or "").strip()
+        et = (e.get("end_time") or "").strip()
+        all_day = bool(e.get("all_day")) or not st
+        if all_day:
+            start, end = date, None
+        else:
+            start = f"{date}T{st}"
+            end = f"{date}T{et}" if et else None
+        drafts.append({
+            "title": (e.get("title") or "Termin").strip(),
+            "location": (e.get("location") or "").strip(),
+            "description": (e.get("description") or "").strip(),
+            "start": start, "end": end, "all_day": all_day,
+            "category": "general",
+        })
+    return drafts
+
+
+@app.post("/api/scan")
+async def scan_image(file: UploadFile = File(...),
+                     user: User = Depends(current_user)):
+    if not SCAN_ENABLED:
+        raise HTTPException(400, "KI-Terminerkennung ist nicht eingerichtet "
+                                 "(ANTHROPIC_API_KEY fehlt).")
+    content = await file.read()
+    if len(content) > MAX_UPLOAD_MB * 1024 * 1024:
+        raise HTTPException(413, f"Bild zu groß (max. {MAX_UPLOAD_MB} MB)")
+    media = (file.content_type or "").lower()
+    if media == "image/jpg":
+        media = "image/jpeg"
+    if media not in _SCAN_MEDIA:
+        raise HTTPException(400, "Bitte ein Foto verwenden (JPG, PNG, WEBP).")
+
+    from datetime import datetime as _dt
+    from zoneinfo import ZoneInfo
+    today = _dt.now(ZoneInfo(FAMILY_TZ)).strftime("%Y-%m-%d")
+    try:
+        from scan import extract_events
+        raw = extract_events(content, media)
+    except Exception as exc:
+        log.warning("Scan fehlgeschlagen: %s", exc)
+        raise HTTPException(502, "Auslesen fehlgeschlagen. Bitte erneut "
+                                 "versuchen oder Termin von Hand anlegen.")
+    return {"events": _drafts_from_raw(raw, today)}
 
 
 # =========================================================================

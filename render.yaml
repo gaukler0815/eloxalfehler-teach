@@ -24,6 +24,11 @@ services:
       # sicher im Render-Dashboard eingegeben.
       - key: FK_FAMILY_CODE
         sync: false
+      # Optional: Termine abfotografieren (KI-Erkennung). Schlüssel von
+      # console.anthropic.com. Leer lassen = Funktion aus. Wird sicher im
+      # Render-Dashboard eingegeben, nicht im Repo gespeichert.
+      - key: ANTHROPIC_API_KEY
+        sync: false
       - key: FK_DATA_DIR
         value: /data
     # Dauerhafter Speicher für Datenbank, Uploads und Push-Schlüssel.

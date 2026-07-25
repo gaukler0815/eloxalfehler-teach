@@ -24,6 +24,7 @@ ein, sehen ihn sofort alle anderen.
 | Vorlaufzeit einstellbar (Stunden/Tage) | Von „zum Zeitpunkt“ bis „2 Wochen vorher“ |
 | Mehrere Erinnerungen pro Termin | Beliebig viele, z. B. *2 Tage* **und** *2 Stunden* vorher |
 | Personen anlegen & bei Termin auswählen | 👥 Personenverwaltung, Mehrfachauswahl pro Termin |
+| Termin abfotografieren | 📷 Foto/Screenshot → KI liest Termine aus, du bestätigst/änderst, Foto wird angehängt (optional, braucht `ANTHROPIC_API_KEY`) |
 | Push nur an ausgewählte Personen (sofern App genutzt) | Erinnerung geht an die verknüpften Konten der betroffenen Personen |
 
 ---
@@ -109,6 +110,8 @@ muss die App unter einer **öffentlichen Adresse mit HTTPS** laufen
 |----------|-----------|----------|
 | `FK_SECRET_KEY` | Schlüssel zum Signieren der Logins – **unbedingt setzen!** | (Platzhalter) |
 | `FK_FAMILY_CODE` | Codewort, das bei der Registrierung Pflicht ist (nur eure Familie kann beitreten). Leer = offene Registrierung. | (leer) |
+| `ANTHROPIC_API_KEY` | Schlüssel für die Termin-Foto-Erkennung (von console.anthropic.com). Leer = Funktion aus. | (leer) |
+| `FK_SCAN_MODEL` | Verwendetes KI-Modell für die Foto-Erkennung. | `claude-opus-5` |
 | `FK_TIMEZONE` | Zeitzone der Familie (für Erinnerungen) | `Europe/Berlin` |
 | `FK_VAPID_CONTACT` | Kontakt-E-Mail für Push-Dienste | `mailto:familie@example.com` |
 | `FK_DATA_DIR` | Ablage für Datenbank, Uploads, Schlüssel | `./data` |

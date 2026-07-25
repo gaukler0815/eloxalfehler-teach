@@ -89,6 +89,12 @@ button { font-family: inherit; cursor: pointer; }
   border: none; font-size: 30px; box-shadow: var(--shadow); z-index: 20; line-height: 1;
 }
 .fab:active { background: var(--brand-dark); }
+.fab-secondary {
+  width: 50px; height: 50px; font-size: 24px;
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 66px);
+  background: var(--card); color: var(--brand); border: 1px solid var(--border);
+}
+.fab-secondary:active { background: var(--bg); }
 
 /* ---------------- Monatsansicht ---------------- */
 .month-grid { display: flex; flex-direction: column; height: 100%; }

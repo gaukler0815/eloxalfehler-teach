@@ -1,0 +1,28 @@
+# Render-Blueprint für den Familienkalender.
+# Render erkennt diese Datei automatisch: New → Blueprint → dieses Repo wählen.
+services:
+  - type: web
+    name: familienkalender
+    runtime: docker
+    dockerfilePath: ./familienkalender/Dockerfile
+    dockerContext: ./familienkalender
+    # "starter" hält den Server dauerhaft an (nötig für pünktliche
+    # Push-Erinnerungen) und erlaubt einen dauerhaften Datenspeicher.
+    plan: starter
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # Wird von Render automatisch als langer Zufallswert erzeugt.
+      - key: FK_SECRET_KEY
+        generateValue: true
+      - key: FK_TIMEZONE
+        value: Europe/Berlin
+      - key: FK_VAPID_CONTACT
+        value: mailto:al@jacobi-eloxal.de
+      - key: FK_DATA_DIR
+        value: /data
+    # Dauerhafter Speicher für Datenbank, Uploads und Push-Schlüssel.
+    disk:
+      name: fk-data
+      mountPath: /data
+      sizeGB: 1

@@ -444,7 +444,11 @@ async function openEventForm(eventId, presetDate) {
     <div class="field"><label>Ort</label>
       <input id="f-location" value="${escapeHtml(ev ? ev.location : "")}" placeholder="Ort (optional)" /></div>
     <div class="field"><label>Notiz</label>
-      <textarea id="f-desc" placeholder="Beschreibung (optional)">${escapeHtml(ev ? ev.description : "")}</textarea></div>
+      <textarea id="f-desc" placeholder="Beschreibung (optional)">${escapeHtml(ev ? ev.description : "")}</textarea>
+      <div class="agenda-meta" style="margin-top:6px">Sehen alle beteiligten Personen.</div></div>
+    <div class="field"><label>🔒 Private Notiz</label>
+      <textarea id="f-private" placeholder="Nur für dich sichtbar – z. B. Geschenkideen">${escapeHtml(ev ? (ev.private_note || "") : "")}</textarea>
+      <div class="agenda-meta" style="margin-top:6px">Diese Notiz sieht <b>niemand sonst</b> – auch nicht die beteiligten Personen.</div></div>
 
     <div class="field"><label>Farbe</label><div class="pill-select" id="f-colors">${colorPills}</div></div>
 
@@ -532,7 +536,8 @@ async function openEventForm(eventId, presetDate) {
     const endNorm = endVal ? (allDay ? endVal.split("T")[0] : endVal) : null;
     const reminders = $$("#f-reminders select").map((s) => +s.value);
     const payload = {
-      title, description: $("#f-desc").value, location: $("#f-location").value,
+      title, description: $("#f-desc").value, private_note: $("#f-private").value,
+      location: $("#f-location").value,
       color: selColor, category: (ev && ev.category === "birthday") ? "birthday" : "general",
       start: startNorm, end: endNorm, all_day: allDay,
       rrule: buildRRule(), person_ids: [...selPersons], reminders,
@@ -631,6 +636,7 @@ async function openEventDetail(eventId) {
   if (recLabel) body += `<div class="detail-row"><span class="ic">🔁</span><span>Wiederholt sich ${recLabel}${rec.interval > 1 ? ` (alle ${rec.interval})` : ""}${rec.until ? `, bis ${parseLocal(rec.until + "T00:00").toLocaleDateString("de-DE")}` : ""}</span></div>`;
   if (ev.location) body += `<div class="detail-row"><span class="ic">📍</span><span>${escapeHtml(ev.location)}</span></div>`;
   if (ev.description) body += `<div class="detail-row"><span class="ic">📝</span><span>${escapeHtml(ev.description)}</span></div>`;
+  if (ev.private_note) body += `<div class="detail-row"><span class="ic">🔒</span><div style="flex:1"><div style="white-space:pre-wrap">${escapeHtml(ev.private_note)}</div><div class="agenda-meta" style="margin-top:2px">Private Notiz – nur du siehst das</div></div></div>`;
   if (persons.length) body += `<div class="detail-row"><span class="ic">👤</span><div class="detail-persons">${persons.map((p) => `<span class="person-chip"><span class="person-dot" style="width:18px;height:18px;font-size:10px;background:${p.color}">${p.name[0]}</span>${escapeHtml(p.name)}</span>`).join("")}</div></div>`;
   if (ev.reminders.length) body += `<div class="detail-row"><span class="ic">🔔</span><span>${ev.reminders.map(reminderLabel).join(", ")}</span></div>`;
   if (ev.attachments.length) {

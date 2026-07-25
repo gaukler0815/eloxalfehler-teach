@@ -45,11 +45,18 @@ app = FastAPI(title="Familienkalender", lifespan=lifespan)
 # =========================================================================
 # Hilfsfunktionen
 # =========================================================================
-def event_to_out(event: Event) -> dict:
+def _private_note_for(db: Session, event_id: int, user_id: int) -> str:
+    from models import PrivateNote
+    pn = db.query(PrivateNote).filter_by(event_id=event_id, user_id=user_id).first()
+    return pn.text if pn else ""
+
+
+def event_to_out(event: Event, db: Session = None, viewer_id: int = None) -> dict:
     return {
         "id": event.id,
         "title": event.title,
         "description": event.description or "",
+        "private_note": _private_note_for(db, event.id, viewer_id) if (db and viewer_id) else "",
         "location": event.location or "",
         "category": event.category,
         "color": event.color,
@@ -78,6 +85,21 @@ def _set_event_relations(db: Session, event: Event, person_ids, reminders):
     db.query(Reminder).filter(Reminder.event_id == event.id).delete()
     for minutes in dict.fromkeys(reminders):
         db.add(Reminder(event_id=event.id, minutes_before=int(minutes)))
+
+
+def _set_private_note(db: Session, event_id: int, user_id: int, text: str):
+    """Legt die private Notiz des Nutzers an/aktualisiert/entfernt sie.
+    Notizen anderer Nutzer bleiben unberührt."""
+    from models import PrivateNote
+    pn = db.query(PrivateNote).filter_by(event_id=event_id, user_id=user_id).first()
+    text = (text or "").strip()
+    if text:
+        if pn:
+            pn.text = text
+        else:
+            db.add(PrivateNote(event_id=event_id, user_id=user_id, text=text))
+    elif pn:
+        db.delete(pn)
 
 
 def _sync_birthday_event(db: Session, person: Person):
@@ -223,7 +245,8 @@ def delete_person(person_id: int, user: User = Depends(current_user),
 # =========================================================================
 @app.get("/api/events")
 def list_events(user: User = Depends(current_user), db: Session = Depends(get_db)):
-    return [event_to_out(e) for e in db.query(Event).order_by(Event.start).all()]
+    return [event_to_out(e, db, user.id)
+            for e in db.query(Event).order_by(Event.start).all()]
 
 
 @app.get("/api/events/{event_id}")
@@ -232,7 +255,7 @@ def get_event(event_id: int, user: User = Depends(current_user),
     event = db.get(Event, event_id)
     if not event:
         raise HTTPException(404, "Termin nicht gefunden")
-    return event_to_out(event)
+    return event_to_out(event, db, user.id)
 
 
 @app.post("/api/events")
@@ -247,9 +270,10 @@ def create_event(data: schemas.EventIn, user: User = Depends(current_user),
     db.add(event)
     db.flush()
     _set_event_relations(db, event, data.person_ids, data.reminders)
+    _set_private_note(db, event.id, user.id, data.private_note)
     db.commit()
     db.refresh(event)
-    return event_to_out(event)
+    return event_to_out(event, db, user.id)
 
 
 @app.put("/api/events/{event_id}")
@@ -268,9 +292,10 @@ def update_event(event_id: int, data: schemas.EventIn,
     event.all_day = data.all_day
     event.rrule = data.rrule or None
     _set_event_relations(db, event, data.person_ids, data.reminders)
+    _set_private_note(db, event.id, user.id, data.private_note)
     db.commit()
     db.refresh(event)
-    return event_to_out(event)
+    return event_to_out(event, db, user.id)
 
 
 @app.delete("/api/events/{event_id}")
@@ -324,10 +349,11 @@ def search(q: str = Query(..., min_length=1), user: User = Depends(current_user)
     events = db.query(Event).all()
     hits = []
     for e in events:
+        own_note = _private_note_for(db, e.id, user.id)
         blob = " ".join([e.title or "", e.description or "",
-                         e.location or ""]).lower()
+                         e.location or "", own_note]).lower()
         if q.lower() in blob:
-            hits.append(event_to_out(e))
+            hits.append(event_to_out(e, db, user.id))
     hits.sort(key=lambda x: x["start"])
     return hits
 

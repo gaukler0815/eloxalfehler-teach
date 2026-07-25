@@ -79,6 +79,8 @@ class Event(Base):
                                cascade="all, delete-orphan")
     person_links = relationship("EventPerson", back_populates="event",
                                 cascade="all, delete-orphan")
+    private_notes = relationship("PrivateNote", back_populates="event",
+                                 cascade="all, delete-orphan")
 
 
 class EventPerson(Base):
@@ -92,6 +94,24 @@ class EventPerson(Base):
 
     event = relationship("Event", back_populates="person_links")
     person = relationship("Person")
+
+
+class PrivateNote(Base):
+    """Eine private Notiz eines Nutzers zu einem Termin.
+
+    Nur der jeweilige Nutzer sieht seine eigene private Notiz – andere
+    Familienmitglieder (auch die, die der Termin betrifft) sehen sie nicht.
+    Beispiel: Geschenkideen zu einem Geburtstag.
+    """
+    __tablename__ = "private_notes"
+    __table_args__ = (UniqueConstraint("event_id", "user_id"),)
+
+    id = Column(Integer, primary_key=True)
+    event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    text = Column(Text, default="")
+
+    event = relationship("Event", back_populates="private_notes")
 
 
 class Reminder(Base):

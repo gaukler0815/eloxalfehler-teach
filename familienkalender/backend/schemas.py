@@ -71,6 +71,7 @@ class AttachmentOut(BaseModel):
 class EventIn(BaseModel):
     title: str
     description: str = ""
+    private_note: str = ""          # nur für den jeweiligen Nutzer sichtbar
     location: str = ""
     category: str = "general"
     color: str = "#4f7cff"

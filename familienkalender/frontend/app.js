@@ -567,6 +567,9 @@ function bindReminderRemovers() {
 function roundedNow() {
   const d = new Date(); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1); return d;
 }
+function attachmentUrl(a) {
+  return a.url || `/api/attachments/${a.id}?token=${encodeURIComponent(State.token)}`;
+}
 function parseRRule(rrule) {
   if (!rrule) return { freq: "", interval: 1, until: "" };
   const parts = Object.fromEntries(rrule.split(";").map((p) => p.split("=")));
@@ -584,7 +587,7 @@ function renderAttachList(ev, pendingFiles) {
   let html = "";
   if (ev && ev.attachments) {
     ev.attachments.forEach((a) => {
-      const url = `/api/attachments/${a.id}?token=${encodeURIComponent(State.token)}`;
+      const url = attachmentUrl(a);
       const thumb = a.content_type.startsWith("image/")
         ? `<img class="attach-thumb" src="${url}" alt="" />` : "<span>📄</span>";
       html += `<div class="attach-item">${thumb}
@@ -633,9 +636,13 @@ async function openEventDetail(eventId) {
   if (ev.attachments.length) {
     body += `<div class="detail-row"><span class="ic">📎</span><div style="flex:1"><div class="attach-list">` +
       ev.attachments.map((a) => {
-        const url = `/api/attachments/${a.id}?token=${encodeURIComponent(State.token)}`;
-        const thumb = a.content_type.startsWith("image/") ? `<img class="attach-thumb" src="${url}">` : "<span>📄</span>";
-        return `<div class="attach-item">${thumb}<a href="${url}" target="_blank">${escapeHtml(a.filename)}</a></div>`;
+        const url = attachmentUrl(a);
+        if (a.content_type.startsWith("image/")) {
+          return `<a href="${url}" target="_blank" class="attach-photo">
+            <img src="${url}" alt="${escapeHtml(a.filename)}">
+            <span class="attach-name">${escapeHtml(a.filename)}</span></a>`;
+        }
+        return `<div class="attach-item"><span>📄</span><a href="${url}" target="_blank">${escapeHtml(a.filename)}</a></div>`;
       }).join("") + "</div></div></div>";
   }
   const actions = `<button class="btn-ghost" id="d-edit">Bearbeiten</button>
@@ -839,10 +846,32 @@ async function configureAuthScreen() {
   } catch (e) {}
 }
 
+function setupSwipe() {
+  const cal = $("#calendar");
+  if (!cal) return;
+  let sx = null, sy = null, moved = false;
+  cal.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) { sx = null; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; moved = false;
+  }, { passive: true });
+  cal.addEventListener("touchmove", () => { moved = true; }, { passive: true });
+  cal.addEventListener("touchend", (e) => {
+    if (sx === null || !moved) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    sx = null;
+    // Nur klare horizontale Wischer (nicht beim Hoch-/Runterscrollen)
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+      navigate(dx < 0 ? 1 : -1);   // links wischen = vor, rechts = zurück
+    }
+  }, { passive: true });
+}
+
 async function boot() {
   if ("serviceWorker" in navigator) {
     try { await navigator.serviceWorker.register("/service-worker.js"); } catch (e) {}
   }
+  setupSwipe();
   configureAuthScreen();
   if (State.token) init();
   else showAuth();

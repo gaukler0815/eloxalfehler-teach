@@ -10,6 +10,7 @@ class RegisterIn(BaseModel):
     name: str
     email: EmailStr
     password: str = Field(min_length=6)
+    family_code: str = ""
 
 
 class LoginIn(BaseModel):

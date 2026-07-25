@@ -22,7 +22,12 @@ Zeitaufwand: ca. 10 Minuten.
    **Connect** klicken.
 3. Render findet automatisch die Datei `render.yaml` und zeigt einen Dienst
    namens **familienkalender** an.
-4. **Apply** (bzw. **Create**) klicken.
+4. Render fragt nach einem Wert für **`FK_FAMILY_CODE`** – das ist euer
+   **Familien-Codewort** (z. B. `Jacobi2026`). Trage hier etwas ein, das nur
+   deine Familie kennt. Nur wer diesen Code kennt, kann sich später
+   registrieren. (Der Code wird sicher bei Render gespeichert, **nicht** im
+   öffentlichen Code.)
+5. **Apply** (bzw. **Create**) klicken.
 
 > Render baut jetzt die App. Das dauert beim ersten Mal ein paar Minuten.
 > Wenn oben **„Live"** in Grün steht, ist alles fertig.
@@ -45,8 +50,15 @@ Zeitaufwand: ca. 10 Minuten.
 
 ## Schritt 5 – Familie einladen
 
-Schick den anderen einfach die Render-Adresse. Jeder registriert sich einmal –
-alle landen automatisch im **gleichen** Familienkalender.
+Schick den anderen die Render-Adresse **und den Familien-Code**. Jeder
+registriert sich einmal (Name, E-Mail, Passwort **und Code**) – alle landen
+automatisch im **gleichen** Familienkalender. Wer den Code nicht hat, kommt
+nicht hinein.
+
+> **Code später ändern?** Im Render-Dashboard beim Dienst →
+> **Environment → `FK_FAMILY_CODE`** anpassen und speichern. Bereits
+> angemeldete Personen bleiben angemeldet; nur **neue** Registrierungen
+> brauchen dann den neuen Code.
 
 ---
 

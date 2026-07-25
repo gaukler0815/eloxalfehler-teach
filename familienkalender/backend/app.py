@@ -110,11 +110,16 @@ def _sync_birthday_event(db: Session, person: Person):
 # =========================================================================
 @app.get("/api/config")
 def api_config():
-    return {"vapid_public_key": get_public_key()}
+    from config import FAMILY_CODE
+    return {"vapid_public_key": get_public_key(),
+            "family_code_required": bool(FAMILY_CODE)}
 
 
 @app.post("/api/auth/register", response_model=schemas.TokenOut)
 def register(data: schemas.RegisterIn, db: Session = Depends(get_db)):
+    from config import FAMILY_CODE
+    if FAMILY_CODE and data.family_code.strip() != FAMILY_CODE:
+        raise HTTPException(403, "Falscher Familien-Code")
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(400, "E-Mail ist bereits registriert")
     user = User(name=data.name, email=str(data.email),

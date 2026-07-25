@@ -121,7 +121,8 @@ $("#register-form").addEventListener("submit", async (e) => {
   try {
     const data = await api("/auth/register", {
       method: "POST",
-      body: { name: fd.get("name"), email: fd.get("email"), password: fd.get("password") },
+      body: { name: fd.get("name"), email: fd.get("email"),
+        password: fd.get("password"), family_code: fd.get("family_code") || "" },
     });
     onLoggedIn(data);
   } catch (err) { $("#auth-error").textContent = err.message; }
@@ -825,10 +826,24 @@ async function init() {
   if (params.get("event")) openEventDetail(+params.get("event"));
 }
 
+async function configureAuthScreen() {
+  // Familien-Code-Feld nur zeigen, wenn der Server ihn verlangt
+  try {
+    const cfg = await api("/config");
+    State.vapidKey = cfg.vapid_public_key;
+    const field = $("#register-familycode");
+    if (field) {
+      if (cfg.family_code_required) { field.classList.remove("hidden"); field.required = true; }
+      else { field.classList.add("hidden"); field.required = false; }
+    }
+  } catch (e) {}
+}
+
 async function boot() {
   if ("serviceWorker" in navigator) {
     try { await navigator.serviceWorker.register("/service-worker.js"); } catch (e) {}
   }
+  configureAuthScreen();
   if (State.token) init();
   else showAuth();
 }

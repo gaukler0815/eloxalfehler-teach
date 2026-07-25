@@ -19,6 +19,11 @@ services:
         value: Europe/Berlin
       - key: FK_VAPID_CONTACT
         value: mailto:al@jacobi-eloxal.de
+      # Familien-Codewort: nur wer es kennt, kann sich registrieren.
+      # sync:false = wird NICHT im Repo gespeichert, sondern beim Einrichten
+      # sicher im Render-Dashboard eingegeben.
+      - key: FK_FAMILY_CODE
+        sync: false
       - key: FK_DATA_DIR
         value: /data
     # Dauerhafter Speicher für Datenbank, Uploads und Push-Schlüssel.

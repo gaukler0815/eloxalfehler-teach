@@ -108,6 +108,7 @@ muss die App unter einer **öffentlichen Adresse mit HTTPS** laufen
 | Variable | Bedeutung | Standard |
 |----------|-----------|----------|
 | `FK_SECRET_KEY` | Schlüssel zum Signieren der Logins – **unbedingt setzen!** | (Platzhalter) |
+| `FK_FAMILY_CODE` | Codewort, das bei der Registrierung Pflicht ist (nur eure Familie kann beitreten). Leer = offene Registrierung. | (leer) |
 | `FK_TIMEZONE` | Zeitzone der Familie (für Erinnerungen) | `Europe/Berlin` |
 | `FK_VAPID_CONTACT` | Kontakt-E-Mail für Push-Dienste | `mailto:familie@example.com` |
 | `FK_DATA_DIR` | Ablage für Datenbank, Uploads, Schlüssel | `./data` |
@@ -124,7 +125,8 @@ python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 ## 👨‍👩‍👧‍👦 So funktioniert's im Alltag
 
 1. **Registrieren:** Jedes Familienmitglied, das die App nutzt, legt ein Konto
-   an. Alle teilen automatisch denselben Familienkalender.
+   an (mit dem **Familien-Code**, falls gesetzt). Alle teilen automatisch
+   denselben Familienkalender; wer den Code nicht kennt, kann nicht beitreten.
 2. **Personen anlegen** (👥): auch für Kinder ohne eigenes Handy. Wer ein
    eigenes Konto hat, kann mit seiner Person **verknüpft** werden – nur dann
    bekommt diese Person Push-Nachrichten.

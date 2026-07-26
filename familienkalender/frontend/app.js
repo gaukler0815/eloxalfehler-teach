@@ -670,9 +670,13 @@ function renderAttachList(ev, pendingFiles) {
 }
 
 /* ------------------------- Termin-Detail ------------------------------ */
-async function openEventDetail(eventId) {
+async function openEventDetail(eventId, focusDate = false) {
   let ev;
   try { ev = await api("/events/" + eventId); } catch (e) { toast(e.message); return; }
+  // Personen sicherstellen, damit die Namen im Detail erscheinen
+  if (!State.persons.length) { try { State.persons = await api("/persons"); } catch (e) {} }
+  // Beim Öffnen aus einer Benachrichtigung zum passenden Datum springen
+  if (focusDate && ev.start) { State.anchor = parseLocal(ev.start); render(); }
   const start = parseLocal(ev.start);
   const end = ev.end ? parseLocal(ev.end) : null;
   const dateStr = ev.all_day
@@ -893,9 +897,13 @@ async function init() {
       && "serviceWorker" in navigator) {
     enablePush().catch(() => {});
   }
-  // Deep-Link ?event=ID
+  // Deep-Link ?event=ID (z. B. aus einer Push-Benachrichtigung)
   const params = new URLSearchParams(location.search);
-  if (params.get("event")) openEventDetail(+params.get("event"));
+  const evId = params.get("event");
+  if (evId) {
+    history.replaceState({}, "", "/");   // URL säubern, damit Neuladen nicht erneut öffnet
+    openEventDetail(+evId, true);
+  }
 }
 
 async function configureAuthScreen() {
@@ -935,6 +943,15 @@ function setupSwipe() {
 async function boot() {
   if ("serviceWorker" in navigator) {
     try { await navigator.serviceWorker.register("/service-worker.js"); } catch (e) {}
+  }
+  // Antippen einer Push-Nachricht bei bereits offener App -> Termin öffnen
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.addEventListener("message", (e) => {
+      const d = e.data || {};
+      if (d.type === "open-event" && d.eventId && State.token) {
+        openEventDetail(+d.eventId, true);
+      }
+    });
   }
   setupSwipe();
   configureAuthScreen();

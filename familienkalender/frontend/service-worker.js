@@ -1,5 +1,5 @@
 /* Service Worker: Offline-Caching + Web-Push-Benachrichtigungen */
-const CACHE = "familienkalender-v1";
+const CACHE = "familienkalender-v2";
 const ASSETS = [
   "/",
   "/index.html",
@@ -57,25 +57,29 @@ self.addEventListener("push", (event) => {
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
       tag: data.tag || "familienkalender",
-      data: { url: data.url || "/" },
+      data: { url: data.url || "/", eventId: data.eventId || null },
       vibrate: [120, 60, 120]
     })
   );
 });
 
-/* Klick auf Benachrichtigung öffnet die App */
+/* Klick auf Benachrichtigung: direkt den kompletten Termin öffnen */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || "/";
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
-      for (const client of list) {
-        if ("focus" in client) {
-          client.navigate(target);
-          return client.focus();
-        }
+  const d = event.notification.data || {};
+  const url = d.url || "/";
+  const eventId = d.eventId || null;
+  event.waitUntil((async () => {
+    const list = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of list) {
+      if ("focus" in client) {
+        await client.focus();
+        // App läuft schon -> Termin-Detail per Nachricht öffnen
+        client.postMessage({ type: "open-event", eventId: eventId, url: url });
+        return;
       }
-      if (clients.openWindow) return clients.openWindow(target);
-    })
-  );
+    }
+    // App nicht offen -> mit Deep-Link starten
+    if (clients.openWindow) return clients.openWindow(url);
+  })());
 });

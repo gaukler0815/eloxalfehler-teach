@@ -106,6 +106,7 @@ def _fire(db: Session, event: Event, occ: datetime, minutes: int):
         "body": f"{_human_lead(minutes)} · {when}"
                 + (f" · {event.location}" if event.location else ""),
         "url": f"/?event={event.id}",
+        "eventId": event.id,
         "tag": f"event-{event.id}-{occ.strftime('%Y%m%d%H%M')}",
     }
     for sub in subs:

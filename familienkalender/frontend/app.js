@@ -474,51 +474,65 @@ async function openEventForm(eventId, presetDate, opts = {}) {
   const remindersHtml = (ev && ev.reminders.length ? ev.reminders : []).map(reminderRow).join("");
 
   const body = `
-    <div class="field"><label>Titel</label>
-      <input id="f-title" value="${escapeHtml(base.title || "")}" placeholder="z. B. Zahnarzt Mia" /></div>
-    <div class="field checkbox-row"><input type="checkbox" id="f-allday" ${base.all_day ? "checked" : ""}/>
-      <label for="f-allday" style="margin:0">Ganztägig</label></div>
-    <div class="row2">
-      <div class="field"><label>Beginn</label><input type="datetime-local" id="f-start" value="${toLocalInput(start)}" /></div>
-      <div class="field"><label>Ende</label><input type="datetime-local" id="f-end" value="${toLocalInput(end)}" /></div>
-    </div>
-    <div class="field"><label>Ort</label>
-      <input id="f-location" value="${escapeHtml(base.location || "")}" placeholder="Ort (optional)" /></div>
-    <div class="field"><label>Notiz</label>
-      <textarea id="f-desc" placeholder="Beschreibung (optional)">${escapeHtml(base.description || "")}</textarea>
-      <div class="agenda-meta" style="margin-top:6px">Sehen alle beteiligten Personen.</div></div>
-    <div class="field"><label>🔒 Private Notiz</label>
-      <textarea id="f-private" placeholder="Nur für dich sichtbar – z. B. Geschenkideen">${escapeHtml(ev ? (ev.private_note || "") : "")}</textarea>
-      <div class="agenda-meta" style="margin-top:6px">Diese Notiz sieht <b>niemand sonst</b> – auch nicht die beteiligten Personen.</div></div>
-
-    <div class="field"><label>Farbe</label><div class="pill-select" id="f-colors">${colorPills}</div></div>
-
-    <div class="field"><label>Wiederholung</label>
-      <select id="f-freq">
-        <option value="">Keine</option>
-        <option value="DAILY" ${rec.freq === "DAILY" ? "selected" : ""}>Täglich</option>
-        <option value="WEEKLY" ${rec.freq === "WEEKLY" ? "selected" : ""}>Wöchentlich</option>
-        <option value="MONTHLY" ${rec.freq === "MONTHLY" ? "selected" : ""}>Monatlich</option>
-        <option value="YEARLY" ${rec.freq === "YEARLY" ? "selected" : ""}>Jährlich</option>
-      </select></div>
-    <div class="row2" id="f-recur-extra" style="${rec.freq ? "" : "display:none"}">
-      <div class="field"><label>Alle … (Intervall)</label>
-        <input type="number" id="f-interval" min="1" value="${rec.interval || 1}" /></div>
-      <div class="field"><label>Enddatum (optional)</label>
-        <input type="date" id="f-until" value="${rec.until || ""}" /></div>
+    <div class="form-section">
+      <div class="sec-title">🗓️ Was & wann</div>
+      <div class="field"><label>Titel</label>
+        <input id="f-title" value="${escapeHtml(base.title || "")}" placeholder="z. B. Zahnarzt Mia" /></div>
+      <div class="field checkbox-row"><input type="checkbox" id="f-allday" ${base.all_day ? "checked" : ""}/>
+        <label for="f-allday" style="margin:0">Ganztägig</label></div>
+      <div class="row2">
+        <div class="field"><label>Beginn</label><input type="datetime-local" id="f-start" value="${toLocalInput(start)}" /></div>
+        <div class="field"><label>Ende</label><input type="datetime-local" id="f-end" value="${toLocalInput(end)}" /></div>
+      </div>
     </div>
 
-    <div class="field"><label>Betrifft (Personen)</label>
-      <div class="pill-select" id="f-persons">${personPills || '<span class="agenda-meta">Noch keine Personen – über 👥 anlegen</span>'}</div></div>
+    <div class="form-section">
+      <div class="sec-title">📍 Ort & Notizen</div>
+      <div class="field"><label>Ort</label>
+        <input id="f-location" value="${escapeHtml(base.location || "")}" placeholder="Ort (optional)" /></div>
+      <div class="field"><label>Notiz</label>
+        <textarea id="f-desc" placeholder="Beschreibung (optional)">${escapeHtml(base.description || "")}</textarea>
+        <div class="agenda-meta" style="margin-top:6px">Sehen alle beteiligten Personen.</div></div>
+      <div class="field"><label>🔒 Private Notiz</label>
+        <textarea id="f-private" placeholder="Nur für dich sichtbar – z. B. Geschenkideen">${escapeHtml(ev ? (ev.private_note || "") : "")}</textarea>
+        <div class="agenda-meta" style="margin-top:6px">Diese Notiz sieht <b>niemand sonst</b> – auch nicht die beteiligten Personen.</div></div>
+    </div>
 
-    <div class="field"><label>Erinnerungen (Push)</label>
-      <div class="reminder-list" id="f-reminders">${remindersHtml}</div>
-      <button type="button" class="btn-add-reminder" id="f-add-reminder">＋ Erinnerung hinzufügen</button>
-      <div class="agenda-meta" style="margin-top:6px">Du kannst mehrere Erinnerungen setzen – z. B. 2 Tage und 2 Stunden vorher.</div></div>
+    <div class="form-section">
+      <div class="sec-title">🎨 Farbe & Wiederholung</div>
+      <div class="field"><label>Farbe</label><div class="pill-select" id="f-colors">${colorPills}</div></div>
+      <div class="field"><label>Wiederholung</label>
+        <select id="f-freq">
+          <option value="">Keine</option>
+          <option value="DAILY" ${rec.freq === "DAILY" ? "selected" : ""}>Täglich</option>
+          <option value="WEEKLY" ${rec.freq === "WEEKLY" ? "selected" : ""}>Wöchentlich</option>
+          <option value="MONTHLY" ${rec.freq === "MONTHLY" ? "selected" : ""}>Monatlich</option>
+          <option value="YEARLY" ${rec.freq === "YEARLY" ? "selected" : ""}>Jährlich</option>
+        </select></div>
+      <div class="row2" id="f-recur-extra" style="${rec.freq ? "" : "display:none"}">
+        <div class="field"><label>Alle … (Intervall)</label>
+          <input type="number" id="f-interval" min="1" value="${rec.interval || 1}" /></div>
+        <div class="field"><label>Enddatum (optional)</label>
+          <input type="date" id="f-until" value="${rec.until || ""}" /></div>
+      </div>
+    </div>
 
-    <div class="field" id="f-attach-field"><label>Dokumente & Bilder</label>
-      <label class="file-input-label">📎 Datei auswählen<input type="file" id="f-file" multiple /></label>
-      <div class="attach-list" id="f-attach-list"></div></div>`;
+    <div class="form-section">
+      <div class="sec-title">👥 Wer & Erinnerung</div>
+      <div class="field"><label>Betrifft (Personen)</label>
+        <div class="pill-select" id="f-persons">${personPills || '<span class="agenda-meta">Noch keine Personen – über 👥 anlegen</span>'}</div></div>
+      <div class="field"><label>Erinnerungen (Push)</label>
+        <div class="reminder-list" id="f-reminders">${remindersHtml}</div>
+        <button type="button" class="btn-add-reminder" id="f-add-reminder">＋ Erinnerung hinzufügen</button>
+        <div class="agenda-meta" style="margin-top:6px">Du kannst mehrere Erinnerungen setzen – z. B. 2 Tage und 2 Stunden vorher.</div></div>
+    </div>
+
+    <div class="form-section">
+      <div class="sec-title">📎 Anhänge</div>
+      <div class="field" id="f-attach-field">
+        <label class="file-input-label">📎 Datei auswählen<input type="file" id="f-file" multiple /></label>
+        <div class="attach-list" id="f-attach-list"></div></div>
+    </div>`;
 
   const actions = `${eventId ? '<button class="btn-danger" id="f-delete">Löschen</button>' : ""}
     <button class="btn-primary" id="f-save">Speichern</button>`;

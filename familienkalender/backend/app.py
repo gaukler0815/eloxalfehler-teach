@@ -20,7 +20,7 @@ from config import (FAMILY_TZ, FRONTEND_DIR, MAX_UPLOAD_MB, SCAN_ENABLED,
                     UPLOAD_DIR)
 from database import get_db, init_db
 from models import (Attachment, Event, EventPerson, Person, PushSubscription,
-                    Reminder, User)
+                    Reminder, Setting, User)
 from push import PushGone, get_public_key, send_push
 from recurrence import expand_event, parse_dt
 from scheduler import scheduler_loop
@@ -315,10 +315,60 @@ def delete_event(event_id: int, user: User = Depends(current_user),
     return {"ok": True}
 
 
+# --- Familien-Einstellungen (Feiertage & Schulferien) --------------------
+def _get_setting(db: Session, key: str, default=None):
+    import json
+    s = db.query(Setting).filter_by(key=key).first()
+    if not s or not s.value:
+        return default
+    try:
+        return json.loads(s.value)
+    except Exception:
+        return default
+
+
+def _set_setting(db: Session, key: str, obj):
+    import json
+    s = db.query(Setting).filter_by(key=key).first()
+    if not s:
+        s = Setting(key=key)
+        db.add(s)
+    s.value = json.dumps(obj)
+
+
+@app.get("/api/holiday-states")
+def holiday_states(user: User = Depends(current_user)):
+    from holidays import STATES
+    return [{"code": c, "name": n} for c, n in STATES.items()]
+
+
+@app.get("/api/settings/holidays")
+def get_holiday_settings(user: User = Depends(current_user),
+                         db: Session = Depends(get_db)):
+    return _get_setting(db, "holidays", {"state": "", "public_holidays": False,
+                                         "school_holidays": False})
+
+
+@app.put("/api/settings/holidays")
+def set_holiday_settings(data: schemas.HolidaySettingsIn,
+                         user: User = Depends(current_user),
+                         db: Session = Depends(get_db)):
+    from holidays import STATES
+    state = (data.state or "").strip().upper()
+    if state and state not in STATES:
+        raise HTTPException(400, "Unbekanntes Bundesland")
+    obj = {"state": state, "public_holidays": bool(data.public_holidays),
+           "school_holidays": bool(data.school_holidays)}
+    _set_setting(db, "holidays", obj)
+    db.commit()
+    return obj
+
+
 @app.get("/api/occurrences")
 def occurrences(start: str = Query(...), end: str = Query(...),
                 user: User = Depends(current_user), db: Session = Depends(get_db)):
-    """Alle Einzeltermine (inkl. aufgelöster Wiederholungen) im Zeitfenster."""
+    """Alle Einzeltermine (inkl. aufgelöster Wiederholungen) im Zeitfenster,
+    dazu optional Feiertage und Schulferien des eingestellten Bundeslandes."""
     window_start = parse_dt(start)
     window_end = parse_dt(end)
     result = []
@@ -341,7 +391,27 @@ def occurrences(start: str = Query(...), end: str = Query(...),
                 "recurring": bool(event.rrule),
             })
     result.sort(key=lambda x: x["start"])
-    return result
+
+    feiertage, ferien = [], []
+    settings = _get_setting(db, "holidays", {}) or {}
+    state = settings.get("state") or ""
+    if state:
+        ws, we = window_start.date(), window_end.date()
+        if settings.get("public_holidays"):
+            from holidays import public_holidays
+            for year in range(ws.year, we.year + 1):
+                for d, name in public_holidays(state, year):
+                    if ws <= d <= we:
+                        feiertage.append({"date": d.isoformat(), "name": name})
+        if settings.get("school_holidays"):
+            from holidays import school_holidays
+            try:
+                ferien = school_holidays(state, ws.isoformat(), we.isoformat())
+            except Exception as exc:
+                log.warning("Schulferien-Abruf fehlgeschlagen: %s", exc)
+                ferien = []
+
+    return {"events": result, "feiertage": feiertage, "ferien": ferien}
 
 
 @app.get("/api/search")

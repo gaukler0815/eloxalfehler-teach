@@ -25,6 +25,7 @@ ein, sehen ihn sofort alle anderen.
 | Mehrere Erinnerungen pro Termin | Beliebig viele, z. B. *2 Tage* **und** *2 Stunden* vorher |
 | Personen anlegen & bei Termin auswählen | 👥 Personenverwaltung, Mehrfachauswahl pro Termin |
 | Termin abfotografieren | 📷 Foto/Screenshot → KI liest Termine aus, du bestätigst/änderst, Foto wird angehängt (optional, braucht `ANTHROPIC_API_KEY`) |
+| Feiertage & Schulferien | 🗓️ In den Einstellungen Bundesland wählen → gesetzliche Feiertage (offline berechnet) und Schulferien (über openHolidays-API) im Kalender ein-/ausblenden |
 | Push nur an ausgewählte Personen (sofern App genutzt) | Erinnerung geht an die verknüpften Konten der betroffenen Personen |
 
 ---

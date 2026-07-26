@@ -159,6 +159,16 @@ class PushSubscription(Base):
     user = relationship("User", back_populates="subscriptions")
 
 
+class Setting(Base):
+    """Familienweite Einstellung als Schlüssel/Wert (z. B. Bundesland für
+    Feiertage & Schulferien)."""
+    __tablename__ = "settings"
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String, unique=True, nullable=False)
+    value = Column(Text, default="")
+
+
 class SentReminder(Base):
     """Merkt sich bereits versendete Erinnerungen, um Doppelversand zu
     verhindern (wichtig bei wiederkehrenden Terminen)."""

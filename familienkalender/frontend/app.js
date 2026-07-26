@@ -10,8 +10,20 @@ const State = {
   anchor: new Date(),           // Bezugsdatum der aktuellen Ansicht
   persons: [],
   occurrences: [],
+  feiertage: [],
+  ferien: [],
   vapidKey: null,
 };
+
+// Bundesländer für die Einstellungen (Code -> Name)
+const STATES_DE = [
+  ["BW", "Baden-Württemberg"], ["BY", "Bayern"], ["BE", "Berlin"],
+  ["BB", "Brandenburg"], ["HB", "Bremen"], ["HH", "Hamburg"], ["HE", "Hessen"],
+  ["MV", "Mecklenburg-Vorpommern"], ["NI", "Niedersachsen"],
+  ["NW", "Nordrhein-Westfalen"], ["RP", "Rheinland-Pfalz"], ["SL", "Saarland"],
+  ["SN", "Sachsen"], ["ST", "Sachsen-Anhalt"], ["SH", "Schleswig-Holstein"],
+  ["TH", "Thüringen"],
+];
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
@@ -160,15 +172,36 @@ function viewWindow() {
 async function loadData() {
   const { start, end } = viewWindow();
   const q = `?start=${toLocalInput(start)}&end=${toLocalInput(end)}`;
-  const [occ, persons] = await Promise.all([
+  const [data, persons] = await Promise.all([
     api("/occurrences" + q),
     api("/persons"),
   ]);
-  State.occurrences = occ;
+  State.occurrences = data.events || [];
+  State.feiertage = data.feiertage || [];
+  State.ferien = data.ferien || [];
   State.persons = persons;
 }
 
 function personById(id) { return State.persons.find((p) => p.id === id); }
+
+/* Feiertage nach Datum + Schulferien-Tage (Datum -> Name) aufbereiten */
+function holidayMaps() {
+  const fMap = {};
+  (State.feiertage || []).forEach((h) => {
+    (fMap[h.date] = fMap[h.date] || []).push(h.name);
+  });
+  const ferienDays = {};
+  (State.ferien || []).forEach((p) => {
+    let d = parseLocal(p.start + "T00:00");
+    const end = parseLocal(p.end + "T00:00");
+    let guard = 0;
+    while (d <= end && guard < 400) {
+      ferienDays[dateKey(d)] = p.name;
+      d = addDays(d, 1); guard += 1;
+    }
+  });
+  return { fMap, ferienDays };
+}
 
 /* ------------------------- Rendering ---------------------------------- */
 function setPeriodLabel() {
@@ -210,6 +243,7 @@ async function render() {
 
 function renderMonth(el) {
   const byDay = occByDay();
+  const { fMap, ferienDays } = holidayMaps();
   const first = new Date(State.anchor.getFullYear(), State.anchor.getMonth(), 1);
   const gridStart = startOfWeek(first);
   const today = new Date();
@@ -221,8 +255,19 @@ function renderMonth(el) {
     const items = byDay[key] || [];
     const other = d.getMonth() !== State.anchor.getMonth();
     const isToday = sameDay(d, today);
-    html += `<div class="day-cell ${other ? "other-month" : ""} ${isToday ? "today" : ""}" data-date="${key}">
-      <span class="day-num">${d.getDate()}</span><div class="day-events">`;
+    const ferienName = ferienDays[key];
+    const prevFerien = ferienDays[dateKey(addDays(d, -1))];
+    const cls = ["day-cell", other ? "other-month" : "", isToday ? "today" : "",
+                 ferienName ? "ferien-day" : ""].filter(Boolean).join(" ");
+    html += `<div class="${cls}" data-date="${key}">
+      <span class="day-num">${d.getDate()}</span>`;
+    if (ferienName && prevFerien !== ferienName) {
+      html += `<div class="ferien-label" title="${escapeHtml(ferienName)}">${escapeHtml(ferienName)}</div>`;
+    }
+    html += '<div class="day-events">';
+    (fMap[key] || []).forEach((n) => {
+      html += `<div class="evt-pill hol" title="${escapeHtml(n)}">${escapeHtml(n)}</div>`;
+    });
     items.slice(0, 3).forEach((o) => {
       const time = o.all_day ? "" : parseLocal(o.start).getHours() + ":" + pad(parseLocal(o.start).getMinutes()) + " ";
       html += `<div class="evt-pill" style="background:${o.color}" data-event="${o.event_id}">${time}${escapeHtml(o.title)}</div>`;
@@ -238,6 +283,7 @@ function renderMonth(el) {
     openEventForm(null, d);
   }));
   $$(".evt-pill", el).forEach((p) => p.addEventListener("click", (e) => {
+    if (!p.dataset.event) return;   // Feiertag-Pille -> nicht anklickbar
     e.stopPropagation(); openEventDetail(+p.dataset.event);
   }));
 }
@@ -256,14 +302,26 @@ function renderTimeGrid(el, days) {
   const byDay = occByDay();
   const today = new Date();
   const multi = days.length > 1;
-  // Ganztägige Termine als Band oben
-  let allday = "";
-  const alldayItems = [];
-  days.forEach((d) => (byDay[dateKey(d)] || []).forEach((o) => { if (o.all_day) alldayItems.push(o); }));
-  if (alldayItems.length) {
-    allday = '<div class="allday-band">' + alldayItems.map((o) =>
-      `<span class="evt-pill" style="background:${o.color}" data-event="${o.event_id}">${escapeHtml(o.title)}</span>`).join("") + "</div>";
-  }
+  // Ganztägige Termine + Feiertage/Ferien als Band oben
+  const { fMap, ferienDays } = holidayMaps();
+  let bandInner = "";
+  const ferienShown = new Set();
+  days.forEach((d) => {
+    const key = dateKey(d);
+    (fMap[key] || []).forEach((n) => {
+      bandInner += `<span class="evt-pill hol">${escapeHtml(n)}</span>`;
+    });
+    const fn = ferienDays[key];
+    if (fn && !ferienShown.has(fn)) {
+      ferienShown.add(fn);
+      bandInner += `<span class="evt-pill ferien">${escapeHtml(fn)}</span>`;
+    }
+  });
+  days.forEach((d) => (byDay[dateKey(d)] || []).forEach((o) => {
+    if (o.all_day) bandInner +=
+      `<span class="evt-pill" style="background:${o.color}" data-event="${o.event_id}">${escapeHtml(o.title)}</span>`;
+  }));
+  const allday = bandInner ? `<div class="allday-band">${bandInner}</div>` : "";
   let head = "";
   if (multi) {
     head = '<div class="tg-week-head"><div></div>' + days.map((d) =>
@@ -291,6 +349,7 @@ function renderTimeGrid(el, days) {
     e.stopPropagation(); openEventDetail(+p.dataset.event);
   }));
   $$(".evt-pill", el).forEach((p) => p.addEventListener("click", (e) => {
+    if (!p.dataset.event) return;   // Feiertag/Ferien -> nicht anklickbar
     e.stopPropagation(); openEventDetail(+p.dataset.event);
   }));
   $$(".tg-slot", el).forEach((s) => s.addEventListener("click", () => {
@@ -305,14 +364,40 @@ function tgEvent(o) {
 
 function renderAgenda(el) {
   const byDay = occByDay();
-  const keys = Object.keys(byDay).sort();
+  const { fMap } = holidayMaps();
+  // Feiertage nach Tag, Ferien als Zeiträume (am Starttag einsortiert)
+  const feByDay = {};
+  Object.keys(fMap).forEach((k) => { feByDay[k] = fMap[k]; });
+  const ferienByStart = {};
+  (State.ferien || []).forEach((p) => {
+    (ferienByStart[p.start] = ferienByStart[p.start] || []).push(p);
+  });
+  const keys = Array.from(new Set([
+    ...Object.keys(byDay), ...Object.keys(feByDay), ...Object.keys(ferienByStart),
+  ])).sort();
   if (!keys.length) { el.innerHTML = '<div class="empty">Keine kommenden Termine.<br>Tippe auf ＋, um einen Termin anzulegen.</div>'; return; }
   let html = '<div class="agenda">';
   keys.forEach((k) => {
     const d = parseLocal(k + "T00:00");
     const label = `${WEEKDAYS[(d.getDay() + 6) % 7]}, ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
     html += `<div class="agenda-day"><div class="agenda-date">${label}</div>`;
-    byDay[k].forEach((o) => {
+    (feByDay[k] || []).forEach((n) => {
+      html += `<div class="agenda-item hol-item">
+        <div class="bar" style="background:#d99400"></div>
+        <div class="agenda-time">🎌</div>
+        <div style="flex:1"><div class="agenda-title">${escapeHtml(n)}</div>
+          <div class="agenda-meta">Feiertag</div></div></div>`;
+    });
+    (ferienByStart[k] || []).forEach((p) => {
+      const e = parseLocal(p.end + "T00:00");
+      const until = `${e.getDate()}. ${MONTHS[e.getMonth()]}`;
+      html += `<div class="agenda-item hol-item">
+        <div class="bar" style="background:#2f9e63"></div>
+        <div class="agenda-time">🏖️</div>
+        <div style="flex:1"><div class="agenda-title">${escapeHtml(p.name)}</div>
+          <div class="agenda-meta">Schulferien · bis ${until}</div></div></div>`;
+    });
+    (byDay[k] || []).forEach((o) => {
       const t = parseLocal(o.start);
       const time = o.all_day ? "ganztägig" : `${pad(t.getHours())}:${pad(t.getMinutes())}`;
       const persons = o.person_ids.map((id) => personById(id)).filter(Boolean).map((p) => p.name).join(", ");
@@ -328,7 +413,9 @@ function renderAgenda(el) {
   });
   html += "</div>";
   el.innerHTML = html;
-  $$(".agenda-item", el).forEach((i) => i.addEventListener("click", () => openEventDetail(+i.dataset.event)));
+  $$(".agenda-item", el).forEach((i) => i.addEventListener("click", () => {
+    if (i.dataset.event) openEventDetail(+i.dataset.event);
+  }));
 }
 
 function escapeHtml(s) {
@@ -808,6 +895,11 @@ $("#persons-btn").addEventListener("click", openPersons);
 async function openSettings() {
   const permission = ("Notification" in window) ? Notification.permission : "unsupported";
   const isSub = await currentSubscription() ? true : false;
+  let hs = { state: "", public_holidays: false, school_holidays: false };
+  try { hs = await api("/settings/holidays"); } catch (e) {}
+  const stateOptions = ['<option value="">— keins —</option>'].concat(
+    STATES_DE.map(([c, n]) =>
+      `<option value="${c}" ${hs.state === c ? "selected" : ""}>${n}</option>`)).join("");
   const body = `
     <div class="detail-row"><span class="ic">👤</span><span>${escapeHtml(State.user.name)}<br><span class="agenda-meta">${escapeHtml(State.user.email)}</span></span></div>
     <div class="field" style="margin-top:16px"><label>Push-Benachrichtigungen</label>
@@ -825,6 +917,14 @@ async function openSettings() {
         <option value="day" ${State.view === "day" ? "selected" : ""}>Tag</option>
         <option value="agenda" ${State.view === "agenda" ? "selected" : ""}>Liste</option>
       </select></div>
+    <div class="field"><label>🗓️ Feiertage & Schulferien</label>
+      <select id="s-state">${stateOptions}</select>
+      <div class="agenda-meta" style="margin:6px 0 10px">Bundesland wählen, dann unten aktivieren.</div>
+      <div class="checkbox-row" style="margin-bottom:8px"><input type="checkbox" id="s-feiertage" ${hs.public_holidays ? "checked" : ""}/>
+        <label for="s-feiertage" style="margin:0">Gesetzliche Feiertage anzeigen</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="s-ferien" ${hs.school_holidays ? "checked" : ""}/>
+        <label for="s-ferien" style="margin:0">Schulferien anzeigen</label></div>
+    </div>
     <button class="btn-ghost" id="s-logout" style="width:100%;margin-top:10px">Abmelden</button>
     <div class="agenda-meta" style="text-align:center;margin-top:14px">Familienkalender · alle Geräte teilen denselben Kalender</div>`;
   openModal("Einstellungen", body, `<button class="btn-primary" id="s-close">Fertig</button>`);
@@ -832,6 +932,20 @@ async function openSettings() {
   $("#s-view").addEventListener("change", (e) => {
     State.view = e.target.value; localStorage.setItem("fk_view", State.view);
   });
+  const saveHolidays = async () => {
+    try {
+      await api("/settings/holidays", { method: "PUT", body: {
+        state: $("#s-state").value,
+        public_holidays: $("#s-feiertage").checked,
+        school_holidays: $("#s-ferien").checked,
+      } });
+      toast("Gespeichert");
+      render();
+    } catch (e) { toast(e.message); }
+  };
+  $("#s-state").addEventListener("change", saveHolidays);
+  $("#s-feiertage").addEventListener("change", saveHolidays);
+  $("#s-ferien").addEventListener("change", saveHolidays);
   $("#s-logout").addEventListener("click", () => { closeModal(); logout(); });
   const on = $("#s-push-on"); if (on) on.addEventListener("click", async () => { await enablePush(); closeModal(); openSettings(); });
   const off = $("#s-push-off"); if (off) off.addEventListener("click", async () => { await disablePush(); closeModal(); openSettings(); });
@@ -855,7 +969,7 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
 }
 async function swRegistration() {
-  if (!("serviceWorker" in navigator)) return null;
+  if (!navigator.serviceWorker) return null;
   return navigator.serviceWorker.ready;
 }
 async function currentSubscription() {

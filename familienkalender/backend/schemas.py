@@ -124,4 +124,11 @@ class PushSubscriptionIn(BaseModel):
     auth: str
 
 
+# --- Feiertage / Schulferien ---------------------------------------------
+class HolidaySettingsIn(BaseModel):
+    state: str = ""            # Bundesland-Code, z. B. "BY"; leer = aus
+    public_holidays: bool = False
+    school_holidays: bool = False
+
+
 TokenOut.model_rebuild()

@@ -26,6 +26,9 @@ ein, sehen ihn sofort alle anderen.
 | Personen anlegen & bei Termin auswählen | 👥 Personenverwaltung, Mehrfachauswahl pro Termin |
 | Termin abfotografieren | 📷 Foto/Screenshot → KI liest Termine aus, du bestätigst/änderst, Foto wird angehängt (optional, braucht `ANTHROPIC_API_KEY`) |
 | Feiertage & Schulferien | 🗓️ In den Einstellungen Bundesland wählen → gesetzliche Feiertage (offline berechnet) und Schulferien (über openHolidays-API) im Kalender ein-/ausblenden |
+| Kalenderdatei (.ics) importieren | 📥 Termine aus einer .ics-Datei (E-Mail-Anhang) einlesen und geführt bestätigen |
+| Outlook-Abo (Familie → Outlook) | 📤 Geheimer ICS-Feed-Link zum Abonnieren in Outlook (Familientermine erscheinen in Outlook) |
+| Outlook einlesen (Outlook → Familie) | 📆 Veröffentlichten Outlook-ICS-Link hinterlegen → Termine erscheinen (schreibgeschützt) im Familienkalender |
 | Push nur an ausgewählte Personen (sofern App genutzt) | Erinnerung geht an die verknüpften Konten der betroffenen Personen |
 
 ---

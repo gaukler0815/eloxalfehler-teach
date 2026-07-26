@@ -270,7 +270,7 @@ function renderMonth(el) {
     });
     items.slice(0, 3).forEach((o) => {
       const time = o.all_day ? "" : parseLocal(o.start).getHours() + ":" + pad(parseLocal(o.start).getMinutes()) + " ";
-      html += `<div class="evt-pill" style="background:${o.color}" data-event="${o.event_id}">${time}${escapeHtml(o.title)}</div>`;
+      html += `<div class="evt-pill" style="background:${o.color}" data-event="${o.event_id || ""}">${time}${escapeHtml(o.title)}</div>`;
     });
     if (items.length > 3) html += `<div class="evt-more">+${items.length - 3} mehr</div>`;
     html += "</div></div>";
@@ -319,7 +319,7 @@ function renderTimeGrid(el, days) {
   });
   days.forEach((d) => (byDay[dateKey(d)] || []).forEach((o) => {
     if (o.all_day) bandInner +=
-      `<span class="evt-pill" style="background:${o.color}" data-event="${o.event_id}">${escapeHtml(o.title)}</span>`;
+      `<span class="evt-pill" style="background:${o.color}" data-event="${o.event_id || ""}">${escapeHtml(o.title)}</span>`;
   }));
   const allday = bandInner ? `<div class="allday-band">${bandInner}</div>` : "";
   let head = "";
@@ -359,7 +359,7 @@ function renderTimeGrid(el, days) {
 }
 function tgEvent(o) {
   const t = parseLocal(o.start);
-  return `<div class="tg-event" style="background:${o.color}" data-event="${o.event_id}">${pad(t.getHours())}:${pad(t.getMinutes())} ${escapeHtml(o.title)}</div>`;
+  return `<div class="tg-event" style="background:${o.color}" data-event="${o.event_id || ""}">${pad(t.getHours())}:${pad(t.getMinutes())} ${escapeHtml(o.title)}</div>`;
 }
 
 function renderAgenda(el) {
@@ -401,12 +401,13 @@ function renderAgenda(el) {
       const t = parseLocal(o.start);
       const time = o.all_day ? "ganztägig" : `${pad(t.getHours())}:${pad(t.getMinutes())}`;
       const persons = o.person_ids.map((id) => personById(id)).filter(Boolean).map((p) => p.name).join(", ");
-      html += `<div class="agenda-item" data-event="${o.event_id}">
+      const meta = [o.location, persons, o.source === "extern" ? "Externer Kalender" : ""].filter(Boolean).join(" · ");
+      html += `<div class="agenda-item" data-event="${o.event_id || ""}">
         <div class="bar" style="background:${o.color}"></div>
         <div class="agenda-time">${time}</div>
         <div style="flex:1">
           <div class="agenda-title">${escapeHtml(o.title)}${o.recurring ? " 🔁" : ""}</div>
-          ${(o.location || persons) ? `<div class="agenda-meta">${escapeHtml([o.location, persons].filter(Boolean).join(" · "))}</div>` : ""}
+          ${meta ? `<div class="agenda-meta">${escapeHtml(meta)}</div>` : ""}
         </div></div>`;
     });
     html += "</div>";
@@ -480,6 +481,28 @@ async function startScan(file) {
   step();
 }
 
+/* ------------------------- Kalenderdatei (.ics) importieren ----------- */
+async function startIcsImport(file) {
+  toast("Kalenderdatei wird gelesen…");
+  let res;
+  try {
+    const fd = new FormData(); fd.append("file", file);
+    res = await api("/import/ics", { method: "POST", body: fd });
+  } catch (err) { toast(err.message); return; }
+  const drafts = res.events || [];
+  if (!drafts.length) { toast("Keine Termine in der Datei gefunden"); return; }
+  let i = 0;
+  const step = () => {
+    if (i >= drafts.length) { toast("Fertig – alle Termine geprüft"); render(); return; }
+    const draft = drafts[i];
+    const badge = `Termin ${i + 1} von ${drafts.length}`;
+    i += 1;
+    openEventForm(null, null, { prefill: draft, badge, onClose: step });
+  };
+  toast(`${drafts.length} Termin(e) gefunden – bitte prüfen`);
+  step();
+}
+
 /* ------------------------- Suche -------------------------------------- */
 $("#search-btn").addEventListener("click", () => {
   $("#search-bar").classList.toggle("hidden");
@@ -550,7 +573,7 @@ async function openEventForm(eventId, presetDate, opts = {}) {
   const start = startSrc ? parseLocal(startSrc) : (presetDate || roundedNow());
   const endSrc = ev ? ev.end : (opts.prefill && opts.prefill.end);
   const end = endSrc ? parseLocal(endSrc) : new Date(start.getTime() + 60 * 60 * 1000);
-  const rec = parseRRule(ev ? ev.rrule : null);
+  const rec = parseRRule(ev ? ev.rrule : ((opts.prefill && opts.prefill.rrule) || null));
   const selPersons = new Set(ev ? ev.person_ids : []);
   const color = base.color || COLORS[0];
 
@@ -900,6 +923,11 @@ async function openSettings() {
   const stateOptions = ['<option value="">— keins —</option>'].concat(
     STATES_DE.map(([c, n]) =>
       `<option value="${c}" ${hs.state === c ? "selected" : ""}>${n}</option>`)).join("");
+  let feed = { token: "" };
+  try { feed = await api("/settings/feed"); } catch (e) {}
+  const feedUrl = feed.token ? `${location.origin}/api/calendar/${feed.token}.ics` : "";
+  let sub = { url: "" };
+  try { sub = await api("/settings/subscription"); } catch (e) {}
   const body = `
     <div class="detail-row"><span class="ic">👤</span><span>${escapeHtml(State.user.name)}<br><span class="agenda-meta">${escapeHtml(State.user.email)}</span></span></div>
     <div class="field" style="margin-top:16px"><label>Push-Benachrichtigungen</label>
@@ -925,6 +953,23 @@ async function openSettings() {
       <div class="checkbox-row"><input type="checkbox" id="s-ferien" ${hs.school_holidays ? "checked" : ""}/>
         <label for="s-ferien" style="margin:0">Schulferien anzeigen</label></div>
     </div>
+    <div class="field"><label>📥 Kalenderdatei importieren</label>
+      <label class="file-input-label">Datei (.ics) auswählen<input type="file" id="s-ics" accept=".ics,text/calendar" hidden /></label>
+      <div class="agenda-meta" style="margin-top:6px">Termine aus einer .ics-Datei (z. B. per E-Mail erhalten) einlesen.</div></div>
+
+    <div class="field"><label>📤 In Outlook abonnieren</label>
+      <div class="agenda-meta" style="margin-bottom:6px">Diesen Link in Outlook unter „Kalender hinzufügen → Aus dem Internet abonnieren" einfügen. Deine Familientermine erscheinen dann in Outlook.</div>
+      <input id="s-feedurl" readonly value="${escapeHtml(feedUrl)}" style="font-size:12px" />
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button type="button" class="btn-ghost" id="s-feed-copy" style="flex:1">Link kopieren</button>
+        <button type="button" class="btn-ghost" id="s-feed-new">Neu erzeugen</button>
+      </div></div>
+
+    <div class="field"><label>📆 Outlook-Kalender einlesen</label>
+      <div class="agenda-meta" style="margin-bottom:6px">In Outlook den Kalender „veröffentlichen" und den ICS-Link hier einfügen – die Termine erscheinen dann (schreibgeschützt) im Familienkalender.</div>
+      <input id="s-suburl" placeholder="https://…/kalender.ics" value="${escapeHtml(sub.url || "")}" style="font-size:12px" />
+      <button type="button" class="btn-ghost" id="s-sub-save" style="width:100%;margin-top:8px">Kalender-Abo speichern</button></div>
+
     <button class="btn-ghost" id="s-logout" style="width:100%;margin-top:10px">Abmelden</button>
     <div class="agenda-meta" style="text-align:center;margin-top:14px">Familienkalender · alle Geräte teilen denselben Kalender</div>`;
   openModal("Einstellungen", body, `<button class="btn-primary" id="s-close">Fertig</button>`);
@@ -946,6 +991,27 @@ async function openSettings() {
   $("#s-state").addEventListener("change", saveHolidays);
   $("#s-feiertage").addEventListener("change", saveHolidays);
   $("#s-ferien").addEventListener("change", saveHolidays);
+  $("#s-ics").addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (f) startIcsImport(f);   // ersetzt den Einstellungs-Dialog durch den Ablauf
+  });
+  $("#s-feed-copy").addEventListener("click", async () => {
+    const url = $("#s-feedurl").value;
+    if (!url) return;
+    try { await navigator.clipboard.writeText(url); toast("Link kopiert"); }
+    catch (e) { $("#s-feedurl").select(); toast("Bitte manuell kopieren"); }
+  });
+  $("#s-feed-new").addEventListener("click", async () => {
+    if (!confirm("Neuen Link erzeugen? Der alte Abo-Link funktioniert dann nicht mehr.")) return;
+    try { const r = await api("/settings/feed/regenerate", { method: "POST" });
+      $("#s-feedurl").value = `${location.origin}/api/calendar/${r.token}.ics`;
+      toast("Neuer Link erzeugt"); } catch (e) { toast(e.message); }
+  });
+  $("#s-sub-save").addEventListener("click", async () => {
+    try { await api("/settings/subscription", { method: "PUT", body: { url: $("#s-suburl").value } });
+      toast("Kalender-Abo gespeichert"); render(); } catch (e) { toast(e.message); }
+  });
   $("#s-logout").addEventListener("click", () => { closeModal(); logout(); });
   const on = $("#s-push-on"); if (on) on.addEventListener("click", async () => { await enablePush(); closeModal(); openSettings(); });
   const off = $("#s-push-off"); if (off) off.addEventListener("click", async () => { await disablePush(); closeModal(); openSettings(); });

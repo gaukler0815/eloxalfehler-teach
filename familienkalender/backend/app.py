@@ -5,12 +5,13 @@ Startet die API, den Erinnerungs-Zeitplaner und liefert das PWA-Frontend aus.
 import asyncio
 import logging
 import mimetypes
+import secrets
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 
 from fastapi import (Depends, FastAPI, File, HTTPException, Query, UploadFile)
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
@@ -411,7 +412,91 @@ def occurrences(start: str = Query(...), end: str = Query(...),
                 log.warning("Schulferien-Abruf fehlgeschlagen: %s", exc)
                 ferien = []
 
+    # Abonnierter externer Kalender (z. B. Outlook) einblenden
+    sub = _get_setting(db, "subscription", {}) or {}
+    sub_url = (sub.get("url") or "").strip()
+    if sub_url:
+        try:
+            from ics_io import fetch_external
+            result.extend(fetch_external(sub_url, window_start, window_end))
+            result.sort(key=lambda x: x["start"])
+        except Exception as exc:
+            log.warning("Externer Kalender-Abruf fehlgeschlagen: %s", exc)
+
     return {"events": result, "feiertage": feiertage, "ferien": ferien}
+
+
+# --- Kalenderdatei (.ics) importieren ------------------------------------
+@app.post("/api/import/ics")
+async def import_ics(file: UploadFile = File(...),
+                     user: User = Depends(current_user)):
+    content = await file.read()
+    if len(content) > MAX_UPLOAD_MB * 1024 * 1024:
+        raise HTTPException(413, f"Datei zu groß (max. {MAX_UPLOAD_MB} MB)")
+    try:
+        from ics_io import parse_ics
+        drafts = parse_ics(content)
+    except Exception as exc:
+        log.warning("ICS-Import fehlgeschlagen: %s", exc)
+        raise HTTPException(400, "Die Kalenderdatei konnte nicht gelesen werden.")
+    return {"events": drafts}
+
+
+# --- Kalender-Feed für Outlook-Abo (Familie -> Outlook) ------------------
+def _feed_token(db: Session) -> str:
+    s = _get_setting(db, "feed", None)
+    if not s or not s.get("token"):
+        s = {"token": secrets.token_urlsafe(24)}
+        _set_setting(db, "feed", s)
+        db.commit()
+    return s["token"]
+
+
+@app.get("/api/settings/feed")
+def get_feed_settings(user: User = Depends(current_user),
+                      db: Session = Depends(get_db)):
+    return {"token": _feed_token(db)}
+
+
+@app.post("/api/settings/feed/regenerate")
+def regenerate_feed(user: User = Depends(current_user),
+                    db: Session = Depends(get_db)):
+    s = {"token": secrets.token_urlsafe(24)}
+    _set_setting(db, "feed", s)
+    db.commit()
+    return {"token": s["token"]}
+
+
+@app.get("/api/calendar/{token}.ics")
+def calendar_feed(token: str, db: Session = Depends(get_db)):
+    """Öffentlicher ICS-Feed (per Geheim-Token). Zum Abonnieren in Outlook."""
+    s = _get_setting(db, "feed", None)
+    if not s or s.get("token") != token:
+        raise HTTPException(404, "Feed nicht gefunden")
+    from ics_io import build_feed
+    data = build_feed(db.query(Event).all())
+    return Response(content=data, media_type="text/calendar; charset=utf-8",
+                    headers={"Content-Disposition": "inline; filename=familienkalender.ics"})
+
+
+# --- Externen Kalender abonnieren (Outlook -> Familie) -------------------
+@app.get("/api/settings/subscription")
+def get_subscription(user: User = Depends(current_user),
+                     db: Session = Depends(get_db)):
+    return _get_setting(db, "subscription", {"url": ""})
+
+
+@app.put("/api/settings/subscription")
+def set_subscription(data: schemas.SubscriptionIn,
+                     user: User = Depends(current_user),
+                     db: Session = Depends(get_db)):
+    url = (data.url or "").strip()
+    if url and not (url.startswith("http://") or url.startswith("https://")
+                    or url.startswith("webcal://")):
+        raise HTTPException(400, "Bitte eine gültige Kalender-Adresse (URL) angeben.")
+    _set_setting(db, "subscription", {"url": url})
+    db.commit()
+    return {"url": url}
 
 
 @app.get("/api/search")

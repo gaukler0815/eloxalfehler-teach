@@ -131,4 +131,8 @@ class HolidaySettingsIn(BaseModel):
     school_holidays: bool = False
 
 
+class SubscriptionIn(BaseModel):
+    url: str = ""             # externer ICS-Link (z. B. Outlook), leer = aus
+
+
 TokenOut.model_rebuild()

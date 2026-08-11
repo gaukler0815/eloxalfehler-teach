@@ -163,7 +163,7 @@
         restitution: 0.25, friction: 0.5, frictionAir: 0.006,
         density: 0.0016 * def.mass, plugin: {}
       });
-      body.plugin = { kind: 'projectile', type, punch: 1, abilityUsed: false };
+      body.plugin = { kind: 'projectile', type, punch: 1, abilityUsed: false, trail: [] };
       M.Body.setVelocity(body, { x: vx, y: vy });
       M.World.add(world, body);
       game.activeBodies.push(body);
@@ -216,6 +216,7 @@
       game.shotsUsed++;
       game.settleCounter = 0;
       game.state = 'flying';
+      game.emit('launch', { type, x: game.aimPos.x, y: game.aimPos.y });
     };
     // A tap/click in flight triggers the ability of the launched projectile.
     game.tap = function () {
@@ -286,8 +287,15 @@
       if (i < 0) return;
       game.blockBodies.splice(i, 1);
       const mat = body.plugin.matDef;
+      if (!silent) {
+        game.emit('blockdestroyed', {
+          x: body.position.x, y: body.position.y,
+          material: body.plugin.material, color: mat.color
+        });
+      }
       if (mat.explosive) {
         game.spawnEffect('boom', body.position, PHYSICS.barrelBlastRadius);
+        game.emit('boom', { x: body.position.x, y: body.position.y, radius: PHYSICS.barrelBlastRadius });
         M.World.remove(world, body);
         game.blastArea(body.position, PHYSICS.barrelBlastRadius, 40, 0.05);
         return;
@@ -300,6 +308,7 @@
       if (i < 0) return;
       game.enemyBodies.splice(i, 1);
       game.spawnEffect('pop', body.position, 40);
+      game.emit('enemykill', { x: body.position.x, y: body.position.y, type: body.plugin.type });
       M.World.remove(world, body);
     }
 
@@ -328,7 +337,7 @@
       });
       game.arcs.push({ segs, ttl: 22, max: 22, source: { x: railBody.position.x, y: railBody.position.y } });
       game.flashLabel('LICHTBOGEN');
-      game.emit('arc', { count: energizedBodies.length });
+      game.emit('arc', { count: energizedBodies.length, segs, x: railBody.position.x, y: railBody.position.y });
     };
 
     // --- collisions --------------------------------------------------------
@@ -338,6 +347,14 @@
 
     function handlePair(a, b) {
       const rv = relSpeed(a, b);
+      // visual squash on both partners of a solid hit (render decays it)
+      if (rv > 3.5) {
+        if (a.plugin) a.plugin.squashT = Math.min(14, rv * 0.8);
+        if (b.plugin) b.plugin.squashT = Math.min(14, rv * 0.8);
+        const mx = (a.position.x + b.position.x) / 2;
+        const my = (a.position.y + b.position.y) / 2;
+        game.emit('impact', { x: mx, y: my, rv });
+      }
       handleSide(a, b, rv);
       handleSide(b, a, rv);
     }
@@ -348,6 +365,7 @@
       // Lift projectile detonates on first solid contact.
       if (op.kind === 'projectile' && op.lift && (p.kind === 'block' || p.kind === 'ground' || p.kind === 'wall')) {
         game.spawnEffect('boom', other.position, 170);
+        game.emit('boom', { x: other.position.x, y: other.position.y, radius: 170 });
         game.blastArea(other.position, 170, 30, 0.05);
         game.removeActive(other);
         return;
@@ -378,9 +396,15 @@
     game.update = function () {
       M.Engine.update(engine, 1000 / 60);
 
-      // Bubbles lift.
+      // Bubbles lift + motion trails (visual bookkeeping, rendered by render.js).
       game.activeBodies.forEach((b) => {
         if (b.plugin.lift) M.Body.setVelocity(b, { x: b.velocity.x * 0.985, y: -9 });
+        if (b.plugin.trail && b.speed > 2) {
+          b.plugin.trail.push({ x: b.position.x, y: b.position.y });
+          if (b.plugin.trail.length > 12) b.plugin.trail.shift();
+        } else if (b.plugin.trail && b.plugin.trail.length) {
+          b.plugin.trail.shift();
+        }
       });
 
       // Pellet lifetimes.

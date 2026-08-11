@@ -13,6 +13,35 @@
   // Small debug hooks (used by the headless browser check and handy in devtools).
   window.__game = game;
   window.__anchor = game.anchor;
+  window.__render = render;
+
+  // --- juice wiring: game events -> sound + particles ---------------------
+  const sound = ER.sound, particles = ER.particles;
+  game.on('launch', () => sound.launch());
+  game.on('impact', (e) => {
+    sound.impact(e.rv);
+    if (e.rv > 5) particles.dust(e.x, e.y, e.rv);
+  });
+  game.on('blockdestroyed', (e) => {
+    particles.shards(e.x, e.y, e.color, e.material === 'kartonage' ? 7 : 12);
+    if (e.material === 'fehlcharge') sound.shatter();
+    else if (e.material === 'kartonage') sound.thudSoft();
+    else sound.crack();
+  });
+  game.on('enemykill', (e) => {
+    particles.burst(e.x, e.y, '#E33A2C', 14, 8);
+    particles.pop(e.x, e.y - 40, 'ZACK!', '#F5A81C');
+    sound.pop();
+  });
+  game.on('boom', (e) => {
+    particles.burst(e.x, e.y, '#F5A81C', 20, 11);
+    particles.dust(e.x, e.y, 20);
+    sound.boom();
+  });
+  game.on('arc', (e) => {
+    if (e.segs) particles.sparks(e.segs);
+    sound.zap();
+  });
 
   const PROGRESS_KEY = 'eloxal-rebels.progress.v1';
   const $ = (id) => document.getElementById(id);
@@ -34,6 +63,7 @@
   let currentId = null;
   function startLevel(id) {
     currentId = id;
+    particles.clear();
     game.loadLevel(ER.levels.get(id));
     window.__anchor = game.anchor;
     hide('menu'); hide('levelend'); hide('board');
@@ -44,16 +74,23 @@
     if (e.won) {
       const prev = progress.best[currentId] || 0;
       if (e.um > prev) { progress.best[currentId] = e.um; saveProgress(progress); }
+      particles.confetti(960, 200);
+      particles.pop(960, 420, '+' + e.um + ' µm', '#F5A81C');
+      sound.win();
+    } else {
+      sound.lose();
     }
-    showLevelEnd(e);
+    // let the confetti fall before the protocol slides in
+    setTimeout(() => showLevelEnd(e), e.won ? 900 : 500);
   });
 
-  game.on('arc', () => { /* hook for sound later */ });
-
   // --- render / update loop ---------------------------------------------
+  let frameNo = 0;
   function frame() {
+    frameNo++;
     if (game.state === 'aim' || game.state === 'flying') game.update();
-    render.draw();
+    particles.update();
+    render.draw(frameNo);
     syncShots(false);
     $('umTotal').querySelector('b').textContent = totalUm();
     requestAnimationFrame(frame);
@@ -76,20 +113,22 @@
     box.innerHTML = '';
     const P = ER.config.PROJECTILES;
     for (let i = 0; i < total; i++) {
-      const chip = document.createElement('div');
-      chip.className = 'chip';
       const type = remaining[i - (total - remaining.length)];
       if (i < total - remaining.length) {
-        chip.classList.add('spent');
-        chip.style.background = '#555';
+        const chip = document.createElement('div');
+        chip.className = 'chip spent';
         chip.textContent = '·';
+        box.appendChild(chip);
       } else {
+        // tiny character portrait instead of a colored dot
         const def = P[type] || P.ali;
-        chip.style.background = def.color;
-        chip.title = def.label + ' — ' + def.hint;
-        chip.textContent = def.label[0];
+        const c = document.createElement('canvas');
+        c.className = 'chip';
+        c.width = 68; c.height = 68;
+        c.title = def.label + ' — ' + def.hint;
+        ER.characters.drawStatic(c.getContext('2d'), type, 34, 38, 17, 40);
+        box.appendChild(c);
       }
-      box.appendChild(chip);
     }
   }
 
@@ -182,6 +221,11 @@
 
   $('btnMenu').onclick = openMenu;
   $('btnRetry').onclick = () => { if (currentId) startLevel(currentId); };
+  $('btnSound').onclick = () => {
+    sound.unlock();
+    sound.setMuted(!sound.isMuted());
+    $('btnSound').textContent = sound.isMuted() ? '🔇' : '🔊';
+  };
 
   // --- savegame file export / import -------------------------------------
   // Progress and leaderboard already persist automatically in localStorage;
@@ -249,6 +293,7 @@
     return render.toWorld(cx, cy);
   }
   canvas.addEventListener('pointerdown', (e) => {
+    sound.unlock(); // audio may only start after a user gesture
     if (isOverlayOpen()) return;
     const w = evPos(e);
     if (game.state === 'aim') grabbing = game.beginAim(w.x, w.y);
@@ -258,7 +303,10 @@
     if (!grabbing) return;
     const w = evPos(e);
     game.moveAim(w.x, w.y);
+    const pull = Math.hypot(game.aimPos.x - game.anchor.x, game.aimPos.y - game.anchor.y);
+    sound.stretch(pull / ER.config.PHYSICS.maxPull);
   });
+  document.addEventListener('pointerdown', () => sound.unlock(), { once: true });
   window.addEventListener('pointerup', () => {
     if (grabbing) { game.releaseAim(); grabbing = false; }
   });

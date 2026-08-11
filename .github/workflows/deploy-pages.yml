@@ -1,0 +1,55 @@
+# Deploys the Eloxal Rebels game to GitHub Pages so it can be played from any
+# browser (desktop, tablet, phone) at:
+#   https://gaukler0815.github.io/eloxalfehler-teach/
+# Runs on every push to main that touches the game, or manually via the
+# Actions tab ("Run workflow"). The game is plain static files, so the "build"
+# is just uploading the eloxal-rebels/ folder.
+name: Deploy game to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'eloxal-rebels/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run game tests
+        run: |
+          node eloxal-rebels/tests/conductivity.test.js
+          node eloxal-rebels/tests/sim.test.js
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Creates/enables the Pages site on first run so no manual
+          # repository-settings step is needed.
+          enablement: true
+
+      - name: Upload game as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: eloxal-rebels
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

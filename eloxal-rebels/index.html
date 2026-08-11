@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Eloxal Rebels</title>
+  <style>
+    :root {
+      --alu: #C9D2DC; --blau: #1E74DC; --gold: #F5A81C; --rot: #E33A2C;
+      --titan: #B4A996; --line: #17131F; --bg: #0B0812; --arc: #8FD3FF;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); overflow: hidden;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: #fff; }
+    #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block;
+      touch-action: none; cursor: crosshair; }
+
+    /* --- top HUD --- */
+    #hud { position: fixed; top: 0; left: 0; right: 0; padding: 14px 20px;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; pointer-events: none; }
+    #hud .panel { background: rgba(23,19,31,0.72); border: 2px solid var(--line);
+      border-radius: 14px; padding: 10px 16px; backdrop-filter: blur(3px); }
+    #levelInfo b { font-size: 20px; }
+    #levelInfo small { display: block; opacity: 0.75; max-width: 520px; margin-top: 2px; }
+    #shots { display: flex; gap: 8px; align-items: center; }
+    #shots .chip { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line);
+      display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--line); }
+    #shots .chip.spent { opacity: 0.28; }
+    #umTotal { text-align: right; }
+    #umTotal b { font-size: 26px; color: var(--gold); }
+    #hud .btns { pointer-events: auto; display: flex; gap: 8px; }
+    button { font: inherit; font-weight: 700; color: #fff; background: var(--blau);
+      border: 2px solid var(--line); border-radius: 12px; padding: 10px 16px; cursor: pointer; }
+    button.ghost { background: rgba(23,19,31,0.7); }
+    button.gold { background: var(--gold); color: var(--line); }
+    button:active { transform: translateY(1px); }
+
+    /* --- overlays --- */
+    .overlay { position: fixed; inset: 0; display: none; place-items: center;
+      background: rgba(11,8,18,0.82); backdrop-filter: blur(4px); z-index: 20; padding: 24px; }
+    .overlay.show { display: grid; }
+    .card { width: min(680px, 94vw); max-height: 92vh; overflow: auto;
+      background: #1b1526; border: 3px solid var(--line); border-radius: 22px; padding: 26px 28px; }
+    .card h1 { font-size: 30px; margin-bottom: 4px; }
+    .card h2 { font-size: 22px; margin: 18px 0 8px; }
+    .card p.sub { opacity: 0.8; margin-bottom: 12px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .levels { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; }
+    .lvl { text-align: left; background: #241c33; border: 2px solid var(--line);
+      border-radius: 14px; padding: 12px 14px; cursor: pointer; }
+    .lvl b { display: block; }
+    .lvl .badge { color: var(--gold); font-weight: 700; }
+    .lvl .w { font-size: 12px; opacity: 0.6; }
+    .um-scale { display: flex; gap: 8px; margin: 12px 0; }
+    .um-scale div { flex: 1; text-align: center; padding: 10px 0; border-radius: 10px;
+      border: 2px solid var(--line); background: #241c33; font-weight: 700; }
+    .um-scale div.on { background: var(--gold); color: var(--line); }
+    input[type=text] { font: inherit; text-transform: uppercase; letter-spacing: 2px;
+      padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line);
+      background: #120e1b; color: #fff; width: 220px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #35304180; }
+    tr.own td { color: var(--gold); font-weight: 700; }
+    .tabs { display: flex; gap: 8px; margin-top: 8px; }
+    .tabs button.active { background: var(--gold); color: var(--line); }
+    .err { color: var(--rot); min-height: 20px; margin-top: 6px; }
+    .hint { font-size: 13px; opacity: 0.7; margin-top: 10px; }
+    a.editor { position: fixed; bottom: 10px; right: 14px; color: #ffffff99;
+      font-size: 13px; z-index: 15; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+
+  <div id="hud">
+    <div class="panel" id="levelInfo"><b>—</b><small></small></div>
+    <div class="panel" id="shots"></div>
+    <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+      <div class="panel" id="umTotal">µm gesamt<br><b>0</b></div>
+      <div class="btns">
+        <button class="ghost" id="btnRetry" title="Nochmal (R)">↻</button>
+        <button class="ghost" id="btnMenu" title="Menü (Esc)">☰</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- World / level menu -->
+  <div class="overlay show" id="menu">
+    <div class="card">
+      <h1>ELOXAL REBELS</h1>
+      <p class="sub">Die Schicht schlägt zurück. Zieh die Schleuder, triff die Korrosionsbande, sammle Mikrometer.</p>
+      <div class="levels" id="levelList"></div>
+      <div class="row">
+        <button class="gold" id="btnBoard">Bestenliste</button>
+        <button class="ghost" onclick="location.href='editor.html'">Leveleditor</button>
+      </div>
+      <div class="row">
+        <button class="ghost" id="btnSaveExport">Spielstand sichern</button>
+        <button class="ghost" id="btnSaveImport">Spielstand laden</button>
+        <input type="file" id="saveFile" accept=".json,application/json" style="display:none" />
+      </div>
+      <div class="err" id="saveMsg"></div>
+      <p class="hint">Fortschritt und Bestenliste werden automatisch im Browser gespeichert. „Spielstand sichern“ legt zusätzlich eine Datei an, die sich auf einem anderen Gerät wieder laden lässt. Tipp: Im Flug klicken/tippen löst die Fähigkeit des Geschosses aus.</p>
+    </div>
+  </div>
+
+  <!-- Level end -->
+  <div class="overlay" id="levelend">
+    <div class="card">
+      <h1 id="endTitle">GESCHAFFT</h1>
+      <p class="sub" id="endSub"></p>
+      <div class="um-scale" id="umScale">
+        <div data-v="6">6 µm</div><div data-v="12">12 µm</div><div data-v="20">20 µm</div>
+      </div>
+      <div class="row">
+        <button id="btnAgain" class="ghost">Nochmal</button>
+        <button id="btnNext" class="gold">Weiter</button>
+      </div>
+
+      <h2>Prüfprotokoll — Bestenliste</h2>
+      <p class="sub">Gesamtschichtdicke aller Level: <b id="protoUm">0</b> µm. Trag dich ein (max. 12 Zeichen, Großbuchstaben).</p>
+      <div class="row" style="margin-top:8px;">
+        <input type="text" id="nameInput" maxlength="12" placeholder="DEIN NAME" />
+        <button class="gold" id="btnSubmit">Eintragen</button>
+      </div>
+      <div class="err" id="nameErr"></div>
+      <div id="endBoard"></div>
+    </div>
+  </div>
+
+  <!-- Full leaderboard -->
+  <div class="overlay" id="board">
+    <div class="card">
+      <h1>Bestenliste</h1>
+      <div class="tabs">
+        <button data-scope="total" class="active">Gesamt</button>
+        <button data-scope="today">Heute</button>
+      </div>
+      <div id="boardBody"></div>
+      <div class="row">
+        <button class="ghost" id="btnBoardClose">Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <a class="editor" href="editor.html">Leveleditor →</a>
+
+  <script src="vendor/matter.min.js"></script>
+  <script src="src/config.js"></script>
+  <script src="src/conductivity.js"></script>
+  <script src="src/levels.js"></script>
+  <script src="src/leaderboard.js"></script>
+  <script src="src/abilities.js"></script>
+  <script src="src/render.js"></script>
+  <script src="src/game.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>

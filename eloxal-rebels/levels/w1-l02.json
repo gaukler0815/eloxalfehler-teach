@@ -1,0 +1,18 @@
+{
+  "id": "w1-l02",
+  "world": 1,
+  "name": "Palettenturm",
+  "subtitle": "Bolle antippen im Flug: Sturzflug und Durchschlag.",
+  "slingshot": { "x": 340, "y": 720 },
+  "projectiles": ["bolle", "ali", "ali"],
+  "blocks": [
+    { "id": "c1", "material": "aluminium", "x": 1480, "y": 895, "w": 44, "h": 170 },
+    { "id": "c2", "material": "aluminium", "x": 1680, "y": 895, "w": 44, "h": 170 },
+    { "id": "beam", "material": "aluminium", "x": 1580, "y": 795, "w": 260, "h": 40 },
+    { "id": "roof", "material": "fehlcharge", "x": 1580, "y": 745, "w": 200, "h": 36 }
+  ],
+  "enemies": [
+    { "id": "e1", "type": "lenny", "x": 1580, "y": 700 },
+    { "id": "e2", "type": "stauber", "x": 1680, "y": 780 }
+  ]
+}

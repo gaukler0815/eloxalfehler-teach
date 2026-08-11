@@ -95,7 +95,13 @@
         <button class="gold" id="btnBoard">Bestenliste</button>
         <button class="ghost" onclick="location.href='editor.html'">Leveleditor</button>
       </div>
-      <p class="hint">Tipp: Im Flug klicken/tippen löst die Fähigkeit des Geschosses aus. Kontur, Farben und Werte stammen aus der Game Design Bible.</p>
+      <div class="row">
+        <button class="ghost" id="btnSaveExport">Spielstand sichern</button>
+        <button class="ghost" id="btnSaveImport">Spielstand laden</button>
+        <input type="file" id="saveFile" accept=".json,application/json" style="display:none" />
+      </div>
+      <div class="err" id="saveMsg"></div>
+      <p class="hint">Fortschritt und Bestenliste werden automatisch im Browser gespeichert. „Spielstand sichern“ legt zusätzlich eine Datei an, die sich auf einem anderen Gerät wieder laden lässt. Tipp: Im Flug klicken/tippen löst die Fähigkeit des Geschosses aus.</p>
     </div>
   </div>
 

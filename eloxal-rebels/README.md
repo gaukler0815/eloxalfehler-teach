@@ -48,6 +48,12 @@ Kein Build, keine Installation. **`index.html` per Doppelklick im Browser
 - **Bestenliste** in `localStorage` mit Pflicht-Namensfilter (max. 12 Zeichen,
   Großbuchstaben, Sperrliste, Doppelnamen mit laufender Nummer), Top 10 plus
   eigener Eintrag mit echtem Rang, Tabs für Gesamt/Heute.
+- **Spielstände**: Fortschritt (beste µm je Level) und Bestenliste werden
+  automatisch im Browser gespeichert (`localStorage`) und überleben Schließen
+  und Neustart. Über das Weltmenü lässt sich der Spielstand zusätzlich als
+  JSON-Datei **sichern und laden** – z. B. um ihn vom Büro-PC auf den
+  Messestand mitzunehmen. Beim Laden werden alle Einträge erneut durch den
+  Namensfilter geprüft.
 - **Leveleditor** (`editor.html`): Bauteile und Gegner mit der Maus setzen,
   Schleuder verschieben, live testen, JSON exportieren/importieren.
 - **Level als JSON** unter `levels/` – aktuell Welt 1 (drei Level) und ein

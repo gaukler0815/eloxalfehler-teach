@@ -119,5 +119,21 @@
     save([]);
   }
 
-  ER.leaderboard = { submit, table, view, sanitizeName, isBlocked, clear };
+  // --- savegame support (see main.js) -------------------------------------
+  function exportData() {
+    return load();
+  }
+  // Replace the stored list with imported entries. Every entry is re-run
+  // through the same sanitizing and block-list rules as live input.
+  function importData(list) {
+    if (!Array.isArray(list)) return false;
+    const clean = list
+      .filter((e) => e && typeof e.name === 'string' && typeof e.um === 'number' && typeof e.ts === 'number')
+      .map((e) => ({ name: sanitizeName(e.name), um: e.um | 0, ts: e.ts }))
+      .filter((e) => e.name && !isBlocked(e.name));
+    save(clean);
+    return true;
+  }
+
+  ER.leaderboard = { submit, table, view, sanitizeName, isBlocked, clear, exportData, importData };
 })(typeof window !== 'undefined' ? window : globalThis);

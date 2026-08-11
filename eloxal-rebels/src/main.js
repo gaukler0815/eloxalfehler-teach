@@ -183,6 +183,59 @@
   $('btnMenu').onclick = openMenu;
   $('btnRetry').onclick = () => { if (currentId) startLevel(currentId); };
 
+  // --- savegame file export / import -------------------------------------
+  // Progress and leaderboard already persist automatically in localStorage;
+  // the file round-trip exists to move a save to another device (e.g. the
+  // trade-show machine) or to keep a backup.
+  function saveMsg(text, isError) {
+    const el = $('saveMsg');
+    el.textContent = text;
+    el.style.color = isError ? '' : '#7ED957';
+  }
+  $('btnSaveExport').onclick = () => {
+    const data = {
+      game: 'eloxal-rebels', version: 1, savedAt: new Date().toISOString(),
+      progress, scores: ER.leaderboard.exportData()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'eloxal-rebels-spielstand.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    saveMsg('Spielstand als Datei gesichert (' + totalUm() + ' µm).', false);
+  };
+  $('btnSaveImport').onclick = () => $('saveFile').click();
+  $('saveFile').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const res = applySaveData(reader.result);
+      saveMsg(res.error || ('Spielstand geladen: ' + totalUm() + ' µm.'), !!res.error);
+    };
+    reader.readAsText(file);
+  });
+  // Parse + validate a savegame string and apply it. Returns {error} on failure.
+  function applySaveData(text) {
+    let data;
+    try { data = JSON.parse(text); } catch (err) { return { error: 'Datei ist kein gültiger Spielstand.' }; }
+    if (!data || data.game !== 'eloxal-rebels' || typeof data.progress !== 'object' || !data.progress) {
+      return { error: 'Datei ist kein gültiger Spielstand.' };
+    }
+    const best = {};
+    Object.entries(data.progress.best || {}).forEach(([id, um]) => {
+      if (typeof um === 'number' && um > 0) best[id] = Math.min(um, ER.config.SCORING.maxPerLevel);
+    });
+    progress = { best };
+    saveProgress(progress);
+    if (Array.isArray(data.scores)) ER.leaderboard.importData(data.scores);
+    buildMenu();
+    return {};
+  }
+  window.__applySaveData = applySaveData; // debug/test hook
+
   // --- overlay helpers ---------------------------------------------------
   function show(id) { $(id).classList.add('show'); }
   function hide(id) { $(id).classList.remove('show'); }

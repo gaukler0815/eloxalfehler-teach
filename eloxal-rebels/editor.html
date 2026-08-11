@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eloxal Rebels — Leveleditor</title>
+  <style>
+    :root { --line:#17131F; --gold:#F5A81C; --blau:#1E74DC; --bg:#0B0812; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: #fff;
+      font-family: system-ui, sans-serif; overflow: hidden; }
+    #wrap { display: grid; grid-template-columns: 300px 1fr; height: 100%; }
+    #side { background: #17131f; border-right: 2px solid #000; padding: 14px;
+      overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+    #side h1 { font-size: 18px; }
+    #side h2 { font-size: 13px; text-transform: uppercase; opacity: 0.7; margin-top: 6px; }
+    label { font-size: 13px; display: block; margin-bottom: 3px; opacity: 0.8; }
+    select, input, textarea, button { font: inherit; }
+    select, input[type=text], input[type=number], textarea {
+      width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #000;
+      background: #221b30; color: #fff; }
+    textarea { height: 130px; font-family: ui-monospace, monospace; font-size: 12px; }
+    .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    button { padding: 9px 10px; border-radius: 9px; border: 2px solid #000;
+      background: var(--blau); color: #fff; font-weight: 700; cursor: pointer; }
+    button.sel { background: var(--gold); color: var(--line); }
+    button.wide { width: 100%; }
+    .field { display: flex; gap: 8px; } .field > div { flex: 1; }
+    #stageWrap { position: relative; }
+    canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+    #tip { position: absolute; left: 12px; bottom: 12px; background: rgba(0,0,0,.6);
+      padding: 8px 12px; border-radius: 8px; font-size: 13px; max-width: 60%; }
+    a { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="side">
+      <h1>Leveleditor</h1>
+      <div class="field">
+        <div><label>Level laden</label>
+          <select id="loadSel"></select></div>
+      </div>
+      <label>Name</label><input type="text" id="fName" />
+      <div class="field">
+        <div><label>Welt</label><input type="number" id="fWorld" value="1" min="1" /></div>
+        <div><label>ID</label><input type="text" id="fId" value="neu-01" /></div>
+      </div>
+
+      <h2>Werkzeug</h2>
+      <div class="modes">
+        <button data-mode="block" class="sel">Bauteil</button>
+        <button data-mode="enemy">Gegner</button>
+        <button data-mode="sling">Schleuder</button>
+        <button data-mode="erase">Löschen</button>
+      </div>
+
+      <div id="blockOpts">
+        <label>Material</label>
+        <select id="fMat"></select>
+        <div class="field">
+          <div><label>Breite</label><input type="number" id="fW" value="120" /></div>
+          <div><label>Höhe</label><input type="number" id="fH" value="80" /></div>
+        </div>
+      </div>
+      <div id="enemyOpts" style="display:none">
+        <label>Gegnertyp</label>
+        <select id="fEnemy"></select>
+      </div>
+
+      <h2>Geschosse</h2>
+      <input type="text" id="fProj" value="ali,ali,ali" />
+      <label style="opacity:.6">Kommagetrennt: ali, bolle, rippi, titania, bubbles, saeuri, buersti, lasar</label>
+
+      <h2>Aktion</h2>
+      <button class="wide" id="btnTest">▶ Testen</button>
+      <button class="wide" id="btnExport">JSON exportieren</button>
+      <button class="wide" id="btnDownload">Als Datei speichern</button>
+      <button class="wide" id="btnImport">JSON importieren</button>
+      <textarea id="json" spellcheck="false"></textarea>
+      <a href="index.html">← zum Spiel</a>
+    </div>
+    <div id="stageWrap">
+      <canvas id="stage"></canvas>
+      <div id="tip">Klicken setzt ein Bauteil. Werkzeug „Schleuder“ verschiebt den Startpunkt, „Löschen“ entfernt das Teil unter dem Cursor. „Testen“ spielt das Level probe.</div>
+    </div>
+  </div>
+
+  <script src="vendor/matter.min.js"></script>
+  <script src="src/config.js"></script>
+  <script src="src/conductivity.js"></script>
+  <script src="src/levels.js"></script>
+  <script src="src/leaderboard.js"></script>
+  <script src="src/abilities.js"></script>
+  <script src="src/render.js"></script>
+  <script src="src/game.js"></script>
+  <script src="src/editor.js"></script>
+</body>
+</html>

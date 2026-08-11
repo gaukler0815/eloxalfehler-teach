@@ -1,0 +1,226 @@
+/*
+ * main.js — bootstrap and glue. Creates the game and renderer, runs the loop,
+ * translates pointer input into slingshot/ability actions, and drives the DOM
+ * overlays (menu, level-end protocol, leaderboard). All visible text is German.
+ */
+(function () {
+  'use strict';
+  const ER = window.ER;
+  const canvas = document.getElementById('stage');
+  const game = ER.game.create();
+  const render = ER.render.create(canvas, game);
+
+  // Small debug hooks (used by the headless browser check and handy in devtools).
+  window.__game = game;
+  window.__anchor = game.anchor;
+
+  const PROGRESS_KEY = 'eloxal-rebels.progress.v1';
+  const $ = (id) => document.getElementById(id);
+
+  // --- progress (best µm per level) -------------------------------------
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || { best: {} }; }
+    catch (e) { return { best: {} }; }
+  }
+  function saveProgress(p) {
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) { /* best effort */ }
+  }
+  let progress = loadProgress();
+  function totalUm() {
+    return Object.values(progress.best).reduce((a, b) => a + b, 0);
+  }
+
+  // --- level flow --------------------------------------------------------
+  let currentId = null;
+  function startLevel(id) {
+    currentId = id;
+    game.loadLevel(ER.levels.get(id));
+    window.__anchor = game.anchor;
+    hide('menu'); hide('levelend'); hide('board');
+    syncShots(true);
+  }
+
+  game.on('levelend', (e) => {
+    if (e.won) {
+      const prev = progress.best[currentId] || 0;
+      if (e.um > prev) { progress.best[currentId] = e.um; saveProgress(progress); }
+    }
+    showLevelEnd(e);
+  });
+
+  game.on('arc', () => { /* hook for sound later */ });
+
+  // --- render / update loop ---------------------------------------------
+  function frame() {
+    if (game.state === 'aim' || game.state === 'flying') game.update();
+    render.draw();
+    syncShots(false);
+    $('umTotal').querySelector('b').textContent = totalUm();
+    requestAnimationFrame(frame);
+  }
+
+  // --- HUD ---------------------------------------------------------------
+  let lastSig = '';
+  function syncShots(force) {
+    const info = $('levelInfo');
+    if (game.level) {
+      info.querySelector('b').textContent = game.level.name;
+      info.querySelector('small').textContent = game.level.subtitle || '';
+    }
+    const remaining = (game.currentType ? [game.currentType] : []).concat(game.queue);
+    const total = game.shotsTotal;
+    const sig = remaining.join(',') + '/' + total;
+    if (!force && sig === lastSig) return;
+    lastSig = sig;
+    const box = $('shots');
+    box.innerHTML = '';
+    const P = ER.config.PROJECTILES;
+    for (let i = 0; i < total; i++) {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      const type = remaining[i - (total - remaining.length)];
+      if (i < total - remaining.length) {
+        chip.classList.add('spent');
+        chip.style.background = '#555';
+        chip.textContent = '·';
+      } else {
+        const def = P[type] || P.ali;
+        chip.style.background = def.color;
+        chip.title = def.label + ' — ' + def.hint;
+        chip.textContent = def.label[0];
+      }
+      box.appendChild(chip);
+    }
+  }
+
+  // --- level end screen --------------------------------------------------
+  let lastEntry = null;
+  function showLevelEnd(e) {
+    $('endTitle').textContent = e.won ? 'GESCHAFFT' : 'GESPERRT';
+    $('endSub').textContent = e.won
+      ? (game.level.name + ' — ' + e.um + ' µm Schichtdicke (' + e.leftover + ' Geschosse übrig).')
+      : (game.level.name + ' — die Charge ist gesperrt. Noch ein Versuch?');
+    $('umScale').querySelectorAll('div').forEach((d) => {
+      d.classList.toggle('on', e.won && Number(d.dataset.v) === e.um);
+    });
+    const next = ER.levels.nextId(currentId);
+    const btnNext = $('btnNext');
+    if (e.won && next) { btnNext.textContent = 'Nächstes Level'; btnNext.onclick = () => startLevel(next); }
+    else if (e.won) { btnNext.textContent = 'Weltmenü'; btnNext.onclick = openMenu; }
+    else { btnNext.textContent = 'Weltmenü'; btnNext.onclick = openMenu; }
+    $('btnAgain').onclick = () => startLevel(currentId);
+    $('protoUm').textContent = totalUm();
+    $('nameErr').textContent = '';
+    lastEntry = null;
+    renderBoardInto($('endBoard'), 'total');
+    show('levelend');
+  }
+
+  // --- leaderboard rendering --------------------------------------------
+  function renderBoardInto(el, scope) {
+    const v = ER.leaderboard.view(scope, lastEntry, 10);
+    let html = '<table><thead><tr><th>#</th><th>Name</th><th>µm</th></tr></thead><tbody>';
+    const seen = new Set();
+    v.top.forEach((r) => {
+      const own = lastEntry && r.ts === lastEntry.ts;
+      if (own) seen.add(r.ts);
+      html += '<tr class="' + (own ? 'own' : '') + '"><td>' + r.rank + '</td><td>' + escapeHtml(r.name) + '</td><td>' + r.um + '</td></tr>';
+    });
+    if (v.own && !seen.has(v.own.ts)) {
+      html += '<tr><td colspan="3" style="opacity:.4;text-align:center">···</td></tr>';
+      html += '<tr class="own"><td>' + v.own.rank + '</td><td>' + escapeHtml(v.own.name) + '</td><td>' + v.own.um + '</td></tr>';
+    }
+    if (!v.top.length) html += '<tr><td colspan="3" style="opacity:.6">Noch keine Einträge.</td></tr>';
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }
+  function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+
+  $('btnSubmit').onclick = () => {
+    const res = ER.leaderboard.submit($('nameInput').value, totalUm());
+    if (res.error) { $('nameErr').textContent = res.error; return; }
+    lastEntry = res.entry;
+    $('nameErr').textContent = '';
+    $('nameInput').value = res.entry.name;
+    renderBoardInto($('endBoard'), 'total');
+  };
+
+  // --- full board overlay ------------------------------------------------
+  let boardScope = 'total';
+  function openBoard() {
+    boardScope = 'total';
+    document.querySelectorAll('#board .tabs button').forEach((b) => b.classList.toggle('active', b.dataset.scope === 'total'));
+    renderBoardInto($('boardBody'), boardScope);
+    show('board');
+  }
+  document.querySelectorAll('#board .tabs button').forEach((b) => {
+    b.onclick = () => {
+      boardScope = b.dataset.scope;
+      document.querySelectorAll('#board .tabs button').forEach((x) => x.classList.toggle('active', x === b));
+      renderBoardInto($('boardBody'), boardScope);
+    };
+  });
+  $('btnBoard').onclick = openBoard;
+  $('btnBoardClose').onclick = () => { hide('board'); };
+
+  // --- menu --------------------------------------------------------------
+  function buildMenu() {
+    const list = $('levelList');
+    list.innerHTML = '';
+    ER.levels.order.forEach((id) => {
+      const lv = ER.levels.get(id);
+      const div = document.createElement('div');
+      div.className = 'lvl';
+      const best = progress.best[id];
+      div.innerHTML = '<span class="w">Welt ' + lv.world + '</span><b>' + lv.name + '</b>' +
+        '<span class="badge">' + (best ? best + ' µm' : '—') + '</span>';
+      div.onclick = () => startLevel(id);
+      list.appendChild(div);
+    });
+  }
+  function openMenu() { buildMenu(); hide('levelend'); hide('board'); show('menu'); }
+
+  $('btnMenu').onclick = openMenu;
+  $('btnRetry').onclick = () => { if (currentId) startLevel(currentId); };
+
+  // --- overlay helpers ---------------------------------------------------
+  function show(id) { $(id).classList.add('show'); }
+  function hide(id) { $(id).classList.remove('show'); }
+
+  // --- pointer input -----------------------------------------------------
+  let grabbing = false;
+  function evPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+    return render.toWorld(cx, cy);
+  }
+  canvas.addEventListener('pointerdown', (e) => {
+    if (isOverlayOpen()) return;
+    const w = evPos(e);
+    if (game.state === 'aim') grabbing = game.beginAim(w.x, w.y);
+    else if (game.state === 'flying') game.tap();
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!grabbing) return;
+    const w = evPos(e);
+    game.moveAim(w.x, w.y);
+  });
+  window.addEventListener('pointerup', () => {
+    if (grabbing) { game.releaseAim(); grabbing = false; }
+  });
+  function isOverlayOpen() {
+    return $('menu').classList.contains('show') || $('levelend').classList.contains('show') || $('board').classList.contains('show');
+  }
+
+  // keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'r' || e.key === 'R') { if (currentId) startLevel(currentId); }
+    else if (e.key === 'Escape') openMenu();
+    else if (e.key === ' ') { if (game.state === 'flying') game.tap(); }
+  });
+
+  // --- go ----------------------------------------------------------------
+  buildMenu();
+  requestAnimationFrame(frame);
+})();

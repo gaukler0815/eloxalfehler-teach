@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ELOXAL REBELS — Game Design Bible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:ital,wght@0,400;0,500;0,700;0,900;1,400&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#17131F;
+  --halle:#241B38;
+  --halle-2:#150F24;
+  --halle-3:#2F2450;
+  --alu:#CBD5DF;
+  --alu-dk:#7E8B9B;
+  --blau:#1E74DC;
+  --cyan:#3FD0EA;
+  --gold:#F5A81C;
+  --rot:#E33A2C;
+  --saeure:#A9E85C;
+  --papier:#F4F0E6;
+  --papier-2:#E7E0D0;
+  --display:"Bungee","Arial Black",Impact,sans-serif;
+  --body:"Barlow",-apple-system,"Segoe UI",sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--halle-2);color:#EDE7F5;font-family:var(--body);
+  font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img,svg{display:block;max-width:100%}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+.halftone{
+  background-image:radial-gradient(rgba(255,255,255,.10) 1.1px, transparent 1.2px);
+  background-size:9px 9px;
+}
+
+/* ── eyebrow / labels ─────────────────────────── */
+.eyebrow{
+  font-family:var(--cond);font-weight:700;text-transform:uppercase;
+  letter-spacing:.22em;font-size:.82rem;color:var(--cyan);margin:0 0 12px;
+}
+.eyebrow.dark{color:#6B5E86}
+h2{
+  font-family:var(--display);font-size:clamp(1.7rem,4.4vw,3rem);line-height:1.02;
+  margin:0 0 10px;text-transform:uppercase;
+}
+h3{font-family:var(--display);font-size:1.05rem;margin:0 0 6px;line-height:1.15}
+.lede{font-size:1.12rem;color:#C6BCDC;max-width:62ch;margin:0 0 34px}
+section{padding:74px 0;position:relative}
+.spec{font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:.8rem}
+
+/* ── HERO ─────────────────────────────────────── */
+.hero{padding:0;background:linear-gradient(180deg,#2B2046 0%,#1A1230 62%,#150F24 100%);overflow:hidden}
+.hero-art{position:relative}
+.hero-art svg{width:100%;height:auto}
+.logo-lock{
+  position:absolute;left:5%;top:7%;max-width:min(560px,58%);z-index:3;
+  filter:drop-shadow(0 12px 0 rgba(0,0,0,.35));
+}
+.logo-lock .kicker{
+  font-family:var(--cond);font-weight:700;letter-spacing:.3em;font-size:clamp(.62rem,1.4vw,.9rem);
+  text-transform:uppercase;color:var(--gold);margin-bottom:2px;
+}
+.logo-lock .title{
+  font-family:var(--display);font-size:clamp(2.1rem,7.4vw,5.4rem);line-height:.86;
+  text-transform:uppercase;color:#fff;margin:0;
+  -webkit-text-stroke:clamp(3px,.7vw,7px) var(--ink);paint-order:stroke fill;
+}
+.logo-lock .title em{display:block;font-style:normal;color:var(--gold)}
+.logo-lock .sub{
+  display:inline-block;margin-top:10px;background:var(--ink);color:#fff;
+  font-family:var(--cond);font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  font-size:clamp(.6rem,1.5vw,.86rem);padding:5px 12px;transform:rotate(-1.4deg);
+}
+.hero-strip{
+  display:flex;flex-wrap:wrap;gap:0;border-top:5px solid var(--ink);
+  background:var(--gold);color:var(--ink);
+}
+.hero-strip div{
+  flex:1 1 180px;padding:14px 20px;font-family:var(--cond);font-weight:700;
+  text-transform:uppercase;letter-spacing:.11em;font-size:.85rem;
+  border-right:2px solid rgba(23,19,31,.25);
+}
+.hero-strip div:last-child{border-right:0}
+.hero-strip b{display:block;font-family:var(--body);font-weight:900;font-size:1.05rem;letter-spacing:0;text-transform:none}
+
+/* ── PAPER PANEL (Story) ──────────────────────── */
+.paper{background:var(--papier);color:var(--ink)}
+.paper .lede{color:#4A4258}
+.paper .eyebrow{color:var(--rot)}
+.acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.act{
+  background:#fff;border:4px solid var(--ink);border-radius:3px;padding:22px 20px 24px;
+  box-shadow:8px 8px 0 rgba(23,19,31,.16);position:relative;
+}
+.act .no{
+  font-family:var(--display);font-size:2.4rem;line-height:1;color:var(--papier-2);
+  position:absolute;right:14px;top:8px;
+}
+.act h3{color:var(--ink);position:relative}
+.act p{margin:8px 0 0;font-size:.98rem;color:#3B3547}
+.pull{
+  margin:34px 0 0;padding:20px 26px;background:var(--ink);color:#fff;border-radius:2px;
+  font-size:1.16rem;font-weight:500;transform:rotate(-.5deg);
+}
+.pull b{color:var(--gold)}
+
+/* ── ROSTER CARDS ─────────────────────────────── */
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:20px}
+.card{
+  background:linear-gradient(170deg,#332651,#1D1533);
+  border:4px solid var(--ink);border-radius:10px;overflow:hidden;
+  box-shadow:0 10px 0 rgba(0,0,0,.35);
+  display:flex;flex-direction:column;transition:transform .18s ease;
+}
+.card:hover{transform:translateY(-6px) rotate(-.8deg)}
+.card .art{
+  position:relative;padding:16px 16px 4px;
+  background:radial-gradient(circle at 50% 42%, var(--accent,#3B2C63) 0%, rgba(0,0,0,0) 68%);
+}
+.card .art::after{
+  content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1.1px);
+  background-size:8px 8px;pointer-events:none;
+}
+.card .art svg{margin:0 auto;width:74%;height:auto}
+.card .meta{padding:6px 16px 18px}
+.card .nm{font-family:var(--display);font-size:1.12rem;color:#fff;line-height:1.1}
+.card .role{font-family:var(--cond);text-transform:uppercase;letter-spacing:.14em;font-size:.74rem;color:var(--accent-t,var(--cyan));margin:2px 0 8px}
+.card p{margin:0;font-size:.9rem;color:#C3B8DC}
+.card .stat{
+  margin-top:12px;border-top:2px dashed rgba(255,255,255,.18);padding-top:9px;
+  display:flex;justify-content:space-between;font-family:var(--cond);
+  text-transform:uppercase;letter-spacing:.08em;font-size:.76rem;color:#9A8DBA;
+}
+.card .stat b{color:#fff}
+.villains .card{background:linear-gradient(170deg,#2A2036,#120C1C)}
+
+/* ── LEITFÄHIGKEIT DEMO ───────────────────────── */
+.demo{
+  background:#100B1C;border:4px solid var(--ink);border-radius:14px;padding:18px;
+  box-shadow:inset 0 0 90px rgba(63,208,234,.07);
+}
+.demo svg{width:100%;height:auto}
+.arc{stroke:var(--cyan);stroke-width:6;fill:none;stroke-linecap:round;
+  stroke-dasharray:1200;stroke-dashoffset:1200;opacity:0}
+.demo.live .arc{animation:zap .9s ease-out forwards}
+@keyframes zap{
+  0%{stroke-dashoffset:1200;opacity:1}
+  70%{stroke-dashoffset:0;opacity:1}
+  100%{stroke-dashoffset:0;opacity:.75}
+}
+.demo .hit{opacity:0}
+.demo.live .hit{animation:pop .5s .38s ease-out forwards}
+@keyframes pop{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+.demo .fell{transition:transform .5s cubic-bezier(.3,1.6,.5,1),opacity .5s}
+.demo.live .fell{transform:translateY(46px) rotate(24deg);opacity:.25}
+.btn{
+  font-family:var(--display);font-size:.95rem;text-transform:uppercase;
+  background:var(--gold);color:var(--ink);border:4px solid var(--ink);border-radius:8px;
+  padding:11px 20px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.45);
+}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.45)}
+.btn:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.two{display:grid;grid-template-columns:1.15fr .85fr;gap:34px;align-items:start}
+
+/* ── PROZESSKETTE ─────────────────────────────── */
+.chain{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;counter-reset:w}
+.step{
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  border:3px solid var(--ink);border-left:9px solid var(--sc,var(--cyan));
+  border-radius:6px;padding:16px 15px;position:relative;
+}
+.step .n{font-family:var(--cond);font-weight:700;letter-spacing:.14em;font-size:.72rem;color:var(--sc,var(--cyan));text-transform:uppercase}
+.step h3{font-size:.98rem;margin:5px 0 6px;color:#fff}
+.step p{margin:0;font-size:.86rem;color:#B6AACF}
+.step .un{display:block;margin-top:10px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;color:#8779A6}
+
+/* ── SWATCHES ─────────────────────────────────── */
+.swatches{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.sw{width:118px}
+.sw i{display:block;height:74px;border:3px solid var(--ink);border-radius:6px}
+.sw span{display:block;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;color:#A99CC6;margin-top:6px}
+
+/* ── TABLE-ish LISTS ──────────────────────────── */
+.rows{border-top:2px solid rgba(255,255,255,.14)}
+.row{
+  display:grid;grid-template-columns:minmax(120px,.8fr) 1fr auto;gap:16px;
+  padding:13px 0;border-bottom:2px solid rgba(255,255,255,.14);align-items:baseline;
+}
+.row b{font-family:var(--display);font-size:.86rem;color:#fff;text-transform:uppercase}
+.row span{font-size:.94rem;color:#B9AED2}
+.row em{font-family:var(--cond);font-style:normal;text-transform:uppercase;letter-spacing:.1em;font-size:.78rem;color:var(--gold);white-space:nowrap}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px}
+.box{background:rgba(255,255,255,.045);border:3px solid rgba(255,255,255,.12);border-radius:10px;padding:22px}
+.box h3{color:var(--cyan)}
+.box ul{margin:8px 0 0;padding-left:20px;font-size:.94rem;color:#B9AED2}
+.box li{margin-bottom:6px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;background:rgba(63,208,234,.13);padding:2px 6px;border-radius:4px;color:#BFEFF9}
+
+/* ── BESTENLISTE ──────────────────────────────── */
+.board{
+  background:var(--papier);color:var(--ink);border:5px solid var(--ink);border-radius:6px;
+  box-shadow:12px 12px 0 rgba(0,0,0,.4);overflow:hidden;max-width:560px;
+}
+.board .bhead{background:var(--ink);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.board .bhead b{font-family:var(--display);font-size:1.15rem;text-transform:uppercase}
+.board .bhead span{font-family:var(--cond);text-transform:uppercase;letter-spacing:.16em;font-size:.74rem;color:var(--gold)}
+.board ol{list-style:none;margin:0;padding:0}
+.board li{
+  display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;
+  padding:11px 20px;border-bottom:2px solid rgba(23,19,31,.14);
+}
+.board li:nth-child(odd){background:rgba(23,19,31,.035)}
+.board li .rk{font-family:var(--display);font-size:1rem;color:#9A93A8}
+.board li .nm2{font-family:var(--cond);font-weight:700;letter-spacing:.09em;text-transform:uppercase;font-size:1.02rem}
+.board li .sc{font-family:var(--body);font-weight:900;font-variant-numeric:tabular-nums}
+.board li .sc i{font-style:normal;font-family:var(--cond);font-weight:600;font-size:.78rem;letter-spacing:.1em;color:#7A7288;margin-left:4px}
+.board li.r1{background:linear-gradient(90deg,rgba(245,168,28,.34),rgba(245,168,28,.06))}
+.board li.r1 .rk{color:#B87A05}
+.board li.r2{background:linear-gradient(90deg,rgba(148,161,177,.3),rgba(148,161,177,.05))}
+.board li.r3{background:linear-gradient(90deg,rgba(232,135,58,.24),rgba(232,135,58,.04))}
+.board li.me{box-shadow:inset 0 0 0 3px var(--rot)}
+.entry{padding:16px 20px;background:var(--papier-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.entry input{
+  flex:1 1 180px;min-width:0;font-family:var(--cond);font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;font-size:1.05rem;padding:11px 13px;border:4px solid var(--ink);
+  border-radius:6px;background:#fff;color:var(--ink);
+}
+.entry input:focus-visible{outline:3px solid var(--blau);outline-offset:2px}
+.entry .hint{flex-basis:100%;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:.74rem;color:#6D657E}
+footer{background:var(--ink);padding:40px 0;text-align:center}
+footer p{margin:0;font-family:var(--cond);text-transform:uppercase;letter-spacing:.18em;font-size:.78rem;color:#8779A6}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s ease}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  .demo.live .arc,.demo.live .hit{animation:none;opacity:1;stroke-dashoffset:0}
+  .bub{animation:none!important}
+}
+@media (max-width:820px){
+  .two{grid-template-columns:1fr}
+  .logo-lock{position:static;max-width:none;padding:26px 22px 6px;filter:none}
+}
+/* ambient bubbles in hero tanks */
+.bub{animation:rise 3.4s linear infinite;transform-origin:center}
+@keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:.85}100%{transform:translateY(-96px);opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- ══════════ SHARED SVG DEFS ══════════ -->
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+<defs>
+  <linearGradient id="gAlu" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#F2F6FA"/><stop offset=".42" stop-color="#C7D2DD"/>
+    <stop offset=".62" stop-color="#93A1B1"/><stop offset="1" stop-color="#C2CDD9"/>
+  </linearGradient>
+  <linearGradient id="gTitan" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#EDE6DC"/><stop offset=".5" stop-color="#B4A996"/><stop offset="1" stop-color="#7E7565"/>
+  </linearGradient>
+  <linearGradient id="gBlau" x1="0" y1="0" x2=".6" y2="1">
+    <stop offset="0" stop-color="#6FC0FF"/><stop offset=".45" stop-color="#1E74DC"/><stop offset="1" stop-color="#123C86"/>
+  </linearGradient>
+  <linearGradient id="gGold" x1="0" y1="0" x2=".5" y2="1">
+    <stop offset="0" stop-color="#FFE49A"/><stop offset=".45" stop-color="#F5A81C"/><stop offset="1" stop-color="#A96606"/>
+  </linearGradient>
+  <linearGradient id="gRot" x1="0" y1="0" x2=".5" y2="1">
+    <stop offset="0" stop-color="#FF8C7A"/><stop offset=".45" stop-color="#E33A2C"/><stop offset="1" stop-color="#8C1409"/>
+  </linearGradient>
+  <radialGradient id="gBubble" cx=".36" cy=".3" r=".78">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset=".55" stop-color="#9FE6FA" stop-opacity=".55"/>
+    <stop offset="1" stop-color="#2AA7D6" stop-opacity=".8"/>
+  </radialGradient>
+  <linearGradient id="gAcid" x1="0" y1="0" x2=".4" y2="1">
+    <stop offset="0" stop-color="#EBFF9E"/><stop offset=".5" stop-color="#A9E85C"/><stop offset="1" stop-color="#4E9418"/>
+  </linearGradient>
+  <linearGradient id="gChalk" x1="0" y1="0" x2=".4" y2="1">
+    <stop offset="0" stop-color="#FDFCF7"/><stop offset=".5" stop-color="#DCD8C8"/><stop offset="1" stop-color="#A9A48D"/>
+  </linearGradient>
+  <linearGradient id="gDark" x1="0" y1="0" x2=".5" y2="1">
+    <stop offset="0" stop-color="#6A6274"/><stop offset=".5" stop-color="#3B3546"/><stop offset="1" stop-color="#1D1926"/>
+  </linearGradient>
+  <linearGradient id="gOil" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#FF7BD5"/><stop offset=".3" stop-color="#8E6BFF"/>
+    <stop offset=".6" stop-color="#38D9C0"/><stop offset="1" stop-color="#F5C24B"/>
+  </linearGradient>
+  <linearGradient id="gSand" x1="0" y1="0" x2=".5" y2="1">
+    <stop offset="0" stop-color="#FFD9A0"/><stop offset=".5" stop-color="#E8873A"/><stop offset="1" stop-color="#8E4210"/>
+  </linearGradient>
+  <linearGradient id="gTank" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#5EE3FF" stop-opacity=".9"/><stop offset="1" stop-color="#0E5FB8"/>
+  </linearGradient>
+  <linearGradient id="gFloor" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3A2C5C"/><stop offset="1" stop-color="#20183A"/>
+  </linearGradient>
+
+  <!-- reusable face kits (origin = centre between the eyes) -->
+  <g id="eyesD">
+    <ellipse cx="-19" cy="0" rx="16.5" ry="18.5" fill="#fff" stroke="#17131F" stroke-width="5"/>
+    <ellipse cx="19" cy="0" rx="16.5" ry="18.5" fill="#fff" stroke="#17131F" stroke-width="5"/>
+    <circle cx="-14" cy="3" r="7.4" fill="#17131F"/><circle cx="14" cy="3" r="7.4" fill="#17131F"/>
+    <circle cx="-16.6" cy="-1.4" r="2.4" fill="#fff"/><circle cx="11.4" cy="-1.4" r="2.4" fill="#fff"/>
+    <path d="M-39,-23 L-7,-13" stroke="#17131F" stroke-width="8.5" stroke-linecap="round"/>
+    <path d="M39,-23 L7,-13" stroke="#17131F" stroke-width="8.5" stroke-linecap="round"/>
+  </g>
+  <g id="eyesMean">
+    <ellipse cx="-18" cy="0" rx="15" ry="16" fill="#FFF6DC" stroke="#17131F" stroke-width="5"/>
+    <ellipse cx="18" cy="0" rx="15" ry="16" fill="#FFF6DC" stroke="#17131F" stroke-width="5"/>
+    <circle cx="-18" cy="2" r="5.6" fill="#17131F"/><circle cx="18" cy="2" r="5.6" fill="#17131F"/>
+    <path d="M-34,-16 L-4,-8" stroke="#17131F" stroke-width="9" stroke-linecap="round"/>
+    <path d="M34,-16 L4,-8" stroke="#17131F" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <g id="shadowE"><ellipse cx="0" cy="0" rx="52" ry="10" fill="#000" opacity=".22"/></g>
+</defs>
+</svg>
+
+<!-- ══════════ HERO ══════════ -->
+<header class="hero">
+  <div class="hero-art">
+    <div class="logo-lock">
+      <div class="kicker">Jacobi Eloxal · Game Design Bible v1</div>
+      <h1 class="title">Eloxal<em>Rebels</em></h1>
+      <div class="sub">Die Schicht schlägt zurück · Browser · 2D-Physik</div>
+    </div>
+    <svg viewBox="0 0 1600 860" role="img" aria-label="Comicszene: Die Rebellen belagern mit einer Gestell-Schleuder die Festung der Korrosionsbande in der Eloxalhalle">
+      <!-- hall backdrop -->
+      <rect width="1600" height="860" fill="#221A38"/>
+      <g opacity=".5">
+        <path d="M0 0 L1600 0 L1600 300 Q800 380 0 300 Z" fill="#2C2050"/>
+      </g>
+      <!-- ceiling crane rail -->
+      <rect x="0" y="86" width="1600" height="16" fill="#191330"/>
+      <rect x="0" y="102" width="1600" height="7" fill="#3B2E63"/>
+      <g fill="#191330">
+        <rect x="180" y="0" width="20" height="90"/><rect x="620" y="0" width="20" height="90"/>
+        <rect x="1080" y="0" width="20" height="90"/><rect x="1460" y="0" width="20" height="90"/>
+      </g>
+      <!-- lamps -->
+      <g>
+        <g transform="translate(430,0)">
+          <rect x="-4" y="100" width="8" height="60" fill="#171130"/>
+          <path d="M-46 160 L46 160 L30 196 L-30 196 Z" fill="#100C22" stroke="#0C0918" stroke-width="4"/>
+          <ellipse cx="0" cy="196" rx="30" ry="9" fill="#FFF3C4"/>
+          <path d="M-30 200 L30 200 L150 470 L-150 470 Z" fill="#FFE9A8" opacity=".08"/>
+        </g>
+        <g transform="translate(1180,0)">
+          <rect x="-4" y="100" width="8" height="60" fill="#171130"/>
+          <path d="M-46 160 L46 160 L30 196 L-30 196 Z" fill="#100C22" stroke="#0C0918" stroke-width="4"/>
+          <ellipse cx="0" cy="196" rx="30" ry="9" fill="#FFF3C4"/>
+          <path d="M-30 200 L30 200 L150 470 L-150 470 Z" fill="#FFE9A8" opacity=".08"/>
+        </g>
+      </g>
+      <!-- background tank row -->
+      <g transform="translate(620,300)">
+        <rect x="0" y="0" width="300" height="180" rx="8" fill="#1A1436" stroke="#0F0B22" stroke-width="6"/>
+        <rect x="14" y="26" width="272" height="140" rx="6" fill="url(#gTank)" opacity=".85"/>
+        <g fill="#CFF6FF" opacity=".75">
+          <circle class="bub" cx="60" cy="150" r="7"/>
+          <circle class="bub" cx="120" cy="160" r="5" style="animation-delay:.7s"/>
+          <circle class="bub" cx="196" cy="152" r="8" style="animation-delay:1.4s"/>
+          <circle class="bub" cx="248" cy="162" r="5" style="animation-delay:2.1s"/>
+        </g>
+        <rect x="0" y="0" width="300" height="16" fill="#F5A81C"/>
+        <g fill="#17131F">
+          <path d="M0 0 L26 0 L0 16 Z"/><path d="M52 0 L78 0 L52 16 Z"/><path d="M104 0 L130 0 L104 16 Z"/>
+          <path d="M156 0 L182 0 L156 16 Z"/><path d="M208 0 L234 0 L208 16 Z"/><path d="M260 0 L286 0 L260 16 Z"/>
+        </g>
+        <!-- rack hanging over tank -->
+        <g stroke="#B4A996" stroke-width="7" stroke-linecap="round" fill="none">
+          <path d="M150 -108 L150 -40"/><path d="M96 -40 L204 -40"/>
+          <path d="M110 -40 L110 6"/><path d="M150 -40 L150 6"/><path d="M190 -40 L190 6"/>
+        </g>
+        <g fill="url(#gAlu)" stroke="#17131F" stroke-width="4">
+          <rect x="98" y="6" width="24" height="46" rx="5"/><rect x="138" y="6" width="24" height="46" rx="5"/>
+          <rect x="178" y="6" width="24" height="46" rx="5"/>
+        </g>
+      </g>
+      <!-- steam -->
+      <g fill="#EADFFF" opacity=".13">
+        <circle cx="700" cy="270" r="34"/><circle cx="748" cy="248" r="26"/><circle cx="792" cy="272" r="30"/>
+      </g>
+
+      <!-- sunburst behind fortress -->
+      <g transform="translate(1210,470)" opacity=".16">
+        <g fill="#F5A81C">
+          <path d="M0 0 L360 -80 L360 -30 Z"/><path d="M0 0 L360 40 L360 90 Z"/>
+          <path d="M0 0 L340 -190 L370 -150 Z"/><path d="M0 0 L300 170 L330 210 Z"/>
+          <path d="M0 0 L-340 -180 L-370 -140 Z"/><path d="M0 0 L-360 60 L-360 110 Z"/>
+        </g>
+      </g>
+
+      <!-- floor -->
+      <rect x="0" y="640" width="1600" height="220" fill="url(#gFloor)"/>
+      <rect x="0" y="640" width="1600" height="9" fill="#0F0B1E"/>
+      <g stroke="#F5A81C" stroke-width="9" opacity=".55">
+        <path d="M0 700 L1600 700" stroke-dasharray="46 30"/>
+      </g>
+
+      <!-- ░░ SLINGSHOT (Titan-Gestell) ░░ -->
+      <g transform="translate(250,640)">
+        <use href="#shadowE" x="0" y="6" transform="scale(1.5,1)"/>
+        <!-- base rack -->
+        <g stroke="#17131F" stroke-width="6" fill="url(#gTitan)">
+          <rect x="-86" y="-26" width="172" height="26" rx="6"/>
+        </g>
+        <g stroke="#8E8371" stroke-width="8" stroke-linecap="round">
+          <path d="M-56 -26 L-56 -210"/><path d="M56 -26 L56 -210"/>
+          <path d="M-56 -120 L56 -120"/>
+        </g>
+        <!-- titanium hooks -->
+        <g fill="none" stroke="url(#gTitan)" stroke-width="16" stroke-linecap="round">
+          <path d="M-56 -210 q-4 -34 22 -40"/><path d="M56 -210 q4 -34 -22 -40"/>
+        </g>
+        <g fill="none" stroke="#17131F" stroke-width="4" opacity=".55">
+          <path d="M-56 -210 q-4 -34 22 -40"/><path d="M56 -210 q4 -34 -22 -40"/>
+        </g>
+        <!-- band -->
+        <path d="M-40 -244 L-6 -168" stroke="#3B2A20" stroke-width="12" stroke-linecap="round"/>
+        <path d="M40 -244 L18 -170" stroke="#2A1C14" stroke-width="12" stroke-linecap="round"/>
+        <!-- ALI loaded in the pouch -->
+        <g transform="translate(6,-186) rotate(-8)">
+          <rect x="-46" y="-42" width="92" height="84" rx="20" fill="url(#gAlu)" stroke="#17131F" stroke-width="6"/>
+          <g stroke="#8E9BAB" stroke-width="2.4" opacity=".55">
+            <path d="M-30 -34 L-30 34"/><path d="M-14 -34 L-14 34"/><path d="M2 -34 L2 34"/><path d="M18 -34 L18 34"/><path d="M32 -34 L32 34"/>
+          </g>
+          <path d="M-46 -22 q30 -16 92 -6 L46 -42 L-26 -42 Z" fill="#fff" opacity=".4"/>
+          <use href="#eyesD" transform="translate(0,-6) scale(.86)"/>
+          <path d="M-13 20 q13 12 26 0" stroke="#17131F" stroke-width="6" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- trajectory -->
+        <g fill="#fff" opacity=".55">
+          <circle cx="90" cy="-268" r="7"/><circle cx="200" cy="-330" r="7"/><circle cx="320" cy="-368" r="7"/>
+          <circle cx="450" cy="-378" r="7"/><circle cx="580" cy="-356" r="7"/><circle cx="700" cy="-300" r="7"/>
+        </g>
+      </g>
+
+      <!-- ░░ FORTRESS ░░ -->
+      <g transform="translate(1080,640)">
+        <use href="#shadowE" x="220" y="4" transform="scale(3.6,1)"/>
+        <!-- crates & beams -->
+        <g stroke="#17131F" stroke-width="6">
+          <rect x="40" y="-120" width="120" height="120" rx="6" fill="#B98A4E"/>
+          <rect x="60" y="-100" width="80" height="80" rx="4" fill="#A2763F"/>
+          <rect x="340" y="-120" width="120" height="120" rx="6" fill="#B98A4E"/>
+          <rect x="360" y="-100" width="80" height="80" rx="4" fill="#A2763F"/>
+          <rect x="30" y="-146" width="440" height="30" rx="5" fill="url(#gAlu)"/>
+          <rect x="170" y="-120" width="30" height="120" fill="#4C5768"/>
+          <rect x="300" y="-120" width="30" height="120" fill="#4C5768"/>
+          <rect x="150" y="-300" width="200" height="26" rx="4" fill="url(#gAlu)"/>
+          <rect x="152" y="-274" width="28" height="128" fill="#39415A"/>
+          <rect x="320" y="-274" width="28" height="128" fill="#39415A"/>
+          <rect x="196" y="-232" width="108" height="86" rx="6" fill="#2C7BD6" opacity=".55"/>
+        </g>
+        <!-- flag -->
+        <g>
+          <rect x="246" y="-430" width="8" height="132" fill="#17131F"/>
+          <path d="M254 -426 L378 -404 L346 -382 L378 -358 L254 -344 Z" fill="#E33A2C" stroke="#17131F" stroke-width="5"/>
+          <path d="M282 -404 l16 0 m-8 -8 l0 16" stroke="#fff" stroke-width="6" opacity=".8"/>
+        </g>
+        <!-- Baron Korrosius on top -->
+        <g transform="translate(250,-350) scale(.78)">
+          <path d="M-72 34 q-16 -46 12 -70 q-10 -34 22 -44 q16 -26 44 -14 q30 -16 46 12 q34 6 30 40 q22 26 -4 58 q-24 26 -78 24 q-56 -2 -72 -6 Z"
+                fill="url(#gChalk)" stroke="#17131F" stroke-width="6"/>
+          <g fill="#C9C4AC" opacity=".85">
+            <circle cx="-30" cy="-4" r="9"/><circle cx="34" cy="12" r="7"/><circle cx="6" cy="24" r="6"/>
+          </g>
+          <use href="#eyesMean" transform="translate(2,-30)"/>
+          <circle cx="20" cy="-30" r="24" fill="none" stroke="#F5A81C" stroke-width="5"/>
+          <path d="M40 -22 q18 22 4 44" stroke="#F5A81C" stroke-width="4" fill="none"/>
+          <path d="M-24 8 q26 18 52 -4" stroke="#17131F" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <!-- corroded crown -->
+          <path d="M-40 -66 L-28 -96 L-12 -74 L4 -104 L20 -76 L36 -100 L44 -64 Z" fill="#9AA36B" stroke="#17131F" stroke-width="5"/>
+        </g>
+        <!-- Fetti perched -->
+        <g transform="translate(100,-176) scale(.55)">
+          <path d="M-70 40 q-22 -40 8 -66 q34 -30 74 -10 q44 -22 62 18 q16 34 -18 56 q-42 20 -126 2 Z" fill="url(#gOil)" stroke="#17131F" stroke-width="7"/>
+          <use href="#eyesMean" transform="translate(0,-8)"/>
+          <path d="M-22 26 q26 22 52 -4" stroke="#17131F" stroke-width="8" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- Lenny perched -->
+        <g transform="translate(400,-176) scale(.55)">
+          <circle cx="0" cy="0" r="66" fill="url(#gDark)" stroke="#17131F" stroke-width="7"/>
+          <g fill="#100D18" opacity=".85"><circle cx="-30" cy="26" r="12"/><circle cx="16" cy="36" r="9"/><circle cx="42" cy="4" r="10"/></g>
+          <use href="#eyesMean" transform="translate(0,-16)"/>
+          <path d="M-24 30 L-14 44 L-4 30 L6 44 L16 30" stroke="#fff" stroke-width="7" fill="none" stroke-linejoin="round"/>
+        </g>
+      </g>
+
+      <!-- foreground chips -->
+      <g fill="url(#gAlu)" stroke="#17131F" stroke-width="4">
+        <rect x="700" y="762" width="70" height="20" rx="6" transform="rotate(-7 700 762)"/>
+        <rect x="880" y="790" width="52" height="16" rx="5" transform="rotate(9 880 790)"/>
+      </g>
+      <!-- vignette -->
+      <rect width="1600" height="860" fill="none"/>
+    </svg>
+  </div>
+  <div class="hero-strip">
+    <div>Genre<b>Physik-Puzzle / Slingshot</b></div>
+    <div>Plattform<b>Browser, Desktop &amp; Tablet</b></div>
+    <div>Umfang v1<b>7 Welten · 84 Level</b></div>
+    <div>Stil<b>Comic, Vektor, 4K-fähig</b></div>
+  </div>
+</header>
+
+<!-- ══════════ PLOT ══════════ -->
+<section class="paper" id="plot">
+  <div class="wrap">
+    <p class="eyebrow">Akt I – III</p>
+    <h2>Der Plot</h2>
+    <p class="lede">Jedes Rohteil in der Halle träumt von einer eigenen Oxidschicht: hart genug, um nie mehr zu korrodieren, und in einer Farbe, die man sich selbst aussucht. Nur einer will das verhindern.</p>
+
+    <div class="acts">
+      <div class="act rv">
+        <div class="no">I</div>
+        <h3>Die Charge, die niemand wollte</h3>
+        <p>Kurz vor Schichtende kippt Baron Korrosius eine Palette Rohteile um und pudert sie mit Weißrost ein. Verunreinigte Teile werden nicht eloxiert – sie werden gesperrt. Der kleine Blechzuschnitt <b>Ali</b> überlebt als Einziger sauber, weil er unter einem Karton lag. Er baut aus zwei Titanhaken und einem Stück Gestellgummi die erste Schleuder.</p>
+      </div>
+      <div class="act rv">
+        <div class="no">II</div>
+        <h3>Quer durch die Anlage</h3>
+        <p>Ali sammelt Verbündete – ein Drehteil, einen Kühlkörper, einen Säuretropfen, einen Strahlkopf. Mit jedem Becken, das die Truppe erobert, wird sie selbst veredelt: entfettet, gebeizt, anodisiert, gefärbt. Die Bande baut Festungen aus Kartonage, Distanzstücken und Stahlgestellen – und hockt oben drauf.</p>
+      </div>
+      <div class="act rv">
+        <div class="no">III</div>
+        <h3>Das letzte Becken</h3>
+        <p>Korrosius verschanzt sich im Verdichtungsbecken – der einzige Ort, an dem er noch gewinnen kann, denn was hier durchläuft, ist für immer versiegelt. Die Rebellen fluten das Becken. Der Baron blüht aus, die Charge geht raus, und über der Halle hängt am Ende ein Prüfzeugnis statt einer Sperrkarte.</p>
+      </div>
+    </div>
+
+    <p class="pull">Der Kniff gegenüber Angry Birds: <b>Die Progression ist die Prozesskette.</b> Deine Geschosse werden nicht durch gekaufte Upgrades stärker, sondern weil sie in jeder Welt wirklich veredelt werden – blank, entfettet, gebeizt, anodisiert, gefärbt, verdichtet.</p>
+  </div>
+</section>
+
+<!-- ══════════ HELDEN ══════════ -->
+<section class="halftone" id="rebellen">
+  <div class="wrap">
+    <p class="eyebrow">Spielbare Munition</p>
+    <h2>Die Rebellen</h2>
+    <p class="lede">Acht Geschosse, jedes mit genau einer Fähigkeit, ausgelöst durch Tap oder Klick im Flug. Masse und Härte bestimmen, gegen welches Material sie etwas ausrichten.</p>
+
+    <div class="roster">
+
+      <!-- ALI -->
+      <div class="card rv" style="--accent:#4A5F7A;--accent-t:#CBD5DF">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Ali, Aluminium-Blechzuschnitt mit entschlossenem Blick">
+            <use href="#shadowE" x="100" y="178"/>
+            <rect x="34" y="46" width="132" height="122" rx="26" fill="url(#gAlu)" stroke="#17131F" stroke-width="7"/>
+            <g stroke="#8E9BAB" stroke-width="3" opacity=".5">
+              <path d="M56 56 L56 158"/><path d="M78 56 L78 158"/><path d="M100 56 L100 158"/><path d="M122 56 L122 158"/><path d="M144 56 L144 158"/>
+            </g>
+            <path d="M34 76 q40 -22 132 -10 L166 60 q-10 -14 -26 -14 L56 46 q-22 4 -22 30 Z" fill="#fff" opacity=".45"/>
+            <use href="#eyesD" transform="translate(100,102)"/>
+            <path d="M84 138 q16 14 32 0" stroke="#17131F" stroke-width="7" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Ali</div>
+          <div class="role">Blechzuschnitt · Standard</div>
+          <p>Keine Sonderfähigkeit, dafür kalkulierbar. Das Referenzgeschoss, an dem der Spieler Winkel und Zug lernt.</p>
+          <div class="stat"><span>Masse</span><b>mittel</b></div>
+        </div>
+      </div>
+
+      <!-- BOLLE -->
+      <div class="card rv" style="--accent:#4A5F7A;--accent-t:#CBD5DF">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Bolle, ein Drehteil mit Bohrspitze">
+            <use href="#shadowE" x="100" y="182"/>
+            <path d="M62 26 h76 a10 10 0 0 1 10 10 v96 l-48 44 l-48 -44 v-96 a10 10 0 0 1 10 -10 Z" fill="url(#gAlu)" stroke="#17131F" stroke-width="7"/>
+            <g stroke="#8E9BAB" stroke-width="4" opacity=".65" fill="none">
+              <path d="M60 44 q40 12 80 0"/><path d="M60 58 q40 12 80 0"/><path d="M60 72 q40 12 80 0"/>
+            </g>
+            <path d="M64 30 q10 -6 22 0 l0 130 l-22 -26 Z" fill="#fff" opacity=".4"/>
+            <use href="#eyesD" transform="translate(100,104) scale(.92)"/>
+            <path d="M88 138 L100 148 L112 138" stroke="#17131F" stroke-width="7" fill="none" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Bolle</div>
+          <div class="role">Drehteil · Durchschlag</div>
+          <p>Tap im Flug: Bolle richtet sich aus und geht in den Sturzflug. Bohrt sich durch eine Materialschicht, statt daran abzuprallen.</p>
+          <div class="stat"><span>Masse</span><b>hoch</b></div>
+        </div>
+      </div>
+
+      <!-- RIPPI -->
+      <div class="card rv" style="--accent:#1E74DC;--accent-t:#8CC6FF">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Rippi, ein blau eloxierter Kühlkörper, der sich in Lamellen aufteilt">
+            <use href="#shadowE" x="100" y="180"/>
+            <g fill="url(#gBlau)" stroke="#17131F" stroke-width="6">
+              <rect x="46" y="26" width="18" height="52" rx="6"/><rect x="72" y="18" width="18" height="60" rx="6"/>
+              <rect x="98" y="14" width="18" height="64" rx="6"/><rect x="124" y="20" width="18" height="58" rx="6"/>
+            </g>
+            <rect x="34" y="70" width="132" height="98" rx="22" fill="url(#gBlau)" stroke="#17131F" stroke-width="7"/>
+            <path d="M34 96 q40 -20 132 -8 L166 84 q-10 -14 -26 -14 L56 70 q-22 4 -22 26 Z" fill="#fff" opacity=".33"/>
+            <use href="#eyesD" transform="translate(100,116)"/>
+            <path d="M84 146 q16 12 32 0" stroke="#17131F" stroke-width="7" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Rippi</div>
+          <div class="role">Kühlkörper · Streuung</div>
+          <p>Tap: teilt sich in drei Lamellen auf, die auseinanderfliegen. Gut gegen breite, flache Dächer und mehrere Gegner in einer Reihe.</p>
+          <div class="stat"><span>Masse</span><b>niedrig ×3</b></div>
+        </div>
+      </div>
+
+      <!-- TITANIA -->
+      <div class="card rv" style="--accent:#B4A996;--accent-t:#EDE6DC">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Titania, ein Titan-Gestellhaken">
+            <use href="#shadowE" x="100" y="182"/>
+            <path d="M100 24 v66 q0 44 -34 44 q-30 0 -30 -30 q0 -22 22 -26"
+                  fill="none" stroke="url(#gTitan)" stroke-width="30" stroke-linecap="round"/>
+            <path d="M100 24 v66 q0 44 -34 44 q-30 0 -30 -30 q0 -22 22 -26"
+                  fill="none" stroke="#17131F" stroke-width="6" stroke-linecap="round" opacity=".45"/>
+            <circle cx="118" cy="106" r="46" fill="url(#gTitan)" stroke="#17131F" stroke-width="7"/>
+            <path d="M76 96 q26 -30 66 -20 q-14 -22 -40 -18 q-26 6 -26 38 Z" fill="#fff" opacity=".45"/>
+            <use href="#eyesD" transform="translate(118,100) scale(.82)"/>
+            <g stroke="#17131F" stroke-width="4" stroke-linecap="round">
+              <path d="M92 82 l-8 -8"/><path d="M144 82 l8 -8"/>
+            </g>
+            <path d="M106 130 q12 10 24 -2" stroke="#17131F" stroke-width="6" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Titania</div>
+          <div class="role">Titanhaken · Zug</div>
+          <p>Tap: hakt sich an der getroffenen Kante ein und reißt sie nach unten. Bringt Türme zum Kippen, ohne sie zu zerstören.</p>
+          <div class="stat"><span>Masse</span><b>mittel</b></div>
+        </div>
+      </div>
+
+      <!-- BUBBLES -->
+      <div class="card rv" style="--accent:#3FD0EA;--accent-t:#BFEFF9">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Bubbles, ein Wasserstoffbläschen">
+            <use href="#shadowE" x="100" y="184"/>
+            <circle cx="100" cy="102" r="66" fill="url(#gBubble)" stroke="#17131F" stroke-width="7"/>
+            <ellipse cx="76" cy="74" rx="22" ry="15" fill="#fff" opacity=".85" transform="rotate(-28 76 74)"/>
+            <circle cx="126" cy="132" r="7" fill="#fff" opacity=".55"/>
+            <g fill="url(#gBubble)" stroke="#17131F" stroke-width="4">
+              <circle cx="150" cy="168" r="13"/><circle cx="46" cy="172" r="9"/>
+            </g>
+            <use href="#eyesD" transform="translate(100,96) scale(.9)"/>
+            <path d="M86 128 q14 16 28 0" stroke="#17131F" stroke-width="6" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Bubbles</div>
+          <div class="role">Wasserstoffblase · Auftrieb</div>
+          <p>Tap: kehrt die Schwerkraft um und steigt auf. Detoniert am ersten Deckenkontakt – der einzige Weg, Festungen von oben zu öffnen.</p>
+          <div class="stat"><span>Masse</span><b>sehr niedrig</b></div>
+        </div>
+      </div>
+
+      <!-- SÄURI -->
+      <div class="card rv" style="--accent:#A9E85C;--accent-t:#DDFFA8">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Säuri, ein Säuretropfen mit frechem Grinsen">
+            <use href="#shadowE" x="100" y="184"/>
+            <path d="M100 20 q46 62 46 92 a46 46 0 0 1 -92 0 q0 -30 46 -92 Z" fill="url(#gAcid)" stroke="#17131F" stroke-width="7"/>
+            <path d="M92 40 q-24 44 -24 66 q0 16 10 26 q-26 -10 -26 -34 q0 -26 40 -58 Z" fill="#fff" opacity=".4"/>
+            <use href="#eyesD" transform="translate(100,104) scale(.88)"/>
+            <path d="M84 138 q18 16 34 -2" stroke="#17131F" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <path d="M98 140 l0 14 l8 -8 Z" fill="#fff" stroke="#17131F" stroke-width="3"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Säuri</div>
+          <div class="role">Säuretropfen · Fläche</div>
+          <p>Tap: platzt und ätzt alles im Radius an – Material verliert Festigkeit, statt zu bersten. Baut Festungen weich, bevor Bolle kommt.</p>
+          <div class="stat"><span>Masse</span><b>niedrig</b></div>
+        </div>
+      </div>
+
+      <!-- BÜRSTI -->
+      <div class="card rv" style="--accent:#E8873A;--accent-t:#FFD9A0">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Bürsti, ein Strahlkopf mit Schutzbrille">
+            <use href="#shadowE" x="100" y="182"/>
+            <path d="M56 34 h88 l-16 62 a34 34 0 0 1 -56 0 Z" fill="url(#gSand)" stroke="#17131F" stroke-width="7"/>
+            <ellipse cx="100" cy="118" rx="46" ry="42" fill="url(#gSand)" stroke="#17131F" stroke-width="7"/>
+            <path d="M62 30 q18 -8 32 0 l-14 66 q-16 -8 -18 -26 Z" fill="#fff" opacity=".35"/>
+            <use href="#eyesD" transform="translate(100,116) scale(.86)"/>
+            <path d="M86 146 q14 12 28 0" stroke="#17131F" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <g fill="#FFE0B0" stroke="#17131F" stroke-width="3">
+              <circle cx="42" cy="170" r="7"/><circle cx="158" cy="168" r="6"/><circle cx="70" cy="182" r="5"/><circle cx="130" cy="184" r="5"/>
+            </g>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Bürsti</div>
+          <div class="role">Strahlkopf · Schrot</div>
+          <p>Tap: bläst eine Wolke Strahlmittel nach vorn. Wenig Wucht pro Korn, aber räumt Schutzfolie, Kartonage und Staubgegner komplett ab.</p>
+          <div class="stat"><span>Masse</span><b>Streuschuss</b></div>
+        </div>
+      </div>
+
+      <!-- LASAR -->
+      <div class="card rv" style="--accent:#E33A2C;--accent-t:#FFB0A6">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Lasar, ein Laserkopf mit rotem Linsenauge">
+            <use href="#shadowE" x="100" y="182"/>
+            <path d="M48 52 h104 a16 16 0 0 1 16 16 v52 a16 16 0 0 1 -16 16 h-40 l-12 30 l-12 -30 h-40 a16 16 0 0 1 -16 -16 v-52 a16 16 0 0 1 16 -16 Z"
+                  fill="url(#gDark)" stroke="#17131F" stroke-width="7"/>
+            <path d="M52 56 h30 l-8 76 h-22 a10 10 0 0 1 -10 -10 Z" fill="#fff" opacity=".22"/>
+            <circle cx="100" cy="94" r="30" fill="#2A1218" stroke="#17131F" stroke-width="6"/>
+            <circle cx="100" cy="94" r="18" fill="url(#gRot)"/>
+            <circle cx="93" cy="87" r="5" fill="#FFD9D2"/>
+            <path d="M40 66 L4 58" stroke="#17131F" stroke-width="9" stroke-linecap="round"/>
+            <path d="M160 66 L196 58" stroke="#17131F" stroke-width="9" stroke-linecap="round"/>
+            <path d="M100 130 L100 194" stroke="#E33A2C" stroke-width="6" opacity=".85"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Lasar</div>
+          <div class="role">Laserkopf · Schnitt</div>
+          <p>Einmal pro Level: Tap friert den Flug ein, der Spieler zieht eine Linie – Lasar schneidet auf dieser Linie durch alles, was er berührt.</p>
+          <div class="stat"><span>Einsatz</span><b>1× pro Level</b></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ GEGNER ══════════ -->
+<section id="bande" style="background:linear-gradient(180deg,#150F24,#1D1430)">
+  <div class="wrap">
+    <p class="eyebrow">Antagonisten</p>
+    <h2>Die Korrosionsbande</h2>
+    <p class="lede">Alle Gegner sind echte Oberflächenfehler. Wer im Betrieb schon eine Sperrkarte geschrieben hat, erkennt jeden von ihnen sofort.</p>
+
+    <div class="roster villains">
+      <div class="card rv" style="--accent:#B9B49B;--accent-t:#EFEBD8">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Baron Korrosius, ein Weißrostklumpen mit Monokel und korrodierter Krone">
+            <use href="#shadowE" x="100" y="184"/>
+            <path d="M100 26 L88 4 L116 12 L112 28 Z" fill="#9AA36B" stroke="#17131F" stroke-width="5"/>
+            <path d="M42 48 L56 16 L74 42 L92 10 L112 40 L132 12 L148 46 Z" fill="#9AA36B" stroke="#17131F" stroke-width="6"/>
+            <path d="M34 140 q-14 -46 14 -70 q-6 -32 26 -40 q18 -22 44 -10 q30 -12 44 16 q30 10 22 42 q20 28 -8 56 q-30 22 -84 20 q-48 -2 -58 -14 Z"
+                  fill="url(#gChalk)" stroke="#17131F" stroke-width="7"/>
+            <g fill="#C4BFA6" opacity=".8"><circle cx="58" cy="112" r="10"/><circle cx="140" cy="126" r="8"/><circle cx="104" cy="140" r="7"/></g>
+            <use href="#eyesMean" transform="translate(100,92)"/>
+            <circle cx="118" cy="92" r="27" fill="none" stroke="#F5A81C" stroke-width="5"/>
+            <path d="M140 100 q20 24 4 46" stroke="#F5A81C" stroke-width="4" fill="none"/>
+            <path d="M76 128 q26 20 52 -4" stroke="#17131F" stroke-width="8" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Baron Korrosius</div>
+          <div class="role">Weißrost · Endgegner</div>
+          <p>Pudert ganze Paletten ein. Drei Trefferphasen; ab Phase zwei zieht er sich Kartonage als Panzerung heran.</p>
+          <div class="stat"><span>Trefferpunkte</span><b>3 Phasen</b></div>
+        </div>
+      </div>
+
+      <div class="card rv" style="--accent:#5A5368;--accent-t:#C9C2D8">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Lochfraß-Lenny, eine dunkle Kugel voller Krater">
+            <use href="#shadowE" x="100" y="182"/>
+            <circle cx="100" cy="102" r="70" fill="url(#gDark)" stroke="#17131F" stroke-width="7"/>
+            <g fill="#0F0C18" opacity=".9">
+              <circle cx="64" cy="134" r="13"/><circle cx="112" cy="146" r="10"/><circle cx="142" cy="106" r="11"/><circle cx="52" cy="88" r="8"/>
+            </g>
+            <path d="M46 78 q26 -34 66 -30 q-18 -18 -46 -8 q-24 10 -20 38 Z" fill="#fff" opacity=".2"/>
+            <use href="#eyesMean" transform="translate(100,86)"/>
+            <path d="M74 128 L86 144 L98 128 L110 144 L122 128" stroke="#fff" stroke-width="7" fill="none" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Lochfraß-Lenny</div>
+          <div class="role">Pitting · Bohrer</div>
+          <p>Frisst sich in tragende Bauteile und schwächt sie über die Zeit. Wer ihn ignoriert, verliert die eigene Statik nicht – aber seine.</p>
+          <div class="stat"><span>Trefferpunkte</span><b>2</b></div>
+        </div>
+      </div>
+
+      <div class="card rv" style="--accent:#8E6BFF;--accent-t:#D6C7FF">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Fetti, ein schillernder Ölfilm">
+            <use href="#shadowE" x="100" y="180"/>
+            <path d="M28 136 q-20 -44 14 -72 q40 -34 84 -12 q50 -24 68 22 q18 40 -22 62 q-48 24 -144 0 Z" fill="url(#gOil)" stroke="#17131F" stroke-width="7"/>
+            <path d="M46 96 q28 -30 68 -24 q-18 -20 -48 -10 q-24 10 -20 34 Z" fill="#fff" opacity=".4"/>
+            <use href="#eyesMean" transform="translate(100,90)"/>
+            <path d="M72 120 q28 24 56 -6" stroke="#17131F" stroke-width="8" fill="none" stroke-linecap="round"/>
+            <g fill="#17131F"><circle cx="60" cy="158" r="6"/><circle cx="142" cy="160" r="5"/></g>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Fetti</div>
+          <div class="role">Ölfilm · Rutschfalle</div>
+          <p>Legt Pfützen aus. Geschosse verlieren darauf jede Reibung und schlittern am Ziel vorbei – erst Bürsti oder Säuri, dann treffen.</p>
+          <div class="stat"><span>Trefferpunkte</span><b>1</b></div>
+        </div>
+      </div>
+
+      <div class="card rv" style="--accent:#8FA9C4;--accent-t:#DCEBFA">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Kalki, eine kristalline Kalkfleck-Figur">
+            <use href="#shadowE" x="100" y="184"/>
+            <path d="M100 22 L136 52 L176 62 L158 100 L172 142 L128 148 L100 180 L72 148 L28 142 L42 100 L24 62 L64 52 Z"
+                  fill="#EAF3FB" stroke="#17131F" stroke-width="7"/>
+            <g fill="#BFD4E8"><path d="M100 22 L136 52 L100 74 Z"/><path d="M172 142 L128 148 L138 112 Z"/><path d="M28 142 L42 100 L74 122 Z"/></g>
+            <use href="#eyesMean" transform="translate(100,96)"/>
+            <path d="M78 130 L122 130" stroke="#17131F" stroke-width="8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Kalki</div>
+          <div class="role">Kalkflecken · Panzer</div>
+          <p>Kristallisiert nach jedem Treffer neu und wird härter. Muss in einem Zug erledigt werden – oder gar nicht.</p>
+          <div class="stat"><span>Trefferpunkte</span><b>1 in Folge</b></div>
+        </div>
+      </div>
+
+      <div class="card rv" style="--accent:#6E6880;--accent-t:#CFC8DE">
+        <div class="art">
+          <svg viewBox="0 0 200 200" role="img" aria-label="Stauber, eine flauschige Staubwolke">
+            <use href="#shadowE" x="100" y="180"/>
+            <path d="M40 138 q-24 -30 4 -52 q-6 -30 26 -34 q18 -24 44 -8 q34 -10 42 20 q30 8 20 40 q-8 26 -46 30 q-56 6 -90 4 Z"
+                  fill="#8E8798" stroke="#17131F" stroke-width="7"/>
+            <g fill="#B4AEBE" opacity=".9"><circle cx="66" cy="76" r="12"/><circle cx="128" cy="66" r="9"/></g>
+            <use href="#eyesMean" transform="translate(100,98) scale(.9)"/>
+            <path d="M84 128 q16 12 32 0" stroke="#17131F" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <g fill="#B4AEBE"><circle cx="30" cy="60" r="6"/><circle cx="174" cy="96" r="5"/><circle cx="160" cy="40" r="4"/></g>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="nm">Stauber</div>
+          <div class="role">Staubeinschluss · Schwarm</div>
+          <p>Kommt nie allein. Einzeln harmlos, in Gruppen verstopft er die Zuluft und dunkelt den halben Bildschirm ab.</p>
+          <div class="stat"><span>Trefferpunkte</span><b>1 · im Schwarm</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SIGNATURE MECHANIC ══════════ -->
+<section class="halftone" id="mechanik">
+  <div class="wrap">
+    <p class="eyebrow">Kernmechanik</p>
+    <h2>Leitfähigkeit</h2>
+    <div class="two">
+      <div>
+        <div class="demo rv" id="demo">
+          <svg viewBox="0 0 760 300" role="img" aria-label="Diagramm: Strom fließt über Alublech und Stahlträger, ein Kunststoffblock isoliert das rechte Bauteil">
+            <rect width="760" height="300" fill="none"/>
+            <!-- rail -->
+            <rect x="20" y="150" width="46" height="120" rx="6" fill="#F5A81C" stroke="#17131F" stroke-width="5"/>
+            <path d="M43 150 l0 -34 m-16 12 l16 -16 l16 16" stroke="#F5A81C" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <!-- parts -->
+            <rect x="110" y="196" width="120" height="74" rx="8" fill="url(#gAlu)" stroke="#17131F" stroke-width="5"/>
+            <text x="170" y="290" text-anchor="middle" fill="#9A8DBA" font-family="Barlow Condensed" font-size="19" letter-spacing="2">ALUBLECH</text>
+            <rect x="240" y="150" width="90" height="120" rx="6" fill="#4C5768" stroke="#17131F" stroke-width="5"/>
+            <text x="285" y="290" text-anchor="middle" fill="#9A8DBA" font-family="Barlow Condensed" font-size="19" letter-spacing="2">STAHL</text>
+            <rect x="340" y="186" width="96" height="84" rx="8" fill="#2C7BD6" stroke="#17131F" stroke-width="5" opacity=".8"/>
+            <text x="388" y="290" text-anchor="middle" fill="#5FA8F0" font-family="Barlow Condensed" font-size="19" letter-spacing="2">KUNSTSTOFF</text>
+            <rect x="446" y="196" width="120" height="74" rx="8" fill="url(#gAlu)" stroke="#17131F" stroke-width="5"/>
+            <text x="506" y="290" text-anchor="middle" fill="#9A8DBA" font-family="Barlow Condensed" font-size="19" letter-spacing="2">ALUBLECH</text>
+            <!-- enemies -->
+            <g class="fell" style="transform-origin:170px 170px">
+              <circle cx="170" cy="170" r="24" fill="url(#gDark)" stroke="#17131F" stroke-width="5"/>
+              <use href="#eyesMean" transform="translate(170,166) scale(.42)"/>
+            </g>
+            <g class="fell" style="transform-origin:285px 126px">
+              <circle cx="285" cy="126" r="24" fill="url(#gOil)" stroke="#17131F" stroke-width="5"/>
+              <use href="#eyesMean" transform="translate(285,122) scale(.42)"/>
+            </g>
+            <g>
+              <circle cx="506" cy="170" r="24" fill="#8E8798" stroke="#17131F" stroke-width="5"/>
+              <use href="#eyesMean" transform="translate(506,166) scale(.42)"/>
+              <text x="574" y="176" fill="#8779A6" font-family="Barlow Condensed" font-size="21" letter-spacing="2">ISOLIERT · ÜBERLEBT</text>
+            </g>
+            <!-- lightning -->
+            <path class="arc" d="M66 210 L120 200 L150 220 L190 196 L232 214 L250 176 L268 200 L300 150 L326 190"/>
+            <g class="hit" fill="#FFF4B8">
+              <path d="M170 138 l10 22 l-16 -4 l8 20 l-22 -22 l16 2 Z"/>
+              <path d="M285 94 l10 22 l-16 -4 l8 20 l-22 -22 l16 2 Z"/>
+            </g>
+          </svg>
+          <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <button class="btn" id="zapBtn">Strom einschalten</button>
+            <span class="spec" style="color:#8779A6">Live-Demo der Mechanik</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="lede" style="margin-bottom:18px">Das ist die Mechanik, die es in keinem anderen Slingshot-Spiel gibt – und sie kommt direkt aus dem Verfahren: Eloxieren funktioniert nur, wo Strom fließt.</p>
+        <div class="rows">
+          <div class="row"><b>Regel 1</b><span>Trifft ein Geschoss eine Stromschiene, läuft ein Lichtbogen durch alle Bauteile, die sich berühren.</span><em>Kette</em></div>
+          <div class="row"><b>Regel 2</b><span>Aluminium und Stahl leiten. Kunststoff, Kartonage und Schutzfolie isolieren und brechen die Kette ab.</span><em>Material</em></div>
+          <div class="row"><b>Regel 3</b><span>Gegner auf leitenden Bauteilen sind sofort erledigt. Auf isolierten überleben sie.</span><em>Ziel</em></div>
+          <div class="row"><b>Folge</b><span>Level werden Puzzles: der Spieler baut die Kontaktkette erst zusammen – ein Blech umkippen, eine Kunststofflage wegstrahlen – und schießt dann erst auf die Schiene.</span><em>Design</em></div>
+        </div>
+        <p style="margin-top:20px;color:#B9AED2;font-size:.96rem">Zweite Ebene, ab Welt 4: <b style="color:#fff">Kontaktstellen.</b> Jedes Geschoss hat einen markierten Kontaktpunkt. Trifft es damit, überträgt es Strom weiter; trifft es daneben, prallt es nur ab.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ MATERIALIEN ══════════ -->
+<section style="background:#1B1430">
+  <div class="wrap">
+    <p class="eyebrow">Bauteile der Festungen</p>
+    <h2>Materialien</h2>
+    <p class="lede">Fünf Baustoffe statt Holz, Stein und Eis. Jeder verhält sich physikalisch anders und reagiert auf ein anderes Geschoss.</p>
+    <div class="rows">
+      <div class="row"><b>Schutzfolie &amp; Kartonage</b><span>Sehr leicht, dämpft Einschläge, brennt nicht durch. Isoliert. Bürsti räumt sie in einem Zug ab.</span><em>Weich · isoliert</em></div>
+      <div class="row"><b>Kunststoff-Distanzstück</b><span>Federt Geschosse zurück – Bankschüsse sind möglich und oft die einzige Lösung. Isoliert.</span><em>Elastisch · isoliert</em></div>
+      <div class="row"><b>Rohaluminium</b><span>Mittlere Masse, verbiegt statt zu bersten. Leitet. Bolle geht durch, Titania reißt es um.</span><em>Mittel · leitet</em></div>
+      <div class="row"><b>Stahlgestell</b><span>Trägt die schwersten Aufbauten und ist mit Wucht allein nicht zu knacken. Leitet ausgezeichnet.</span><em>Hart · leitet</em></div>
+      <div class="row"><b>Fehlcharge-Eloxal</b><span>Sprödes, überaltertes Bad: zersplittert beim ersten Kontakt. Der Glasersatz und der beste Kettenreaktions-Auslöser.</span><em>Spröde</em></div>
+      <div class="row"><b>Säurefass</b><span>Explodiert im Radius und ätzt Nachbarbauteile an. Auslöser für die großen Punktezüge.</span><em>Sprengfalle</em></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PROZESSKETTE ══════════ -->
+<section class="halftone" id="welten" style="background:linear-gradient(180deg,#1B1430,#241B38)">
+  <div class="wrap">
+    <p class="eyebrow">Weltenaufbau · 12 Level pro Welt</p>
+    <h2>Die Prozesskette</h2>
+    <p class="lede">Die Welten folgen der echten Reihenfolge der Anlage. Die Nummerierung ist keine Deko – jede Welt schaltet die Fähigkeit frei, die im Prozessschritt danach gebraucht wird.</p>
+    <div class="chain">
+      <div class="step rv" style="--sc:#CBD5DF"><div class="n">Welt 1</div><h3>Wareneingang &amp; Vorrichtung</h3><p>Tutorial. Kartonage, Paletten, erste Schleuderschüsse. Ali lernt, dass es ohne Gestell nicht weitergeht.</p><span class="un">Freischaltung: Titania</span></div>
+      <div class="step rv" style="--sc:#8E6BFF"><div class="n">Welt 2</div><h3>Entfettung</h3><p>Fettis Pfützen überall. Alles rutscht, Winkel zählen mehr als Kraft.</p><span class="un">Freischaltung: Bürsti</span></div>
+      <div class="step rv" style="--sc:#A9E85C"><div class="n">Welt 3</div><h3>Beize</h3><p>Matte Oberflächen, dampfende Becken, angefressene Bauteile. Erste Säurefass-Kettenreaktionen.</p><span class="un">Freischaltung: Säuri</span></div>
+      <div class="step rv" style="--sc:#3FD0EA"><div class="n">Welt 4</div><h3>Dekapieren &amp; Spülen</h3><p>Kurze Welt, hohes Tempo. Wasserstoffblasen als Fahrstuhl – Bubbles kommt ins Team.</p><span class="un">Freischaltung: Bubbles</span></div>
+      <div class="step rv" style="--sc:#1E74DC"><div class="n">Welt 5</div><h3>Anodisieren</h3><p>Der Kern. Stromschienen, Kontaktstellen, Gestelle unter Spannung. Alle Rebellen bekommen ihre Schicht und damit mehr Härte.</p><span class="un">Freischaltung: Leitfähigkeits-Puzzles</span></div>
+      <div class="step rv" style="--sc:#F5A81C"><div class="n">Welt 6</div><h3>Färben</h3><p>Vier Farbzonen – Schwarz, Blau, Rot, Gold. Die Farbe des Geschosses entscheidet, welche Fassfarbe es zünden kann.</p><span class="un">Freischaltung: Farbkombis</span></div>
+      <div class="step rv" style="--sc:#E33A2C"><div class="n">Welt 7</div><h3>Verdichten</h3><p>Dampf nimmt Sicht, Flugbahnen sind nur erahnbar. Bosskampf gegen Korrosius über drei Phasen.</p><span class="un">Belohnung: Prüfzeugnis</span></div>
+      <div class="step rv" style="--sc:#B4A996"><div class="n">Bonus</div><h3>Strahlen &amp; Lasergravur</h3><p>Freischaltbare Nebenwelt mit Lasar als Hauptgeschoss: reine Präzisionsschnitte, keine Wucht.</p><span class="un">Freischaltung: Lasar</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FARBEN & STIL ══════════ -->
+<section style="background:#150F24">
+  <div class="wrap">
+    <p class="eyebrow">Art Direction</p>
+    <h2>Grafikstil</h2>
+    <p class="lede">Comic wie Angry Birds, aber die Palette ist nicht erfunden: sie ist die Farbkarte des Betriebs. Alles wird als Vektor gezeichnet und rendert damit in jeder Auflösung scharf – vom Handy bis zum 4K-Messebildschirm.</p>
+
+    <div class="swatches">
+      <div class="sw"><i style="background:linear-gradient(160deg,#F2F6FA,#93A1B1)"></i><span>Natur E0 · Alu</span></div>
+      <div class="sw"><i style="background:linear-gradient(160deg,#4A4655,#17131F)"></i><span>Schwarz</span></div>
+      <div class="sw"><i style="background:linear-gradient(160deg,#6FC0FF,#123C86)"></i><span>Blau</span></div>
+      <div class="sw"><i style="background:linear-gradient(160deg,#FFE49A,#A96606)"></i><span>Gold</span></div>
+      <div class="sw"><i style="background:linear-gradient(160deg,#FF8C7A,#8C1409)"></i><span>Rot</span></div>
+      <div class="sw"><i style="background:linear-gradient(160deg,#EDE6DC,#7E7565)"></i><span>Titan</span></div>
+    </div>
+
+    <div class="grid2" style="margin-top:34px">
+      <div class="box rv">
+        <h3>Zeichenregeln</h3>
+        <ul>
+          <li>Konturlinie durchgehend <code>#17131F</code>, gleiche Stärke bei jeder Figur – das hält die Truppe zusammen.</li>
+          <li>Zwei Lichtquellen: harter Glanz oben links, kalter Reflex vom Becken unten.</li>
+          <li>Kein Airbrush. Volumen entsteht über zwei bis drei Farbstufen, wie im Comic.</li>
+          <li>Figuren sind rund und kompakt, Festungen kantig und industriell. Der Kontrast macht das Bild lesbar.</li>
+        </ul>
+      </div>
+      <div class="box rv">
+        <h3>Assets &amp; Auflösung</h3>
+        <ul>
+          <li>Alle Figuren und Bauteile als SVG – beliebig skalierbar, kein Nachzeichnen für neue Displays.</li>
+          <li>Für die Engine automatisch zu Sprite-Atlanten gerendert: <code>@1x</code>, <code>@2x</code>, <code>@4x</code>.</li>
+          <li>Hintergründe in drei Parallax-Ebenen: Halle, Beckenreihe, Vordergrundboden.</li>
+          <li>Animation über Skelett-Verformung (Squash &amp; Stretch), nicht über Einzelbilder.</li>
+        </ul>
+      </div>
+      <div class="box rv">
+        <h3>Ton</h3>
+        <ul>
+          <li>Grundlage sind Aufnahmen aus der eigenen Halle: Gebläse, Krankette, blubberndes Becken.</li>
+          <li>Der Lichtbogen ist der lauteste Moment im Spiel – bewusst als Belohnung eingesetzt.</li>
+          <li>Die Rebellen sprechen nicht, sie geben Töne. Korrosius hüstelt Kalkstaub.</li>
+        </ul>
+      </div>
+      <div class="box rv">
+        <h3>Wertung &amp; Fortschritt</h3>
+        <ul>
+          <li>Statt Sternen werden <b style="color:#fff">Mikrometer</b> vergeben: 6, 12 oder 20 µm Schichtdicke pro Level.</li>
+          <li>Währung sind <b style="color:#fff">Ampereminuten</b>, verdient durch überflüssige Geschosse.</li>
+          <li>Am Ende jeder Welt steht ein Prüfprotokoll mit der erreichten Gesamtschichtdicke.</li>
+          <li>Gesperrtes Easter Egg im Weltenmenü: eine Trommelwelt mit dem Hinweis, dass es hier keinen Trommelprozess gibt.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ LEVELBEISPIEL ══════════ -->
+<section class="paper" id="level">
+  <div class="wrap">
+    <p class="eyebrow">Blaupause</p>
+    <h2>Level 5–8 „Kontakt&shy;stelle"</h2>
+    <p class="lede">Ein durchgeplantes Level als Muster für alle weiteren – drei Geschosse, eine Lösung, zwei Sackgassen.</p>
+    <div class="acts">
+      <div class="act rv"><div class="no">A</div><h3>Aufbau</h3><p>Links die Schleuder. Rechts ein Stahlturm mit Stromschiene an der Spitze, Lenny sitzt auf einem Alublech am Boden, Kalki auf einer Kunststofflage darüber, Fetti auf dem Dach aus Fehlcharge-Eloxal.</p></div>
+      <div class="act rv"><div class="no">B</div><h3>Die Lösung</h3><p>Bürsti bläst die Kunststofflage weg, sodass Kalkis Blech auf den Stahl kippt und Kontakt bekommt. Bubbles steigt auf und sprengt das spröde Dach, Fetti fällt auf dieselbe Kette. Ali trifft die Schiene – ein Lichtbogen, drei Gegner.</p></div>
+      <div class="act rv"><div class="no">C</div><h3>Die Sackgassen</h3><p>Wer zuerst auf die Schiene schießt, verbrennt den Schuss an einer Kette mit nur einem Gegner. Wer Säuri auf den Stahl setzt, macht ihn weich – und die Kette bricht beim Einsturz. Beides lehrbar in unter 30 Sekunden.</p></div>
+    </div>
+    <p class="pull">Regel für alle 84 Level: <b>eine neue Idee pro Level, drei Level zum Üben, dann eine Idee mehr.</b> Kein Level länger als 45 Sekunden im ersten Versuch.</p>
+  </div>
+</section>
+
+<!-- ══════════ BESTENLISTE ══════════ -->
+<section class="halftone" id="rangliste" style="background:linear-gradient(180deg,#241B38,#1B1430)">
+  <div class="wrap">
+    <p class="eyebrow">Endbildschirm</p>
+    <h2>Die Bestenliste</h2>
+    <p class="lede">Wer eine Welt abschließt, bekommt sein Prüfprotokoll – und trägt sich mit Namen ein. Gewertet wird die Gesamtschichtdicke aller Level: 20 µm pro perfektem Level, maximal 1.680 µm im ganzen Spiel.</p>
+
+    <div class="two">
+      <div>
+        <div class="board rv">
+          <div class="bhead"><b>Prüfprotokoll</b><span>Gesamtschichtdicke</span></div>
+          <ol id="lb"></ol>
+          <div class="entry">
+            <input id="lbName" maxlength="12" placeholder="Dein Name" aria-label="Name für die Bestenliste">
+            <button class="btn" id="lbBtn">Eintragen</button>
+            <span class="hint">Mockup – so sieht der Endbildschirm aus</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="rows">
+          <div class="row"><b>Wertung</b><span>Summe aller µm. Jedes Level bringt 6, 12 oder 20 µm – abhängig davon, wie viele Geschosse übrig bleiben.</span><em>µm gesamt</em></div>
+          <div class="row"><b>Eingabe</b><span>Maximal zwölf Zeichen, Großbuchstaben, direkt nach dem letzten Level. Kein Konto, keine Anmeldung, keine Mailadresse.</span><em>Arcade</em></div>
+          <div class="row"><b>Geltungs&shy;bereich</b><span>Eine Liste pro Gerät oder Standort. Am Messestand teilen sich alle Besucher eine gemeinsame Liste, zu Hause spielt jeder gegen sich selbst.</span><em>Lokal</em></div>
+          <div class="row"><b>Zeitraum</b><span>Tagesbestenliste und Gesamtliste nebeneinander. Am Messetag zählt der Tag, sonst die Gesamtwertung.</span><em>Zwei Tabs</em></div>
+          <div class="row"><b>Filter</b><span>Automatische Sperrliste für unpassende Namen, Doppelnamen bekommen eine laufende Nummer.</span><em>Pflicht</em></div>
+          <div class="row"><b>Anzeige</b><span>Top 10 sichtbar, der eigene Eintrag immer zusätzlich mit seinem echten Rang – auch auf Platz 340.</span><em>Immer sichtbar</em></div>
+        </div>
+        <p style="margin-top:20px;color:#B9AED2;font-size:.96rem">Zusatz für den Messestand: die Bestenliste läuft im Leerlauf als Vollbild-Anzeige mit den Comicfiguren im Hintergrund – der Bildschirm wirbt also auch dann, wenn gerade niemand spielt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ TECHNIK ══════════ -->
+<section style="background:linear-gradient(180deg,#1B1430,#150F24)">
+  <div class="wrap">
+    <p class="eyebrow">Umsetzung</p>
+    <h2>Technik</h2>
+    <div class="grid2">
+      <div class="box rv">
+        <h3>Stack</h3>
+        <ul>
+          <li>Reines HTML/JS, keine Installation, kein Store, kein Login.</li>
+          <li><code>Matter.js</code> für die 2D-Physik, Rendering über <code>Canvas</code> auf einer festen Weltgröße mit Skalierung.</li>
+          <li>Level als <code>JSON</code>: Bauteile, Positionen, Material, Gegner, verfügbare Geschosse.</li>
+          <li>Fortschritt lokal im Browser. Bestenliste ebenfalls lokal – am Messestand als geteilte Liste auf einem kleinen Server im Netz.</li>
+        </ul>
+      </div>
+      <div class="box rv">
+        <h3>Leveleditor</h3>
+        <ul>
+          <li>Zweite HTML-Seite: Bauteile mit der Maus setzen, Physik live testen, JSON exportieren.</li>
+          <li>Damit können neue Level ohne Programmierer entstehen – auch von Azubis.</li>
+        </ul>
+      </div>
+      <div class="box rv">
+        <h3>Meilensteine</h3>
+        <ul>
+          <li><b style="color:#fff">M1</b> Prototyp: Schleuder, Physik, Welt 1 mit drei Leveln.</li>
+          <li><b style="color:#fff">M2</b> Alle acht Geschosse mit Fähigkeiten, Materialverhalten komplett.</li>
+          <li><b style="color:#fff">M3</b> Leitfähigkeit, Editor, Welten 1–4.</li>
+          <li><b style="color:#fff">M4</b> Färben, Bosskampf, Ton, Prüfprotokolle.</li>
+        </ul>
+      </div>
+      <div class="box rv">
+        <h3>Einsatz im Betrieb</h3>
+        <ul>
+          <li>Messestand und Tag der offenen Tür: Touchscreen, ein Spielstand, Bestenliste.</li>
+          <li>Ausbildungsmarketing – die Prozesskette lernt man beim Spielen mit.</li>
+          <li>QR-Code auf Musterplatten und Angeboten, der direkt ins Level führt.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><p>Eloxal Rebels · Game Design Bible v1 · Jacobi Eloxal GmbH</p></footer>
+
+<script>
+// scroll reveal
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+document.querySelectorAll('.rv').forEach((el,i)=>{el.style.transitionDelay=(i%4)*60+'ms';io.observe(el)});
+
+// conductivity demo
+const demo=document.getElementById('demo'), btn=document.getElementById('zapBtn');
+btn.addEventListener('click',()=>{
+  if(demo.classList.contains('live')){
+    demo.classList.remove('live'); btn.textContent='Strom einschalten'; return;
+  }
+  demo.classList.add('live'); btn.textContent='Zurücksetzen';
+});
+
+// leaderboard mockup
+let scores=[
+  {n:'ELOX-KING',s:1620},{n:'BADMEISTER',s:1544},{n:'ANODIN',s:1498},
+  {n:'GESTELL-GUNTHER',s:1402},{n:'SPUELBECKEN',s:1355},{n:'MIKROMETER',s:1290},
+  {n:'ROHTEIL 77',s:1188},{n:'FOLIENFREI',s:1104}
+];
+const lb=document.getElementById('lb');
+function renderLb(){
+  scores.sort((a,b)=>b.s-a.s);
+  lb.innerHTML=scores.slice(0,10).map((e,i)=>
+    `<li class="r${i+1}${e.me?' me':''}"><span class="rk">${i+1}</span>`+
+    `<span class="nm2">${e.n}</span>`+
+    `<span class="sc">${e.s.toLocaleString('de-DE')}<i>µm</i></span></li>`).join('');
+}
+renderLb();
+const nameIn=document.getElementById('lbName');
+document.getElementById('lbBtn').addEventListener('click',()=>{
+  const v=nameIn.value.trim().toUpperCase().slice(0,12);
+  if(!v){nameIn.focus();return;}
+  scores=scores.filter(e=>!e.me);
+  scores.push({n:v,s:900+Math.floor(Math.random()*780),me:true});
+  renderLb(); nameIn.value=''; nameIn.placeholder='Nochmal spielen?';
+});
+nameIn.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('lbBtn').click()});
+</script>
+</body>
+</html>

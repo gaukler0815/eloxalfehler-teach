@@ -343,15 +343,30 @@
     ctx.restore();
   }
 
-  function drawEnemy(ctx, type, x, y, r, vx, vy, t, id, squashT) {
+  function drawEnemy(ctx, type, x, y, r, vx, vy, t, id, squashT, fear) {
     const f = faceParams(t, id, vx, vy);
-    const bob = Math.sin((t + f.seed) * 0.05) * 2;
-    const breathe = 1 + 0.025 * Math.sin((t + f.seed) * 0.08);
+    if (fear) f.blink = 0; // scared enemies don't blink
+    const bob = Math.sin((t + f.seed) * 0.05) * (fear ? 4 : 2); // trembling when scared
+    const breathe = 1 + (fear ? 0.05 : 0.025) * Math.sin((t + f.seed) * (fear ? 0.4 : 0.08));
     ctx.save();
     ctx.translate(x, y + bob);
     ctx.scale(breathe, 2 - breathe);
     if (squashT > 0) { const k = Math.min(0.3, squashT * 0.03); ctx.scale(1 + k, 1 - k); }
     (enemyArt[type] || enemyArt.stauber)(ctx, r, f, t);
+    if (fear) {
+      // open "uh-oh" mouth over whatever the resting face was
+      ctx.fillStyle = LINE;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(0, r * 0.42, r * 0.2, r * 0.26, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      // sweat drop
+      ctx.fillStyle = '#8FD3FF';
+      ctx.beginPath();
+      ctx.moveTo(r * 0.78, -r * 0.72);
+      ctx.bezierCurveTo(r * 0.95, -r * 0.5, r * 0.9, -r * 0.38, r * 0.76, -r * 0.38);
+      ctx.bezierCurveTo(r * 0.62, -r * 0.38, r * 0.6, -r * 0.52, r * 0.78, -r * 0.72);
+      ctx.fill();
+    }
     ctx.restore();
   }
 

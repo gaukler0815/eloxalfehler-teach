@@ -34,8 +34,7 @@ jobs:
 
       - name: Run game tests
         run: |
-          node eloxal-rebels/tests/conductivity.test.js
-          node eloxal-rebels/tests/sim.test.js
+          for f in eloxal-rebels/tests/*.test.js; do node "$f"; done
 
       - name: Publish eloxal-rebels/ to the gh-pages branch
         run: |

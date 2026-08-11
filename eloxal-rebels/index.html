@@ -50,12 +50,24 @@
     .card h2 { font-size: 22px; margin: 18px 0 8px; }
     .card p.sub { opacity: 0.8; margin-bottom: 12px; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-    .levels { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; }
-    .lvl { text-align: left; background: #241c33; border: 2px solid var(--line);
-      border-radius: 14px; padding: 12px 14px; cursor: pointer; }
-    .lvl b { display: block; }
-    .lvl .badge { color: var(--gold); font-weight: 700; }
-    .lvl .w { font-size: 12px; opacity: 0.6; }
+    .brand { display: flex; justify-content: center; margin-bottom: 6px; }
+    .brandlogo { width: 230px; height: auto; }
+    .gametitle { text-align: center; letter-spacing: 3px;
+      background: linear-gradient(180deg, #fff, var(--alu) 55%, #8FA3B8);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 3px 0 var(--line)); }
+    .card > .sub { text-align: center; }
+    .levels { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 10px; }
+    .lvl { position: relative; text-align: left; background: #241c33; border: 2px solid var(--line);
+      border-radius: 14px; padding: 10px 12px; cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease; }
+    .lvl:hover { transform: translateY(-2px); background: #2c2340; }
+    .lvl b { display: block; font-size: 14px; }
+    .lvl .badge { color: var(--gold); font-weight: 700; font-size: 13px; }
+    .lvl .w { font-size: 11px; opacity: 0.6; }
+    .lvl.locked { opacity: 0.45; cursor: not-allowed; }
+    .lvl.locked:hover { transform: none; background: #241c33; }
+    .lvl .lock { position: absolute; top: 8px; right: 10px; }
     .um-scale { display: flex; gap: 8px; margin: 12px 0; }
     .um-scale div { flex: 1; text-align: center; padding: 10px 0; border-radius: 10px;
       border: 2px solid var(--line); background: #241c33; font-weight: 700; }
@@ -70,8 +82,7 @@
     .tabs button.active { background: var(--gold); color: var(--line); }
     .err { color: var(--rot); min-height: 20px; margin-top: 6px; }
     .hint { font-size: 13px; opacity: 0.7; margin-top: 10px; }
-    a.editor { position: fixed; bottom: 10px; right: 14px; color: #ffffff99;
-      font-size: 13px; z-index: 15; text-decoration: none; }
+    .protobrand { height: 30px; vertical-align: middle; margin-left: 8px; }
   </style>
 </head>
 <body>
@@ -93,20 +104,30 @@
   <!-- World / level menu -->
   <div class="overlay show" id="menu">
     <div class="card">
-      <h1>ELOXAL REBELS</h1>
-      <p class="sub">Die Schicht schlägt zurück. Zieh die Schleuder, triff die Korrosionsbande, sammle Mikrometer.</p>
+      <div class="brand">
+        <svg viewBox="0 0 300 74" class="brandlogo" role="img" aria-label="Jacobi Eloxal">
+          <defs>
+            <linearGradient id="jhex" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#1E74DC"/><stop offset="1" stop-color="#8FD3FF"/>
+            </linearGradient>
+          </defs>
+          <polygon points="37,4 65,20 65,54 37,70 9,54 9,20" fill="url(#jhex)" stroke="#17131F" stroke-width="4"/>
+          <text x="37" y="50" text-anchor="middle" font-family="system-ui,sans-serif" font-size="38" font-weight="800" fill="#fff">J</text>
+          <text x="82" y="36" font-family="system-ui,sans-serif" font-size="30" font-weight="800" fill="#C9D2DC">JACOBI</text>
+          <text x="83" y="62" font-family="system-ui,sans-serif" font-size="20" font-weight="700" letter-spacing="6" fill="#F5A81C">ELOXAL</text>
+        </svg>
+      </div>
+      <h1 class="gametitle">ELOXAL&nbsp;REBELS</h1>
+      <p class="sub">Die Schicht schlägt zurück. Zieh die Schleuder, triff die Korrosionsbande, sammle Mikrometer. 12 Level — von der Palette bis zu Baron Korrosius.</p>
       <div class="levels" id="levelList"></div>
       <div class="row">
         <button class="gold" id="btnBoard">Bestenliste</button>
-        <button class="ghost" onclick="location.href='editor.html'">Leveleditor</button>
-      </div>
-      <div class="row">
         <button class="ghost" id="btnSaveExport">Spielstand sichern</button>
         <button class="ghost" id="btnSaveImport">Spielstand laden</button>
         <input type="file" id="saveFile" accept=".json,application/json" style="display:none" />
       </div>
       <div class="err" id="saveMsg"></div>
-      <p class="hint">Fortschritt und Bestenliste werden automatisch im Browser gespeichert. „Spielstand sichern“ legt zusätzlich eine Datei an, die sich auf einem anderen Gerät wieder laden lässt. Tipp: Im Flug klicken/tippen löst die Fähigkeit des Geschosses aus.</p>
+      <p class="hint">Jedes gewonnene Level schaltet das nächste frei. Im Flug klicken/tippen löst die Fähigkeit des Geschosses aus. Fortschritt wird automatisch gespeichert.</p>
     </div>
   </div>
 
@@ -123,7 +144,12 @@
         <button id="btnNext" class="gold">Weiter</button>
       </div>
 
-      <h2>Prüfprotokoll — Bestenliste</h2>
+      <h2>Prüfprotokoll — Bestenliste
+        <svg viewBox="0 0 74 74" class="protobrand" role="img" aria-label="Jacobi Eloxal">
+          <polygon points="37,4 65,20 65,54 37,70 9,54 9,20" fill="#1E74DC" stroke="#17131F" stroke-width="4"/>
+          <text x="37" y="50" text-anchor="middle" font-family="system-ui,sans-serif" font-size="38" font-weight="800" fill="#fff">J</text>
+        </svg>
+      </h2>
       <p class="sub">Gesamtschichtdicke aller Level: <b id="protoUm">0</b> µm. Trag dich ein (max. 12 Zeichen, Großbuchstaben).</p>
       <div class="row" style="margin-top:8px;">
         <input type="text" id="nameInput" maxlength="12" placeholder="DEIN NAME" />
@@ -148,8 +174,6 @@
       </div>
     </div>
   </div>
-
-  <a class="editor" href="editor.html">Leveleditor →</a>
 
   <script src="vendor/matter.min.js"></script>
   <script src="src/config.js"></script>

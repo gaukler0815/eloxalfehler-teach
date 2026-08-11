@@ -1,0 +1,90 @@
+{
+  "id": "l11",
+  "world": 3,
+  "name": "Laserschnitt",
+  "subtitle": "Lasar friert den Flug ein — zieh die Linie, die den Bunker öffnet. Nur einmal.",
+  "width": 2800,
+  "slingshot": {
+    "x": 320,
+    "y": 720
+  },
+  "projectiles": [
+    "lasar",
+    "bolle",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "k1",
+      "material": "stahl",
+      "x": 2200,
+      "y": 860,
+      "w": 60,
+      "h": 240
+    },
+    {
+      "id": "k2",
+      "material": "stahl",
+      "x": 2450,
+      "y": 860,
+      "w": 60,
+      "h": 240
+    },
+    {
+      "id": "kRoof",
+      "material": "stahl",
+      "x": 2325,
+      "y": 720,
+      "w": 380,
+      "h": 40
+    },
+    {
+      "id": "inner",
+      "material": "fehlcharge",
+      "x": 2325,
+      "y": 940,
+      "w": 120,
+      "h": 80
+    },
+    {
+      "id": "guardbox",
+      "material": "kartonage",
+      "x": 2000,
+      "y": 935,
+      "w": 120,
+      "h": 90
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "lenny",
+      "x": 2000,
+      "y": 860
+    },
+    {
+      "id": "e2",
+      "type": "kalki",
+      "x": 2270,
+      "y": 948
+    },
+    {
+      "id": "e3",
+      "type": "kalki",
+      "x": 2390,
+      "y": 948
+    },
+    {
+      "id": "e4",
+      "type": "lenny",
+      "x": 2325,
+      "y": 670
+    },
+    {
+      "id": "e5",
+      "type": "stauber",
+      "x": 2620,
+      "y": 956
+    }
+  ]
+}

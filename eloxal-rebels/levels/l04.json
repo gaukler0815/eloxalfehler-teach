@@ -1,0 +1,70 @@
+{
+  "id": "l04",
+  "world": 1,
+  "name": "Hinterm Schild",
+  "subtitle": "Der Stahl blockt flache Schüsse. Hoch drüber — Rippi teilt sich auf.",
+  "width": 1920,
+  "slingshot": {
+    "x": 340,
+    "y": 720
+  },
+  "projectiles": [
+    "rippi",
+    "ali",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "shield",
+      "material": "stahl",
+      "x": 1180,
+      "y": 860,
+      "w": 44,
+      "h": 240
+    },
+    {
+      "id": "ramp",
+      "material": "kunststoff",
+      "x": 1500,
+      "y": 470,
+      "w": 320,
+      "h": 30,
+      "angle": -32,
+      "static": true
+    },
+    {
+      "id": "box",
+      "material": "kartonage",
+      "x": 1560,
+      "y": 935,
+      "w": 120,
+      "h": 90
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "stauber",
+      "x": 1300,
+      "y": 956
+    },
+    {
+      "id": "e2",
+      "type": "stauber",
+      "x": 1420,
+      "y": 956
+    },
+    {
+      "id": "e3",
+      "type": "fetti",
+      "x": 1560,
+      "y": 862
+    },
+    {
+      "id": "e4",
+      "type": "stauber",
+      "x": 1700,
+      "y": 956
+    }
+  ]
+}

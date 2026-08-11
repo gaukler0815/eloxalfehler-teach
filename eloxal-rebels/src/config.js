@@ -122,7 +122,8 @@
     lenny:     { label: 'Lochfraß-Lenny', radius: 30, color: '#3B7A57', face: 'drill' },
     fetti:     { label: 'Fetti',     radius: 28, color: '#C7B24A', face: 'oil' },
     kalki:     { label: 'Kalki',     radius: 30, color: '#E7E2D6', face: 'crystal' },
-    korrosius: { label: 'Baron Korrosius', radius: 54, color: '#F0EAF2', face: 'boss' }
+    // The boss: three hit phases (design bible), heavier so he stands his ground.
+    korrosius: { label: 'Baron Korrosius', radius: 54, color: '#F0EAF2', face: 'boss', hp: 3, density: 0.003 }
   };
 
   // Scoring in micrometres of anodized layer. Shots left over after clearing

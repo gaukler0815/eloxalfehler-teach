@@ -1,0 +1,108 @@
+{
+  "id": "l07",
+  "world": 2,
+  "name": "Säurebad",
+  "subtitle": "Stahl ist mit Wucht allein nicht zu knacken. Erst Säuri, dann Bolle.",
+  "width": 2400,
+  "slingshot": {
+    "x": 320,
+    "y": 720
+  },
+  "projectiles": [
+    "saeuri",
+    "bolle",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "g1",
+      "material": "stahl",
+      "x": 1850,
+      "y": 880,
+      "w": 44,
+      "h": 200
+    },
+    {
+      "id": "g2",
+      "material": "stahl",
+      "x": 2050,
+      "y": 880,
+      "w": 44,
+      "h": 200
+    },
+    {
+      "id": "g3",
+      "material": "stahl",
+      "x": 2250,
+      "y": 880,
+      "w": 44,
+      "h": 200
+    },
+    {
+      "id": "floor1",
+      "material": "stahl",
+      "x": 2050,
+      "y": 762,
+      "w": 460,
+      "h": 36
+    },
+    {
+      "id": "u1",
+      "material": "stahl",
+      "x": 1950,
+      "y": 654,
+      "w": 44,
+      "h": 180
+    },
+    {
+      "id": "u2",
+      "material": "stahl",
+      "x": 2150,
+      "y": 654,
+      "w": 44,
+      "h": 180
+    },
+    {
+      "id": "roof",
+      "material": "stahl",
+      "x": 2050,
+      "y": 546,
+      "w": 300,
+      "h": 36
+    },
+    {
+      "id": "barrel",
+      "material": "saeurefass",
+      "x": 2350,
+      "y": 945,
+      "w": 70,
+      "h": 70
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "lenny",
+      "x": 1950,
+      "y": 950
+    },
+    {
+      "id": "e2",
+      "type": "kalki",
+      "x": 2150,
+      "y": 950
+    },
+    {
+      "id": "e3",
+      "type": "lenny",
+      "x": 2050,
+      "y": 714
+    },
+    {
+      "id": "e4",
+      "type": "stauber",
+      "x": 2050,
+      "y": 504
+    }
+  ]
+}

@@ -169,9 +169,12 @@
   };
 
   // --- loop --------------------------------------------------------------
+  let frameNo = 0;
   function frame() {
+    frameNo++;
     if (testing && (game.state === 'aim' || game.state === 'flying')) game.update();
-    render.draw();
+    if (ER.particles) ER.particles.update();
+    render.draw(frameNo);
     requestAnimationFrame(frame);
   }
 

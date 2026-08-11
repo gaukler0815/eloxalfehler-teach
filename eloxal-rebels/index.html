@@ -23,10 +23,11 @@
       border-radius: 14px; padding: 10px 16px; backdrop-filter: blur(3px); }
     #levelInfo b { font-size: 20px; }
     #levelInfo small { display: block; opacity: 0.75; max-width: 520px; margin-top: 2px; }
-    #shots { display: flex; gap: 8px; align-items: center; }
-    #shots .chip { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line);
+    #shots { display: flex; gap: 6px; align-items: center; }
+    #shots canvas.chip { width: 34px; height: 34px; }
+    #shots div.chip.spent { width: 30px; height: 30px; border-radius: 50%;
+      border: 3px solid var(--line); background: #555; opacity: 0.28;
       display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--line); }
-    #shots .chip.spent { opacity: 0.28; }
     #umTotal { text-align: right; }
     #umTotal b { font-size: 26px; color: var(--gold); }
     #hud .btns { pointer-events: auto; display: flex; gap: 8px; }
@@ -36,12 +37,15 @@
     button.gold { background: var(--gold); color: var(--line); }
     button:active { transform: translateY(1px); }
 
-    /* --- overlays --- */
-    .overlay { position: fixed; inset: 0; display: none; place-items: center;
-      background: rgba(11,8,18,0.82); backdrop-filter: blur(4px); z-index: 20; padding: 24px; }
-    .overlay.show { display: grid; }
+    /* --- overlays (fade + card pop) --- */
+    .overlay { position: fixed; inset: 0; display: grid; place-items: center;
+      background: rgba(11,8,18,0.82); backdrop-filter: blur(4px); z-index: 20; padding: 24px;
+      visibility: hidden; opacity: 0; transition: opacity 0.25s ease, visibility 0.25s; }
+    .overlay.show { visibility: visible; opacity: 1; }
     .card { width: min(680px, 94vw); max-height: 92vh; overflow: auto;
-      background: #1b1526; border: 3px solid var(--line); border-radius: 22px; padding: 26px 28px; }
+      background: #1b1526; border: 3px solid var(--line); border-radius: 22px; padding: 26px 28px;
+      transform: scale(0.92) translateY(14px); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .overlay.show .card { transform: scale(1) translateY(0); }
     .card h1 { font-size: 30px; margin-bottom: 4px; }
     .card h2 { font-size: 22px; margin: 18px 0 8px; }
     .card p.sub { opacity: 0.8; margin-bottom: 12px; }
@@ -79,6 +83,7 @@
     <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
       <div class="panel" id="umTotal">µm gesamt<br><b>0</b></div>
       <div class="btns">
+        <button class="ghost" id="btnSound" title="Ton an/aus">🔊</button>
         <button class="ghost" id="btnRetry" title="Nochmal (R)">↻</button>
         <button class="ghost" id="btnMenu" title="Menü (Esc)">☰</button>
       </div>
@@ -152,6 +157,9 @@
   <script src="src/levels.js"></script>
   <script src="src/leaderboard.js"></script>
   <script src="src/abilities.js"></script>
+  <script src="src/particles.js"></script>
+  <script src="src/sound.js"></script>
+  <script src="src/characters.js"></script>
   <script src="src/render.js"></script>
   <script src="src/game.js"></script>
   <script src="src/main.js"></script>

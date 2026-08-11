@@ -1,0 +1,56 @@
+{
+  "id": "l01",
+  "world": 1,
+  "name": "Wareneingang",
+  "subtitle": "Ziehen, zielen, loslassen. Räum die Palette ab.",
+  "width": 1920,
+  "slingshot": {
+    "x": 340,
+    "y": 720
+  },
+  "projectiles": [
+    "ali",
+    "ali",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "b1",
+      "material": "kartonage",
+      "x": 1360,
+      "y": 935,
+      "w": 150,
+      "h": 90
+    },
+    {
+      "id": "b2",
+      "material": "kartonage",
+      "x": 1360,
+      "y": 845,
+      "w": 150,
+      "h": 90
+    },
+    {
+      "id": "b3",
+      "material": "kartonage",
+      "x": 1520,
+      "y": 935,
+      "w": 150,
+      "h": 90
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "stauber",
+      "x": 1360,
+      "y": 776
+    },
+    {
+      "id": "e2",
+      "type": "stauber",
+      "x": 1520,
+      "y": 866
+    }
+  ]
+}

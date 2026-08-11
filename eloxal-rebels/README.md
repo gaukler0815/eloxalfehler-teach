@@ -54,21 +54,32 @@ Kein Build, keine Installation. **`index.html` per Doppelklick im Browser
   JSON-Datei **sichern und laden** – z. B. um ihn vom Büro-PC auf den
   Messestand mitzunehmen. Beim Laden werden alle Einträge erneut durch den
   Namensfilter geprüft.
-- **Leveleditor** (`editor.html`): Bauteile und Gegner mit der Maus setzen,
-  Schleuder verschieben, live testen, JSON exportieren/importieren.
-- **Level als JSON** unter `levels/` – aktuell Welt 1 (drei Level) und ein
-  Leitfähigkeits-Puzzle „Kontaktstelle“ aus Welt 5.
+- **12 Level in drei Welten** mit ansteigender Schwierigkeit: vom
+  Kartonage-Tutorial über Bankschüsse, Leitfähigkeits-Puzzles und
+  Kettenreaktionen bis zum Bosskampf gegen Baron Korrosius (drei
+  Trefferphasen). Spätere Level nutzen breitere Welten; die Kamera zoomt beim
+  Zielen heraus und folgt dem Schuss. Jedes gewonnene Level schaltet das
+  nächste frei. Level liegen als JSON unter `levels/` (generiert aus
+  `src/levels.js`, dem Laufzeit-Katalog).
 
-Status der Meilensteine: **M1 vollständig**, große Teile von **M2** (alle acht
-Geschosse, µm-Wertung, Bestenliste) und **M3** (Leitfähigkeit, Editor) sind
-umgesetzt. Offen bleiben u. a. weitere Welten/Level, die fertigen SVG-Figuren,
-Färben/Bosskampf und Ton (M4).
+- **Design & „Juice“**: Figuren mit Gesichtern (blinzeln, schauen in
+  Flugrichtung, erschrecken vor nahenden Geschossen), Squash & Stretch,
+  Partikel, Kameraführung mit Intro-Schwenk und Zeitlupe beim letzten Treffer,
+  Parallax-Halle mit Jacobi-Eloxal-Beschilderung, synthetisierter Sound.
+
+Status der Meilensteine: **M1–M3 im Kern umgesetzt** (der Leveleditor wurde
+bewusst wieder entfernt), vom **M4** stehen Bosskampf und Ton. Offen bleiben
+u. a. Färben und das Prüfprotokoll je Welt.
+
+Ein Hinweis zum Logo: Die Firmen-Beschilderung im Spiel ist als Vektor-Grafik
+nachgebaut (Sechseck-Marke + Schriftzug). Liegt die echte Logodatei vor, kann
+sie das Nachbau-Logo in `index.html` (SVG im Menü) und `src/render.js`
+(`drawLogoSign`) ersetzen.
 
 ## Ordnerstruktur
 
 ```
 index.html            Spiel-Einstieg
-editor.html           Leveleditor
 src/
   config.js           Palette, Materialien, Geschosse, Physik-/Balancing-Werte
   conductivity.js     Kernmechanik Lichtbogen (rein, testbar)
@@ -78,8 +89,10 @@ src/
   render.js           Canvas-2D-Renderer (einfache Formen in der Eloxal-Palette)
   game.js             Physikwelt, Schleuder, Kollisionen, Wertung, Sieg/Niederlage
   main.js             Bootstrap, Eingabe, HUD, Menü, Endbildschirm, Bestenliste
-  editor.js           Logik des Leveleditors
-levels/               ein JSON pro Level
+  characters.js       Figuren-Art (Gesichter, Squash & Stretch)
+  particles.js        Partikel (Staub, Splitter, Funken, Konfetti)
+  sound.js            WebAudio-Soundeffekte (ohne Audiodateien)
+levels/               ein JSON pro Level (l01–l12)
 assets/               SVG-Quellen der Figuren (folgen)
 vendor/matter.min.js  Physik-Engine, lokal (läuft offline)
 docs/                 Game Design Bible
@@ -94,6 +107,7 @@ Node:
 ```bash
 node tests/conductivity.test.js   # die Kernmechanik isoliert
 node tests/sim.test.js            # ganze Runde headless: Schuss, Bruch, Lichtbogen, Wertung
+node tests/levels.test.js         # alle 12 Level: Struktur, JSON-Sync, statische Stabilität
 ```
 
 Der Sim-Test lädt dieselbe matter.js-Datei wie das Spiel und beweist u. a., dass

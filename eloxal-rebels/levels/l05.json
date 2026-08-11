@@ -1,0 +1,92 @@
+{
+  "id": "l05",
+  "world": 2,
+  "name": "Kipplast",
+  "subtitle": "Titania hakt sich an Kanten fest und reißt sie herunter.",
+  "width": 2400,
+  "slingshot": {
+    "x": 320,
+    "y": 720
+  },
+  "projectiles": [
+    "titania",
+    "bolle",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "barrel",
+      "material": "saeurefass",
+      "x": 1600,
+      "y": 945,
+      "w": 70,
+      "h": 70
+    },
+    {
+      "id": "t1a",
+      "material": "aluminium",
+      "x": 1750,
+      "y": 850,
+      "w": 50,
+      "h": 260
+    },
+    {
+      "id": "t1b",
+      "material": "aluminium",
+      "x": 1900,
+      "y": 850,
+      "w": 50,
+      "h": 260
+    },
+    {
+      "id": "cap",
+      "material": "aluminium",
+      "x": 1825,
+      "y": 700,
+      "w": 220,
+      "h": 40
+    },
+    {
+      "id": "s1",
+      "material": "aluminium",
+      "x": 2150,
+      "y": 850,
+      "w": 50,
+      "h": 260
+    },
+    {
+      "id": "cap2",
+      "material": "aluminium",
+      "x": 2150,
+      "y": 700,
+      "w": 180,
+      "h": 40
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "lenny",
+      "x": 1825,
+      "y": 650
+    },
+    {
+      "id": "e2",
+      "type": "stauber",
+      "x": 2150,
+      "y": 656
+    },
+    {
+      "id": "e3",
+      "type": "lenny",
+      "x": 2020,
+      "y": 950
+    },
+    {
+      "id": "e4",
+      "type": "stauber",
+      "x": 2290,
+      "y": 956
+    }
+  ]
+}

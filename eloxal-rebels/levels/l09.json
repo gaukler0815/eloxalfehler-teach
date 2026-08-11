@@ -1,0 +1,114 @@
+{
+  "id": "l09",
+  "world": 3,
+  "name": "Kettenreaktion",
+  "subtitle": "Fehlcharge splittert, Fässer zünden Fässer. Ein Treffer reicht — der richtige.",
+  "width": 2800,
+  "slingshot": {
+    "x": 320,
+    "y": 720
+  },
+  "projectiles": [
+    "ali",
+    "rippi",
+    "bolle"
+  ],
+  "blocks": [
+    {
+      "id": "gA",
+      "material": "fehlcharge",
+      "x": 1900,
+      "y": 910,
+      "w": 40,
+      "h": 140
+    },
+    {
+      "id": "gB",
+      "material": "fehlcharge",
+      "x": 2050,
+      "y": 910,
+      "w": 40,
+      "h": 140
+    },
+    {
+      "id": "gC",
+      "material": "fehlcharge",
+      "x": 2200,
+      "y": 910,
+      "w": 40,
+      "h": 140
+    },
+    {
+      "id": "gD",
+      "material": "fehlcharge",
+      "x": 2350,
+      "y": 910,
+      "w": 40,
+      "h": 140
+    },
+    {
+      "id": "deck",
+      "material": "fehlcharge",
+      "x": 2125,
+      "y": 825,
+      "w": 560,
+      "h": 30
+    },
+    {
+      "id": "f1",
+      "material": "saeurefass",
+      "x": 1975,
+      "y": 775,
+      "w": 70,
+      "h": 70
+    },
+    {
+      "id": "f2",
+      "material": "saeurefass",
+      "x": 2275,
+      "y": 775,
+      "w": 70,
+      "h": 70
+    },
+    {
+      "id": "f3",
+      "material": "saeurefass",
+      "x": 2540,
+      "y": 945,
+      "w": 70,
+      "h": 70
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "stauber",
+      "x": 1975,
+      "y": 956
+    },
+    {
+      "id": "e2",
+      "type": "stauber",
+      "x": 2125,
+      "y": 956
+    },
+    {
+      "id": "e3",
+      "type": "fetti",
+      "x": 2275,
+      "y": 952
+    },
+    {
+      "id": "e4",
+      "type": "lenny",
+      "x": 2450,
+      "y": 950
+    },
+    {
+      "id": "e5",
+      "type": "stauber",
+      "x": 2650,
+      "y": 956
+    }
+  ]
+}

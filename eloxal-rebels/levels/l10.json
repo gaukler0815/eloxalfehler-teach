@@ -1,0 +1,129 @@
+{
+  "id": "l10",
+  "world": 3,
+  "name": "Doppelfestung",
+  "subtitle": "Zwei Festungen, vier Geschosse. Teile gut ein.",
+  "width": 2800,
+  "slingshot": {
+    "x": 320,
+    "y": 720
+  },
+  "projectiles": [
+    "titania",
+    "rippi",
+    "bolle",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "a1",
+      "material": "aluminium",
+      "x": 1650,
+      "y": 880,
+      "w": 44,
+      "h": 200
+    },
+    {
+      "id": "a2",
+      "material": "aluminium",
+      "x": 1800,
+      "y": 880,
+      "w": 44,
+      "h": 200
+    },
+    {
+      "id": "aRoof",
+      "material": "fehlcharge",
+      "x": 1725,
+      "y": 762,
+      "w": 220,
+      "h": 36
+    },
+    {
+      "id": "b1",
+      "material": "stahl",
+      "x": 2300,
+      "y": 870,
+      "w": 44,
+      "h": 220
+    },
+    {
+      "id": "b2",
+      "material": "stahl",
+      "x": 2500,
+      "y": 870,
+      "w": 44,
+      "h": 220
+    },
+    {
+      "id": "bBeam",
+      "material": "stahl",
+      "x": 2400,
+      "y": 742,
+      "w": 280,
+      "h": 36
+    },
+    {
+      "id": "bUp1",
+      "material": "aluminium",
+      "x": 2400,
+      "y": 644,
+      "w": 44,
+      "h": 160
+    },
+    {
+      "id": "bRoof",
+      "material": "aluminium",
+      "x": 2400,
+      "y": 549,
+      "w": 200,
+      "h": 30
+    },
+    {
+      "id": "barrel",
+      "material": "saeurefass",
+      "x": 2400,
+      "y": 945,
+      "w": 70,
+      "h": 70
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "stauber",
+      "x": 1725,
+      "y": 956
+    },
+    {
+      "id": "e2",
+      "type": "lenny",
+      "x": 1725,
+      "y": 714
+    },
+    {
+      "id": "e3",
+      "type": "stauber",
+      "x": 2200,
+      "y": 956
+    },
+    {
+      "id": "e4",
+      "type": "kalki",
+      "x": 2450,
+      "y": 950
+    },
+    {
+      "id": "e5",
+      "type": "stauber",
+      "x": 2400,
+      "y": 700
+    },
+    {
+      "id": "e6",
+      "type": "fetti",
+      "x": 2640,
+      "y": 952
+    }
+  ]
+}

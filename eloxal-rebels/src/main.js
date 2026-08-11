@@ -42,6 +42,11 @@
     if (e.segs) particles.sparks(e.segs);
     sound.zap();
   });
+  game.on('enemyhurt', (e) => {
+    particles.burst(e.x, e.y, '#FFFFFF', 10, 6);
+    particles.pop(e.x, e.y - 70, e.hp + ' TREFFER NOCH', '#8FD3FF');
+    sound.crack();
+  });
 
   const PROGRESS_KEY = 'eloxal-rebels.progress.v1';
   const $ = (id) => document.getElementById(id);
@@ -206,14 +211,18 @@
   function buildMenu() {
     const list = $('levelList');
     list.innerHTML = '';
-    ER.levels.order.forEach((id) => {
+    ER.levels.order.forEach((id, i) => {
       const lv = ER.levels.get(id);
       const div = document.createElement('div');
-      div.className = 'lvl';
       const best = progress.best[id];
-      div.innerHTML = '<span class="w">Welt ' + lv.world + '</span><b>' + lv.name + '</b>' +
-        '<span class="badge">' + (best ? best + ' µm' : '—') + '</span>';
-      div.onclick = () => startLevel(id);
+      // each won level unlocks the next one
+      const prevId = i > 0 ? ER.levels.order[i - 1] : null;
+      const unlocked = i === 0 || (progress.best[prevId] || 0) > 0;
+      div.className = 'lvl' + (unlocked ? '' : ' locked');
+      div.innerHTML = '<span class="w">Welt ' + lv.world + ' · Level ' + (i + 1) + '</span><b>' + lv.name + '</b>' +
+        '<span class="badge">' + (best ? best + ' µm' : (unlocked ? '—' : '')) + '</span>' +
+        (unlocked ? '' : '<span class="lock">🔒</span>');
+      if (unlocked) div.onclick = () => startLevel(id);
       list.appendChild(div);
     });
   }

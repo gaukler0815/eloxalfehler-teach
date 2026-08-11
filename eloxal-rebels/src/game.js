@@ -84,12 +84,13 @@
       game.pellets = [];
       game.effects = [];
       game.arcs = [];
-      // Ground and side walls (static).
-      const ground = M.Bodies.rectangle(WORLD.width / 2, WORLD.groundY + 80,
-        WORLD.width * 3, 200, { isStatic: true, friction: 0.9, plugin: { kind: 'ground' } });
+      // Ground and side walls (static), sized to the level's world width.
+      const lw = game.levelWidth || WORLD.width;
+      const ground = M.Bodies.rectangle(lw / 2, WORLD.groundY + 80,
+        lw * 3, 200, { isStatic: true, friction: 0.9, plugin: { kind: 'ground' } });
       const leftWall = M.Bodies.rectangle(-120, WORLD.height / 2, 240, WORLD.height * 3,
         { isStatic: true, plugin: { kind: 'wall' } });
-      const rightWall = M.Bodies.rectangle(WORLD.width + 120, WORLD.height / 2, 240, WORLD.height * 3,
+      const rightWall = M.Bodies.rectangle(lw + 120, WORLD.height / 2, 240, WORLD.height * 3,
         { isStatic: true, plugin: { kind: 'wall' } });
       M.World.add(world, [ground, leftWall, rightWall]);
     }
@@ -97,7 +98,7 @@
     function addBlock(spec) {
       const mat = MATERIALS[spec.material];
       const body = M.Bodies.rectangle(spec.x, spec.y, spec.w, spec.h, {
-        isStatic: !!mat.rail,
+        isStatic: !!mat.rail || !!spec.static,
         density: mat.density,
         restitution: mat.restitution,
         friction: mat.friction,
@@ -117,9 +118,9 @@
     function addEnemy(spec) {
       const def = ENEMIES[spec.type] || ENEMIES.stauber;
       const body = M.Bodies.circle(spec.x, spec.y, def.radius, {
-        density: 0.0016, restitution: 0.1, friction: 0.6, plugin: {}
+        density: def.density || 0.0016, restitution: 0.1, friction: 0.6, plugin: {}
       });
-      body.plugin = { kind: 'enemy', id: spec.id, type: spec.type, hp: 1 };
+      body.plugin = { kind: 'enemy', id: spec.id, type: spec.type, hp: def.hp || 1, maxHp: def.hp || 1 };
       M.World.add(world, body);
       game.enemyBodies.push(body);
       return body;
@@ -127,6 +128,7 @@
 
     game.loadLevel = function (data) {
       game.level = data;
+      game.levelWidth = data.width || WORLD.width;
       clearWorld();
       game.anchor = { x: data.slingshot.x, y: data.slingshot.y };
       (data.blocks || []).forEach(addBlock);
@@ -138,7 +140,13 @@
       game.um = 0;
       game.flashText = '';
       game.flashTtl = 0;
+      game.slowmo = 0;
       prepareShot();
+      // camera intro: pan in from the fortress (centroid of the enemies)
+      const es = game.enemyBodies;
+      const cx = es.length ? es.reduce((a, e) => a + e.position.x, 0) / es.length : game.levelWidth * 0.75;
+      const cy = es.length ? es.reduce((a, e) => a + e.position.y, 0) / es.length : 700;
+      game.emit('levelloaded', { focusX: cx, focusY: cy, width: game.levelWidth });
     };
 
     function prepareShot() {
@@ -263,7 +271,7 @@
           M.Body.applyForce(b, b.position, { x: (dx / n) * impulse * b.mass * fall, y: (dy / n) * impulse * b.mass * fall - 0.01 * b.mass });
         }
         if (b.plugin.kind === 'block') damageBlock(b, dmg * fall);
-        else if (b.plugin.kind === 'enemy') killEnemy(b);
+        else if (b.plugin.kind === 'enemy') damageEnemy(b, 2); // blasts hit hard (boss loses 2 phases)
       });
     };
     game.cutLine = function (from, to) {
@@ -310,6 +318,19 @@
       game.spawnEffect('pop', body.position, 40);
       game.emit('enemykill', { x: body.position.x, y: body.position.y, type: body.plugin.type });
       M.World.remove(world, body);
+      // dramatic slow-motion beat when the last enemy goes down
+      if (game.enemyBodies.length === 0) game.slowmo = 50;
+    }
+    // Multi-hit enemies (the boss) lose one phase per qualifying hit.
+    function damageEnemy(body, n) {
+      body.plugin.hp -= n;
+      if (body.plugin.hp <= 0) return killEnemy(body);
+      body.plugin.squashT = 12;
+      body.plugin.hurtT = 30;
+      game.emit('enemyhurt', {
+        x: body.position.x, y: body.position.y,
+        type: body.plugin.type, hp: body.plugin.hp
+      });
     }
 
     // --- the arc (conductivity) -------------------------------------------
@@ -388,13 +409,16 @@
         const threshold = p.type === 'kalki' ? PHYSICS.kalkiKillImpact : PHYSICS.enemyKillImpact;
         const boost = op.kind === 'projectile' ? (op.punch || 1) : 1;
         if (op.kind === 'pellet' && p.type !== 'stauber') return; // grit only clears dust
-        if (rv * boost >= threshold) killEnemy(body);
+        if (rv * boost >= threshold) damageEnemy(body, 1);
       }
     }
 
     // --- main step ---------------------------------------------------------
     game.update = function () {
-      M.Engine.update(engine, 1000 / 60);
+      // slow-motion beat (purely dramatic, decays automatically)
+      const dt = game.slowmo > 0 ? (1000 / 60) * 0.3 : 1000 / 60;
+      if (game.slowmo > 0) game.slowmo--;
+      M.Engine.update(engine, dt);
 
       // Bubbles lift + motion trails (visual bookkeeping, rendered by render.js).
       game.activeBodies.forEach((b) => {
@@ -417,12 +441,13 @@
       // Off-world cleanup.
       game.blockBodies.slice().forEach((b) => { if (b.position.y > PHYSICS.offWorldY) destroyBlock(b, true); });
       game.enemyBodies.slice().forEach((e) => { if (e.position.y > PHYSICS.offWorldY) killEnemy(e); });
-      game.activeBodies.slice().forEach((b) => { if (b.position.y > PHYSICS.offWorldY || b.position.x > WORLD.width + 400 || b.position.x < -400) game.removeActive(b); });
+      game.activeBodies.slice().forEach((b) => { if (b.position.y > PHYSICS.offWorldY || b.position.x > (game.levelWidth || WORLD.width) + 400 || b.position.x < -400) game.removeActive(b); });
 
-      // Effects / arcs / flash countdown.
+      // Effects / arcs / flash / hurt countdowns.
       game.effects = game.effects.filter((e) => (--e.ttl) > 0);
       game.arcs = game.arcs.filter((a) => (--a.ttl) > 0);
       if (game.flashTtl > 0) game.flashTtl--;
+      game.enemyBodies.forEach((e) => { if (e.plugin.hurtT > 0) e.plugin.hurtT--; });
 
       // Win as soon as the last enemy is gone.
       if (game.enemyBodies.length === 0 && game.state !== 'won' && game.state !== 'lost') {

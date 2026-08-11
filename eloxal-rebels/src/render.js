@@ -119,22 +119,16 @@
       ctx.translate(x, y);
       ctx.scale(s, s);
       ctx.globalAlpha = alpha;
-      // hexagonal anodizing-cell mark
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
-        const px = Math.cos(a) * 34, py = Math.sin(a) * 34;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
+      // round JX mark
       const hg = ctx.createLinearGradient(-34, -34, 34, 34);
       hg.addColorStop(0, '#1E74DC'); hg.addColorStop(1, '#8FD3FF');
-      ctx.fillStyle = hg; ctx.fill();
+      ctx.fillStyle = hg;
+      ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = PALETTE.line; ctx.lineWidth = 5; ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '800 40px system-ui, sans-serif';
+      ctx.font = '800 30px system-ui, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('J', 0, 3);
+      ctx.fillText('JX', 0, 2);
       // wordmark
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#C9D2DC';

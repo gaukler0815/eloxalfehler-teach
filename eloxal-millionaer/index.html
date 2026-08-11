@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wer wird Eloxal-Millionär</title>
+<style>
+  :root{
+    --bg1:#03102b; --bg2:#0a2a5e; --panel:#0b1e44cc; --gold:#ffcf3f;
+    --gold2:#ff9d00; --blue:#0e2a63; --blue-lite:#12408f; --text:#eaf1ff;
+    --correct:#1f9d4d; --wrong:#c0392b; --ring:#39d0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:"Segoe UI",system-ui,Arial,sans-serif;color:var(--text);
+    background:radial-gradient(1200px 800px at 50% -10%,var(--bg2),var(--bg1)) fixed;
+    min-height:100vh;display:flex;flex-direction:column;
+  }
+  header{
+    text-align:center;padding:18px 12px 6px;
+  }
+  header h1{
+    margin:0;font-size:clamp(22px,4.5vw,40px);font-weight:800;letter-spacing:.5px;
+    background:linear-gradient(180deg,#fff3c0,var(--gold) 45%,var(--gold2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 2px 16px rgba(255,180,0,.25);
+  }
+  header p{margin:4px 0 0;opacity:.8;font-size:14px}
+  .layout{
+    flex:1;display:grid;grid-template-columns:1fr 300px;gap:20px;
+    max-width:1150px;width:100%;margin:0 auto;padding:14px 18px 26px;
+  }
+  @media(max-width:860px){.layout{grid-template-columns:1fr}.ladder-wrap{order:-1}}
+
+  /* ---------- Spielfeld ---------- */
+  .stage{display:flex;flex-direction:column;gap:18px;min-height:420px;justify-content:flex-end}
+  .qcard{
+    background:linear-gradient(180deg,#0f2c66,#0a1f49);
+    border:2px solid #2f6bd6;border-radius:16px;padding:22px 24px;
+    box-shadow:0 0 0 3px #06122e, 0 18px 40px rgba(0,0,0,.5);
+    position:relative;
+  }
+  .qmeta{display:flex;justify-content:space-between;font-size:13px;opacity:.8;margin-bottom:10px}
+  .qtext{font-size:clamp(17px,2.4vw,22px);font-weight:600;line-height:1.4}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  @media(max-width:560px){.answers{grid-template-columns:1fr}}
+  .ans{
+    display:flex;align-items:center;gap:12px;cursor:pointer;
+    background:linear-gradient(180deg,#0e2559,#0a1c41);
+    border:2px solid #2f6bd6;border-radius:40px;padding:12px 18px;
+    font-size:16px;color:var(--text);text-align:left;transition:.15s;
+  }
+  .ans:hover:not(.locked){background:linear-gradient(180deg,#12408f,#0e2b63);border-color:var(--ring)}
+  .ans .letter{color:var(--gold);font-weight:800;min-width:22px}
+  .ans.selected{background:linear-gradient(180deg,#c78a00,#8a5f00);border-color:var(--gold)}
+  .ans.correct{background:linear-gradient(180deg,#18a24f,#0d6a34);border-color:#39ff9e;animation:pulse .5s}
+  .ans.wrong{background:linear-gradient(180deg,#c0392b,#7d221a);border-color:#ff7b6b}
+  .ans.disabled{opacity:.35;pointer-events:none}
+  .ans.hidden5050{visibility:hidden}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+
+  /* ---------- Joker ---------- */
+  .lifelines{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .ll{
+    width:64px;height:44px;border-radius:24px;border:2px solid var(--gold);
+    background:radial-gradient(circle at 50% 30%,#12408f,#0a1c41);
+    color:var(--gold);font-weight:800;font-size:13px;cursor:pointer;transition:.15s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ll:hover:not(.used){box-shadow:0 0 14px var(--ring);transform:translateY(-2px)}
+  .ll.used{opacity:.3;text-decoration:line-through;cursor:not-allowed;border-color:#556}
+
+  /* ---------- Geld-Leiter ---------- */
+  .ladder-wrap{background:var(--panel);border:1px solid #2f6bd6;border-radius:14px;padding:12px}
+  .ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column-reverse}
+  .ladder li{
+    display:flex;justify-content:space-between;padding:6px 12px;border-radius:8px;
+    font-weight:600;font-size:14px;color:#cfe0ff;
+  }
+  .ladder li .lvl{opacity:.6;min-width:26px}
+  .ladder li.safe{color:#fff}
+  .ladder li.safe .amt{color:var(--gold)}
+  .ladder li.current{background:linear-gradient(90deg,var(--gold2),var(--gold));color:#241a00}
+  .ladder li.current .lvl{opacity:.9}
+  .ladder li.won{color:#5fe08a}
+
+  /* ---------- Overlay / Buttons ---------- */
+  .center{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
+    background:linear-gradient(180deg,#0f2c66,#0a1f49);border:2px solid #2f6bd6;border-radius:16px;
+    padding:34px 26px;box-shadow:0 18px 40px rgba(0,0,0,.5)}
+  .btn{
+    border:none;border-radius:40px;padding:14px 30px;font-size:17px;font-weight:800;cursor:pointer;
+    background:linear-gradient(180deg,var(--gold),var(--gold2));color:#241a00;transition:.15s;
+  }
+  .btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
+  .btn.ghost{background:transparent;border:2px solid var(--gold);color:var(--gold)}
+  .big{font-size:clamp(22px,4vw,34px);font-weight:800}
+  .muted{opacity:.85;font-size:15px;max-width:520px;line-height:1.5}
+  .toast{
+    position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:50;
+    background:#0b1e44;border:1px solid var(--gold);color:#fff;padding:10px 18px;border-radius:12px;
+    font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.3s;pointer-events:none;
+    max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1}
+  .explain{margin-top:14px;font-size:14px;line-height:1.5;background:#06122e;border-left:4px solid var(--gold);
+    padding:10px 14px;border-radius:6px;display:none}
+  .explain.show{display:block}
+  .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  footer{text-align:center;font-size:12px;opacity:.5;padding:8px 0 16px}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<header>
+  <h1>💡 Wer wird Eloxal‑Millionär</h1>
+  <p>Das Quiz rund um Eloxieren, Anodisation &amp; Oberflächentechnik</p>
+</header>
+
+<div class="layout">
+  <div class="stage" id="stage"><!-- dynamisch --></div>
+
+  <div class="ladder-wrap">
+    <ol class="ladder" id="ladder"></ol>
+  </div>
+</div>
+
+<footer>Fragenkatalog: <span id="qcount"></span> Fragen · Jede Runde zufällig · Jacobi Eloxal</footer>
+
+<script src="fragen.js"></script>
+<script>
+/* =========================================================
+ *  Konfiguration
+ * ========================================================= */
+const GELDLEITER = [50,100,200,300,500,1000,2000,4000,8000,16000,32000,64000,125000,500000,1000000];
+const SICHER = [4, 9];                     // Index in GELDLEITER = Sicherheitsstufen (500 €, 16.000 €)
+// Schwierigkeit je Stufe: Level 1-5 leicht, 6-10 mittel, 11-15 schwer
+function stufeSchwierigkeit(level){ return level < 5 ? 1 : level < 10 ? 2 : 3; }
+
+const SPEICHER_KEY = "eloxal_millionaer_gesehen";
+
+/* =========================================================
+ *  Fragen-Auswahl (Katalog) – ohne Wiederholung
+ * ========================================================= */
+function idOf(q){ return q.f; }               // Frage-Text als eindeutige ID
+
+function ladeGesehen(){
+  try{ return JSON.parse(localStorage.getItem(SPEICHER_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function speicherGesehen(map){
+  try{ localStorage.setItem(SPEICHER_KEY, JSON.stringify(map)); }catch(e){}
+}
+
+/* Zieht 15 Fragen (5 je Schwierigkeit), bevorzugt lange nicht gesehene. */
+function baueFragenset(){
+  const gesehen = ladeGesehen();
+  const nachStufe = {1:[],2:[],3:[]};
+  FRAGENKATALOG.forEach(q => { if(nachStufe[q.s]) nachStufe[q.s].push(q); });
+
+  function ziehe(pool, anzahl, benutzt){
+    // Sortiere: zuerst nie/lange nicht gesehene, dann leichter Zufall
+    const kandidaten = pool.filter(q => !benutzt.has(idOf(q)));
+    kandidaten.sort((a,b)=>{
+      const ga = gesehen[idOf(a)] || 0, gb = gesehen[idOf(b)] || 0;
+      if(ga !== gb) return ga - gb;          // seltener gesehen zuerst
+      return Math.random() - 0.5;            // sonst zufällig
+    });
+    return kandidaten.slice(0, anzahl);
+  }
+
+  const benutzt = new Set();
+  let set = [];
+  [1,2,3].forEach(s=>{
+    const gezogen = ziehe(nachStufe[s], 5, benutzt);
+    gezogen.forEach(q=>benutzt.add(idOf(q)));
+    set = set.concat(gezogen);
+  });
+
+  // Falls ein Pool zu klein ist, mit übrigen Fragen auffüllen
+  if(set.length < 15){
+    const rest = FRAGENKATALOG.filter(q=>!benutzt.has(idOf(q)));
+    rest.sort(()=>Math.random()-0.5);
+    set = set.concat(rest.slice(0, 15 - set.length));
+  }
+
+  // Merken, dass diese Fragen gezeigt wurden (für nächste Runden)
+  set.forEach(q=>{ gesehen[idOf(q)] = (gesehen[idOf(q)]||0) + 1; });
+  speicherGesehen(gesehen);
+
+  // Antworten je Frage mischen und richtigen Index nachführen
+  return set.map(q=>{
+    const opts = q.a.map((text,i)=>({text, korrekt:i===q.r}));
+    for(let i=opts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [opts[i],opts[j]]=[opts[j],opts[i]]; }
+    return {frage:q.f, kategorie:q.k, erklaerung:q.e, optionen:opts,
+            richtigerIndex:opts.findIndex(o=>o.korrekt)};
+  });
+}
+
+/* =========================================================
+ *  Spielzustand
+ * ========================================================= */
+let fragen=[], level=0, joker={fifty:false, publikum:false, telefon:false};
+let entschieden=false;
+
+const stage  = document.getElementById('stage');
+const ladderEl = document.getElementById('ladder');
+const toastEl = document.getElementById('toast');
+document.getElementById('qcount').textContent = FRAGENKATALOG.length;
+
+function euro(n){ return n.toLocaleString('de-DE') + " €"; }
+function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toast._t);
+  toast._t=setTimeout(()=>toastEl.classList.remove('show'),3200); }
+
+function gesicherterBetrag(){
+  // höchste erreichte Sicherheitsstufe unterhalb des aktuellen Levels
+  let betrag = 0;
+  SICHER.forEach(idx=>{ if(level > idx) betrag = GELDLEITER[idx]; });
+  return betrag;
+}
+
+/* =========================================================
+ *  Rendering
+ * ========================================================= */
+function renderLadder(){
+  ladderEl.innerHTML='';
+  GELDLEITER.forEach((betrag,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="lvl">${i+1}</span><span class="amt">${euro(betrag)}</span>`;
+    if(SICHER.includes(i)) li.classList.add('safe');
+    if(i===level) li.classList.add('current');
+    if(i<level) li.classList.add('won');
+    ladderEl.appendChild(li);
+  });
+}
+
+function renderStart(){
+  renderLadder();
+  stage.innerHTML=`
+    <div class="center">
+      <div class="big">Bereit für die Million? 🏆</div>
+      <p class="muted">15 Fragen rund um Eloxal, Anodisation, Färben, Verdichten und typische
+      Fehler. Drei Joker helfen dir. Sicherheitsstufen bei <b>500 €</b> und <b>16.000 €</b>.
+      Die Fragen werden jede Runde neu aus dem Katalog gezogen – es wird selten langweilig!</p>
+      <button class="btn" onclick="spielStart()">Spiel starten</button>
+    </div>`;
+}
+
+function renderFrage(){
+  entschieden=false;
+  renderLadder();
+  const q=fragen[level];
+  const betrag=GELDLEITER[level];
+  const letters=['A','B','C','D'];
+  stage.innerHTML=`
+    <div class="lifelines">
+      <button class="ll ${joker.fifty?'used':''}"    id="j5050"   onclick="jokerFifty()"   title="50:50 – zwei falsche Antworten entfernen">50:50</button>
+      <button class="ll ${joker.publikum?'used':''}" id="jpub"    onclick="jokerPublikum()" title="Publikumsjoker">👥</button>
+      <button class="ll ${joker.telefon?'used':''}"  id="jtel"    onclick="jokerTelefon()"  title="Telefonjoker">📞</button>
+    </div>
+    <div class="qcard">
+      <div class="qmeta"><span>Frage ${level+1} / 15 · ${q.kategorie}</span><span>Für ${euro(betrag)}</span></div>
+      <div class="qtext">${q.frage}</div>
+      <div class="answers" id="answers">
+        ${q.optionen.map((o,i)=>`
+          <button class="ans" data-i="${i}" onclick="waehle(${i})">
+            <span class="letter">${letters[i]}</span><span class="txt">${o.text}</span>
+          </button>`).join('')}
+      </div>
+      <div class="explain" id="explain"></div>
+    </div>`;
+}
+
+/* =========================================================
+ *  Spielablauf
+ * ========================================================= */
+function spielStart(){
+  fragen=baueFragenset();
+  level=0;
+  joker={fifty:false, publikum:false, telefon:false};
+  renderFrage();
+}
+
+function waehle(i){
+  if(entschieden) return;
+  entschieden=true;
+  const q=fragen[level];
+  const btns=[...document.querySelectorAll('.ans')];
+  btns.forEach(b=>b.classList.add('locked'));
+  const chosen=btns[i];
+  chosen.classList.add('selected');
+
+  // kleine Spannungspause
+  setTimeout(()=>{
+    const richtig = i===q.richtigerIndex;
+    btns[q.richtigerIndex].classList.remove('selected');
+    btns[q.richtigerIndex].classList.add('correct');
+    if(!richtig) chosen.classList.add('wrong');
+
+    const ex=document.getElementById('explain');
+    ex.innerHTML=`<b>${richtig?'✅ Richtig!':'❌ Leider falsch.'}</b> ${q.erklaerung}`;
+    ex.classList.add('show');
+
+    setTimeout(()=> richtig ? weiter() : verloren(), richtig?1400:2600);
+  }, 900);
+}
+
+function weiter(){
+  if(level===GELDLEITER.length-1){ gewonnen(); return; }
+  level++;
+  renderFrage();
+}
+
+function verloren(){
+  renderLadder();
+  const betrag=gesicherterBetrag();
+  const q=fragen[level];
+  stage.innerHTML=`
+    <div class="center">
+      <div class="big">💥 Schade!</div>
+      <p class="muted">Die richtige Antwort war:<br><b>${q.optionen[q.richtigerIndex].text}</b></p>
+      <p class="muted">${q.erklaerung}</p>
+      <div class="big" style="color:var(--gold)">Gesicherter Gewinn: ${euro(betrag)}</div>
+      <div class="row">
+        <button class="btn" onclick="spielStart()">Nochmal spielen</button>
+        <button class="btn ghost" onclick="renderStart()">Zum Start</button>
+      </div>
+    </div>`;
+}
+
+function gewonnen(){
+  renderLadder();
+  stage.innerHTML=`
+    <div class="center">
+      <div class="big">🎉 ELOXAL‑MILLIONÄR! 🎉</div>
+      <p class="muted">Alle 15 Fragen richtig! Du beherrschst das Eloxieren aus dem Effeff.</p>
+      <div class="big" style="color:var(--gold)">Gewinn: 1.000.000 €</div>
+      <div class="row">
+        <button class="btn" onclick="spielStart()">Nochmal spielen</button>
+        <button class="btn ghost" onclick="renderStart()">Zum Start</button>
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+ *  Joker
+ * ========================================================= */
+function jokerFifty(){
+  if(joker.fifty||entschieden) return;
+  joker.fifty=true; document.getElementById('j5050').classList.add('used');
+  const q=fragen[level];
+  const falsche=q.optionen.map((o,i)=>i).filter(i=>i!==q.richtigerIndex);
+  // zwei zufällige falsche entfernen
+  falsche.sort(()=>Math.random()-0.5);
+  falsche.slice(0,2).forEach(i=>{
+    const b=document.querySelector(`.ans[data-i="${i}"]`);
+    b.classList.add('disabled','hidden5050');
+  });
+}
+
+function jokerPublikum(){
+  if(joker.publikum||entschieden) return;
+  joker.publikum=true; document.getElementById('jpub').classList.add('used');
+  const q=fragen[level];
+  // Publikum liegt meistens richtig – Verteilung erzeugen
+  const n=q.optionen.length;
+  let werte=new Array(n).fill(0);
+  const richtig=q.richtigerIndex;
+  const sichtbar=q.optionen.map((o,i)=>i).filter(i=>{
+    const b=document.querySelector(`.ans[data-i="${i}"]`);
+    return b && !b.classList.contains('hidden5050');
+  });
+  const trefferChance=55+Math.floor(Math.random()*30); // 55–85 % aufs richtige
+  werte[richtig]=trefferChance;
+  let rest=100-trefferChance;
+  const andere=sichtbar.filter(i=>i!==richtig);
+  andere.forEach((i,idx)=>{
+    const v = idx===andere.length-1 ? rest : Math.floor(Math.random()*rest*0.7);
+    werte[i]=v; rest-=v;
+  });
+  const letters=['A','B','C','D'];
+  const txt=sichtbar.map(i=>`${letters[i]}: ${werte[i]}%`).join('  ·  ');
+  toast('👥 Publikum: '+txt);
+}
+
+function jokerTelefon(){
+  if(joker.telefon||entschieden) return;
+  joker.telefon=true; document.getElementById('jtel').classList.add('used');
+  const q=fragen[level];
+  const letters=['A','B','C','D'];
+  const sichtbar=q.optionen.map((o,i)=>i).filter(i=>{
+    const b=document.querySelector(`.ans[data-i="${i}"]`);
+    return b && !b.classList.contains('hidden5050');
+  });
+  // Telefonjoker ist ziemlich sicher, aber nicht immer
+  const sicher=Math.random()<0.8;
+  let tipp = sicher ? q.richtigerIndex
+                    : sichtbar[Math.floor(Math.random()*sichtbar.length)];
+  const phrasen = sicher
+    ? [`Ganz klar, das ist ${letters[tipp]}.`,
+       `Da bin ich mir sicher: Antwort ${letters[tipp]}.`,
+       `Das hatten wir letzte Woche im Betrieb – ${letters[tipp]}!`]
+    : [`Hmm, ich bin nicht ganz sicher… ich würde ${letters[tipp]} sagen.`,
+       `Schwierig. Vielleicht ${letters[tipp]}? Ohne Gewähr.`];
+  toast('📞 Fachkollege: '+phrasen[Math.floor(Math.random()*phrasen.length)]);
+}
+
+/* =========================================================
+ *  Start
+ * ========================================================= */
+renderStart();
+</script>
+</body>
+</html>

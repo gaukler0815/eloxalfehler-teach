@@ -32,7 +32,8 @@
     var group = new THREE.Group();
 
     var bodyMat = new THREE.MeshStandardMaterial({
-      color: c.color, roughness: 0.95, metalness: 0.1, flatShading: true
+      color: new THREE.Color(c.color).convertSRGBToLinear(),
+      roughness: 0.95, metalness: 0.1, flatShading: true
     });
     var bodyR = c.radius;
     var body = new THREE.Mesh(blobGeometry(bodyR, 7 + bodyR * 100), bodyMat);
@@ -56,7 +57,8 @@
 
     if (c.boss) {
       var crownMat = new THREE.MeshStandardMaterial({
-        color: 0xE8A33D, metalness: 0.9, roughness: 0.3
+        color: new THREE.Color(0xE8A33D).convertSRGBToLinear(),
+        metalness: 0.9, roughness: 0.3
       });
       for (var k = 0; k < 5; k++) {
         var spike = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.7, 5), crownMat);
@@ -190,14 +192,19 @@
         g.position.y = Math.abs(bob) * 0.12;
         g.rotation.z = bob * 0.07;
 
-        // hit flash
+        // hit flash + scale punch; the boss smolders even when untouched
         if (e.hitFlash > 0) {
           e.hitFlash -= dt;
-          e.body.material.emissive = new THREE.Color(0xffffff);
+          e.body.material.emissive.setHex(0xffffff);
           e.body.material.emissiveIntensity = 0.8;
+        } else if (e.cfg.boss) {
+          e.body.material.emissive.setHex(0xff2e2e);
+          e.body.material.emissiveIntensity = 0.15 + Math.sin(e.bobPhase * 0.7) * 0.1;
         } else if (e.body.material.emissiveIntensity !== 0) {
           e.body.material.emissiveIntensity = 0;
         }
+        var punch = 1 + Math.max(0, e.hitFlash) * 1.2;
+        g.scale.set(punch, 1 / punch, punch);
 
         // attacks
         e.attackCd -= dt;

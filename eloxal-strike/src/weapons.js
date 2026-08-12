@@ -22,8 +22,8 @@
 
   function buildViewmodel(w) {
     var g = new THREE.Group();
-    var dark = new THREE.MeshStandardMaterial({ color: 0x454c58, roughness: 0.45, metalness: 0.75 });
-    var alu = new THREE.MeshStandardMaterial({ color: 0x9aa7b4, roughness: 0.3, metalness: 0.9 });
+    var dark = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x454c58).convertSRGBToLinear(), roughness: 0.45, metalness: 0.75 });
+    var alu = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x9aa7b4).convertSRGBToLinear(), roughness: 0.3, metalness: 0.9 });
     var accent = new THREE.MeshStandardMaterial({
       color: w.color, emissive: w.color, emissiveIntensity: 0.9, roughness: 0.4
     });

@@ -29,6 +29,8 @@
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
 
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 200);
@@ -37,6 +39,31 @@
 
   var world = ES.world.build(scene);
   ES.weapons.init(camera);
+
+  // cheap environment map: a tiny scene of light strips, prefiltered via
+  // PMREM — gives all standard materials proper metallic reflections
+  (function () {
+    var envScene = new THREE.Scene();
+    envScene.background = new THREE.Color(0x0a0c12);
+    function strip(color, w, h, x, y, z, ry) {
+      var m = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, h),
+        new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide })
+      );
+      m.position.set(x, y, z);
+      m.rotation.y = ry || 0;
+      m.rotation.x = (y > 0) ? Math.PI / 2 : 0;
+      envScene.add(m);
+    }
+    strip(0xfff2dd, 6, 1.4, -4, 8, 0);       // warm lamp row
+    strip(0xfff2dd, 6, 1.4, 4, 8, 0);
+    strip(0x9fb8e8, 3, 14, 0, 9, 0);          // cool skylight
+    strip(0x86d32f, 10, 4, 0, -0.01, 0);      // acid glow from below
+    strip(0xE8A33D, 4, 2, 0, 3, -8);          // gold signage
+    var pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(envScene, 0.06).texture;
+    pmrem.dispose();
+  })();
 
   window.addEventListener('resize', function () {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -319,6 +346,7 @@
       var d = dx * dx + dz * dz + Math.random() * 300;
       if (d > bestD) { bestD = d; best = sp; }
     });
+    burst(new THREE.Vector3(best[0], 1.0, best[1]), 0x9fe348, 12, 4, 3);
     ES.enemies.spawn(scene, type, best[0], best[1], diff.enemyHp, diff.enemySpeed);
   }
 
@@ -544,6 +572,8 @@
     var dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     clockT += dt;
+
+    world.update(dt, clockT);
 
     // crane trolley drifts along its bridge, in menu and in game
     var trolleyX = Math.sin(clockT * 0.15) * 26;

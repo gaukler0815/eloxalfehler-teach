@@ -1,7 +1,9 @@
 /* Eloxal Strike — builds the anodizing hall (the one world of the game):
  * floor, walls, glowing electrolyte basins, racks, crates, crane bridge,
- * hall signage with the JACOBI ELOXAL logo, lights and fog. Also owns the
- * static collision list (axis-aligned boxes) used by player and enemies.
+ * ceiling girders, pipes, light cones, steam, dust, rotating warn beacons
+ * and the JACOBI ELOXAL hall signage. Also owns the static collision list
+ * (axis-aligned boxes) used by player and enemies, and an update() hook for
+ * its ambient animations.
  */
 (function () {
   'use strict';
@@ -9,37 +11,64 @@
   var HALL = 76;      // hall is HALL x HALL meters, centered on origin
   var WALL_H = 11;
 
+  function lin(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
+
   function makeCanvas(w, h) {
     var c = document.createElement('canvas');
     c.width = w; c.height = h;
     return c;
   }
 
-  /* Brushed-metal floor with anodizing-line markings. */
+  /* Brushed-metal floor with anodizing-line markings and oil stains. */
   function floorTexture() {
-    var c = makeCanvas(512, 512);
+    var c = makeCanvas(1024, 1024);
     var g = c.getContext('2d');
     g.fillStyle = '#23262c';
-    g.fillRect(0, 0, 512, 512);
-    for (var i = 0; i < 2200; i++) {
+    g.fillRect(0, 0, 1024, 1024);
+    // brushed streaks
+    for (var i = 0; i < 5200; i++) {
       g.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.03) + ')';
-      g.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 40 + 4, 1);
+      g.fillRect(Math.random() * 1024, Math.random() * 1024, Math.random() * 60 + 6, 1);
     }
+    // oil / chemical stains
+    for (var s = 0; s < 26; s++) {
+      var sx = Math.random() * 1024, sy = Math.random() * 1024;
+      var sr = 18 + Math.random() * 70;
+      var grad = g.createRadialGradient(sx, sy, 2, sx, sy, sr);
+      grad.addColorStop(0, 'rgba(8,10,14,' + (0.25 + Math.random() * 0.2) + ')');
+      grad.addColorStop(1, 'rgba(8,10,14,0)');
+      g.fillStyle = grad;
+      g.beginPath();
+      g.ellipse(sx, sy, sr, sr * (0.5 + Math.random() * 0.5), Math.random() * 3, 0, Math.PI * 2);
+      g.fill();
+    }
+    // panel seams
     g.strokeStyle = 'rgba(0,0,0,0.5)';
-    g.lineWidth = 3;
-    g.strokeRect(1, 1, 510, 510);
-    g.strokeStyle = 'rgba(232,163,61,0.5)';
+    g.lineWidth = 4;
+    g.strokeRect(2, 2, 1020, 1020);
+    // painted walkway lines
+    g.strokeStyle = 'rgba(232,163,61,0.45)';
+    g.lineWidth = 10;
+    g.beginPath();
+    g.moveTo(0, 512); g.lineTo(1024, 512);
+    g.moveTo(512, 0); g.lineTo(512, 1024);
+    g.stroke();
+    g.setLineDash([40, 30]);
+    g.strokeStyle = 'rgba(201,210,220,0.18)';
     g.lineWidth = 6;
     g.beginPath();
-    g.moveTo(0, 256); g.lineTo(512, 256);
+    g.moveTo(0, 100); g.lineTo(1024, 100);
+    g.moveTo(0, 924); g.lineTo(1024, 924);
     g.stroke();
+    g.setLineDash([]);
     var tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(10, 10);
+    tex.repeat.set(6, 6);
     return tex;
   }
 
-  /* Corrugated dark wall panels. */
+  /* Corrugated dark wall panels with a grimy lower edge. */
   function wallTexture() {
     var c = makeCanvas(256, 256);
     var g = c.getContext('2d');
@@ -53,7 +82,13 @@
       g.fillStyle = grad;
       g.fillRect(x, 0, 32, 256);
     }
+    var dirt = g.createLinearGradient(0, 190, 0, 256);
+    dirt.addColorStop(0, 'rgba(10,8,6,0)');
+    dirt.addColorStop(1, 'rgba(10,8,6,0.5)');
+    g.fillStyle = dirt;
+    g.fillRect(0, 190, 256, 66);
     var tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     tex.repeat.set(12, 2);
     return tex;
@@ -91,7 +126,9 @@
     g.fillStyle = '#E8A33D';
     g.font = '800 74px system-ui, sans-serif';
     g.fillText('ELOXAL', 272, 192);
-    return new THREE.CanvasTexture(c);
+    var tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
+    return tex;
   }
 
   function warnTexture() {
@@ -106,13 +143,28 @@
       g.fill();
     }
     var tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     return tex;
+  }
+
+  /* Soft round dot used by steam/dust point clouds. */
+  function puffTexture() {
+    var c = makeCanvas(64, 64);
+    var g = c.getContext('2d');
+    var grad = g.createRadialGradient(32, 32, 2, 32, 32, 30);
+    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.4, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
   }
 
   function build(scene) {
     var colliders = [];   // {minX,maxX,minZ,maxZ}
     var solids = [];      // meshes that block hitscan shots
+    var animated = { steams: [], beacons: [], pools: [], dust: null };
     var half = HALL / 2;
 
     function addCollider(cx, cz, sx, sz) {
@@ -122,13 +174,15 @@
       });
     }
 
-    scene.background = new THREE.Color(0x0c0e14);
-    scene.fog = new THREE.Fog(0x0c0e14, 24, 95);
+    scene.background = new THREE.Color(0x0a0c12);
+    scene.fog = new THREE.Fog(0x0a0c12, 20, 88);
+
+    var puffTex = puffTexture();
 
     // --- floor / ceiling ---------------------------------------------------
     var floor = new THREE.Mesh(
       new THREE.PlaneGeometry(HALL, HALL),
-      new THREE.MeshStandardMaterial({ map: floorTexture(), roughness: 0.85, metalness: 0.35 })
+      new THREE.MeshStandardMaterial({ map: floorTexture(), roughness: 0.78, metalness: 0.3 })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
@@ -137,11 +191,34 @@
 
     var ceil = new THREE.Mesh(
       new THREE.PlaneGeometry(HALL, HALL),
-      new THREE.MeshStandardMaterial({ color: 0x11141b, roughness: 1 })
+      new THREE.MeshStandardMaterial({ color: 0x0d1016, roughness: 1 })
     );
     ceil.rotation.x = Math.PI / 2;
     ceil.position.y = WALL_H;
     scene.add(ceil);
+
+    // skylight strips in the ceiling (cool daylight slits)
+    var skyMat = new THREE.MeshBasicMaterial({ color: 0x9fb8e8 });
+    [-18, 0, 18].forEach(function (sx) {
+      var strip = new THREE.Mesh(new THREE.PlaneGeometry(2.6, HALL - 16), skyMat);
+      strip.rotation.x = Math.PI / 2;
+      strip.position.set(sx, WALL_H - 0.05, 0);
+      scene.add(strip);
+    });
+
+    // ceiling girders (I-beam look: dark boxes) across both axes
+    var girderMat = new THREE.MeshStandardMaterial({ color: lin(0x2a2f38), roughness: 0.7, metalness: 0.6 });
+    for (var gx = -30; gx <= 30; gx += 12) {
+      var girder = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, HALL - 2), girderMat);
+      girder.position.set(gx, WALL_H - 0.5, 0);
+      scene.add(girder);
+    }
+    var crossGirder = new THREE.Mesh(new THREE.BoxGeometry(HALL - 2, 0.6, 0.5), girderMat);
+    crossGirder.position.set(0, WALL_H - 1.1, -14);
+    scene.add(crossGirder);
+    var crossGirder2 = crossGirder.clone();
+    crossGirder2.position.z = 14;
+    scene.add(crossGirder2);
 
     // --- walls -------------------------------------------------------------
     var wallMat = new THREE.MeshStandardMaterial({ map: wallTexture(), roughness: 0.9, metalness: 0.2 });
@@ -164,10 +241,22 @@
     addCollider(-half - 0.5, 0, 1, HALL + 4);
     addCollider(half + 0.5, 0, 1, HALL + 4);
 
+    // pipe runs along the side walls
+    var pipeMatA = new THREE.MeshStandardMaterial({ color: lin(0x4a5560), roughness: 0.45, metalness: 0.85 });
+    var pipeMatB = new THREE.MeshStandardMaterial({ color: lin(0x2e6b8a), roughness: 0.4, metalness: 0.8 });
+    [-1, 1].forEach(function (side) {
+      [[2.6, pipeMatA, 0.16], [3.15, pipeMatB, 0.11], [5.2, pipeMatA, 0.22]].forEach(function (p) {
+        var pipe = new THREE.Mesh(new THREE.CylinderGeometry(p[2], p[2], HALL - 2, 10), p[1]);
+        pipe.rotation.x = Math.PI / 2;
+        pipe.position.set(side * (half - 0.45), p[0], 0);
+        scene.add(pipe);
+      });
+    });
+
     // --- logo signs on two walls ------------------------------------------
     var logoTex = logoTexture();
     var logoMat = new THREE.MeshStandardMaterial({
-      map: logoTex, emissive: 0xffffff, emissiveMap: logoTex, emissiveIntensity: 0.55,
+      map: logoTex, emissive: 0xffffff, emissiveMap: logoTex, emissiveIntensity: 0.7,
       roughness: 0.6
     });
     [[0, 7.4, -half + 0.12, 0], [0, 7.4, half - 0.12, Math.PI]].forEach(function (p) {
@@ -175,6 +264,10 @@
       sign.position.set(p[0], p[1], p[2]);
       sign.rotation.y = p[3];
       scene.add(sign);
+      // small warm spot washing the sign area
+      var wash = new THREE.PointLight(0xE8A33D, 0.5, 14, 2);
+      wash.position.set(p[0], p[1] - 1.5, p[2] + (p[3] === 0 ? 3 : -3));
+      scene.add(wash);
     });
 
     // --- electrolyte basins (glowing hazard pools with warn rims) ----------
@@ -189,25 +282,43 @@
       rim.position.set(bx, 0.45, bz);
       scene.add(rim);
       solids.push(rim);
-      var pool = new THREE.Mesh(
-        new THREE.PlaneGeometry(8.2, 5.2),
-        new THREE.MeshStandardMaterial({
-          color: 0x9fe348, emissive: 0x86d32f, emissiveIntensity: 0.9, roughness: 0.2
-        })
-      );
+      var poolMat = new THREE.MeshStandardMaterial({
+        color: 0x9fe348, emissive: 0x86d32f, emissiveIntensity: 0.9, roughness: 0.15,
+        metalness: 0.1
+      });
+      var pool = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 5.2), poolMat);
       pool.rotation.x = -Math.PI / 2;
       pool.position.set(bx, 0.92, bz);
       scene.add(pool);
-      var glow = new THREE.PointLight(0x9fe348, 0.9, 16, 2);
-      glow.position.set(bx, 2.2, bz);
+      var glow = new THREE.PointLight(0x9fe348, 1.1, 17, 2);
+      glow.position.set(bx, 2.4, bz);
       scene.add(glow);
+      animated.pools.push({ mat: poolMat, light: glow, phase: bx * 0.7 + bz });
       addCollider(bx, bz, 9, 6);
+
+      // rising steam above the bath
+      var steamCount = 26;
+      var pos = new Float32Array(steamCount * 3);
+      for (var i = 0; i < steamCount; i++) {
+        pos[i * 3] = bx + (Math.random() - 0.5) * 7;
+        pos[i * 3 + 1] = 1 + Math.random() * 3.2;
+        pos[i * 3 + 2] = bz + (Math.random() - 0.5) * 4.4;
+      }
+      var steamGeo = new THREE.BufferGeometry();
+      steamGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      var steamMat = new THREE.PointsMaterial({
+        map: puffTex, color: 0xcfe8b8, size: 1.2, transparent: true, opacity: 0.12,
+        depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
+      });
+      var steam = new THREE.Points(steamGeo, steamMat);
+      scene.add(steam);
+      animated.steams.push({ points: steam, cx: bx, cz: bz });
     });
 
     // --- anodizing racks (pillar pairs with hanging aluminum parts) --------
-    var alu = new THREE.MeshStandardMaterial({ color: 0xb9c4cf, roughness: 0.35, metalness: 0.85 });
-    var steel = new THREE.MeshStandardMaterial({ color: 0x3a4048, roughness: 0.6, metalness: 0.7 });
-    var goldAlu = new THREE.MeshStandardMaterial({ color: 0xE8A33D, roughness: 0.35, metalness: 0.8 });
+    var alu = new THREE.MeshStandardMaterial({ color: lin(0xb9c4cf), roughness: 0.25, metalness: 0.9 });
+    var steel = new THREE.MeshStandardMaterial({ color: lin(0x3a4048), roughness: 0.55, metalness: 0.75 });
+    var goldAlu = new THREE.MeshStandardMaterial({ color: lin(0xE8A33D), roughness: 0.28, metalness: 0.85 });
     var barGeo = new THREE.BoxGeometry(0.25, 4.2, 0.25);
     var partGeo = new THREE.BoxGeometry(0.5, 1.1, 0.14);
     var rackSpots = [[-28, 0], [28, 0], [0, -24], [0, 24], [-24, -22], [24, 22]];
@@ -237,7 +348,7 @@
     });
 
     // --- crates & barrels as cover -----------------------------------------
-    var crateMat = new THREE.MeshStandardMaterial({ color: 0x6b5a3e, roughness: 0.9 });
+    var crateMat = new THREE.MeshStandardMaterial({ color: lin(0x6b5a3e), roughness: 0.9 });
     var crateSpots = [
       [-8, -18, 2.2], [9, -20, 1.8], [-10, 20, 2.0], [8, 18, 2.4],
       [-30, 12, 1.8], [30, -12, 2.0], [-6, 2, 1.6], [7, -3, 1.9],
@@ -256,7 +367,7 @@
     });
 
     var barrelGeo = new THREE.CylinderGeometry(0.55, 0.55, 1.3, 14);
-    var barrelMat = new THREE.MeshStandardMaterial({ color: 0x2e6b8a, roughness: 0.5, metalness: 0.6 });
+    var barrelMat = new THREE.MeshStandardMaterial({ color: lin(0x2e6b8a), roughness: 0.35, metalness: 0.75 });
     [[-12, -4], [13, 5], [-3, -26], [4, 27], [-26, 20], [27, -19]].forEach(function (bp) {
       var b = new THREE.Mesh(barrelGeo, barrelMat);
       b.position.set(bp[0], 0.65, bp[1]);
@@ -283,11 +394,11 @@
     scene.add(crane);
 
     // --- lights ------------------------------------------------------------
-    scene.add(new THREE.AmbientLight(0x404860, 0.55));
-    var hemi = new THREE.HemisphereLight(0x6a7a9a, 0x1a140e, 0.5);
+    scene.add(new THREE.AmbientLight(0x39415a, 0.4));
+    var hemi = new THREE.HemisphereLight(0x5a6a8c, 0x231a10, 0.45);
     scene.add(hemi);
 
-    var key = new THREE.DirectionalLight(0xfff2dd, 0.75);
+    var key = new THREE.DirectionalLight(0xfff2dd, 0.85);
     key.position.set(14, 18, 8);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -295,24 +406,121 @@
     key.shadow.camera.top = 40; key.shadow.camera.bottom = -40;
     scene.add(key);
 
-    // hanging hall lamps
+    // hanging hall lamps with visible light cones
+    var coneMat = new THREE.MeshBasicMaterial({
+      color: 0xffe6b0, transparent: true, opacity: 0.05, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+    });
     [[-18, 0], [18, 0], [0, -16], [0, 16]].forEach(function (lp) {
-      var lamp = new THREE.PointLight(0xffe6b0, 0.6, 30, 2);
+      var lamp = new THREE.PointLight(0xffe6b0, 0.75, 32, 2);
       lamp.position.set(lp[0], 8.6, lp[1]);
       scene.add(lamp);
+      var shade = new THREE.Mesh(
+        new THREE.ConeGeometry(0.55, 0.5, 12, 1, true),
+        new THREE.MeshStandardMaterial({ color: lin(0x22262e), roughness: 0.5, metalness: 0.8, side: THREE.DoubleSide })
+      );
+      shade.position.set(lp[0], 8.85, lp[1]);
+      scene.add(shade);
       var bulb = new THREE.Mesh(
-        new THREE.SphereGeometry(0.28, 10, 8),
+        new THREE.SphereGeometry(0.24, 10, 8),
         new THREE.MeshBasicMaterial({ color: 0xffe6b0 })
       );
       bulb.position.copy(lamp.position);
       scene.add(bulb);
+      var cone = new THREE.Mesh(new THREE.ConeGeometry(3.6, 8.6, 20, 1, true), coneMat);
+      cone.position.set(lp[0], 4.3, lp[1]);
+      scene.add(cone);
     });
+
+    // rotating orange warn beacons high on the side walls
+    [[-half + 0.6, -18], [half - 0.6, 18]].forEach(function (wp) {
+      var beacon = new THREE.Group();
+      var base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.22, 0.26, 0.3, 10),
+        new THREE.MeshStandardMaterial({ color: lin(0x2a2f38), roughness: 0.6 })
+      );
+      beacon.add(base);
+      var dome = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xff7b2e })
+      );
+      dome.position.y = 0.24;
+      beacon.add(dome);
+      var ray = new THREE.Mesh(
+        new THREE.ConeGeometry(1.4, 5.5, 14, 1, true),
+        new THREE.MeshBasicMaterial({
+          color: 0xff7b2e, transparent: true, opacity: 0.08, depthWrite: false,
+          blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+        })
+      );
+      ray.rotation.z = Math.PI / 2;
+      ray.position.set(2.75, 0.24, 0);
+      beacon.add(ray);
+      var blink = new THREE.PointLight(0xff7b2e, 0.6, 20, 2);
+      blink.position.y = 0.3;
+      beacon.add(blink);
+      beacon.position.set(wp[0], 8.2, wp[1]);
+      scene.add(beacon);
+      animated.beacons.push({ group: beacon, light: blink });
+    });
+
+    // dust motes drifting through the hall
+    var dustCount = 220;
+    var dustPos = new Float32Array(dustCount * 3);
+    for (var d = 0; d < dustCount; d++) {
+      dustPos[d * 3] = (Math.random() - 0.5) * (HALL - 6);
+      dustPos[d * 3 + 1] = 0.5 + Math.random() * 9;
+      dustPos[d * 3 + 2] = (Math.random() - 0.5) * (HALL - 6);
+    }
+    var dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    var dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+      map: puffTex, color: 0xbfcbd8, size: 0.14, transparent: true, opacity: 0.32,
+      depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
+    }));
+    scene.add(dust);
+    animated.dust = dust;
+
+    /* Ambient animation: steam rises, pools shimmer, beacons rotate,
+     * dust drifts. Called once per frame from main.js. */
+    function update(dt, t) {
+      for (var i = 0; i < animated.steams.length; i++) {
+        var st = animated.steams[i];
+        var arr = st.points.geometry.attributes.position;
+        for (var j = 0; j < arr.count; j++) {
+          var y = arr.getY(j) + dt * (0.5 + (j % 5) * 0.1);
+          if (y > 4.6) {
+            y = 1;
+            arr.setX(j, st.cx + (Math.random() - 0.5) * 7);
+            arr.setZ(j, st.cz + (Math.random() - 0.5) * 4.4);
+          }
+          arr.setY(j, y);
+        }
+        arr.needsUpdate = true;
+      }
+      for (var p = 0; p < animated.pools.length; p++) {
+        var po = animated.pools[p];
+        var pulse = 0.85 + Math.sin(t * 1.7 + po.phase) * 0.18;
+        po.mat.emissiveIntensity = pulse;
+        po.light.intensity = 0.9 + pulse * 0.35;
+      }
+      for (var b = 0; b < animated.beacons.length; b++) {
+        var be = animated.beacons[b];
+        be.group.rotation.y = t * 2.4 + b * Math.PI;
+        be.light.intensity = 0.45 + Math.sin(t * 4.8 + b) * 0.25;
+      }
+      if (animated.dust) {
+        animated.dust.rotation.y = t * 0.006;
+        animated.dust.material.opacity = 0.26 + Math.sin(t * 0.7) * 0.07;
+      }
+    }
 
     return {
       colliders: colliders,
       solids: solids,
       bounds: { min: -half + 1, max: half - 1 },
       crane: { trolley: trolley, cable: cable, load: hookLoad },
+      update: update,
       // enemy spawn points along the hall edges
       spawnPoints: [
         [-half + 4, -half + 4], [half - 4, -half + 4],

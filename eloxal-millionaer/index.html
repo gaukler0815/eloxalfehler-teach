@@ -3,413 +3,378 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wer wird Eloxal-Millionär</title>
+<title>Wer wird Eloxal-Millionär · Jacobi Eloxal</title>
 <style>
+  /* ===== Jacobi Eloxal Markenfarben ===== */
   :root{
-    --bg1:#03102b; --bg2:#0a2a5e; --panel:#0b1e44cc; --gold:#ffcf3f;
-    --gold2:#ff9d00; --blue:#0e2a63; --blue-lite:#12408f; --text:#eaf1ff;
-    --correct:#1f9d4d; --wrong:#c0392b; --ring:#39d0ff;
+    --alu:#C9D2DC; --blau:#1E74DC; --blau-d:#0e2a63; --gold:#F5A81C; --gold-h:#ffd166;
+    --rot:#E33A2C; --gruen:#2fbf6b; --arc:#8FD3FF; --line:#17131F;
+    --bg1:#050914; --bg2:#0a1834; --panel:rgba(10,24,52,.72); --text:#eef4ff;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
   body{
     font-family:"Segoe UI",system-ui,Arial,sans-serif;color:var(--text);
-    background:radial-gradient(1200px 800px at 50% -10%,var(--bg2),var(--bg1)) fixed;
-    min-height:100vh;display:flex;flex-direction:column;
+    min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;
+    background:
+      radial-gradient(1000px 620px at 50% -8%, #14357a 0%, rgba(20,53,122,0) 60%),
+      radial-gradient(1400px 900px at 50% 120%, #0b1f4d 0%, rgba(11,31,77,0) 55%),
+      linear-gradient(180deg,var(--bg2),var(--bg1));
+    background-attachment:fixed;
   }
-  header{
-    text-align:center;padding:18px 12px 6px;
+  /* rotierende Spotlight-Strahlen im Hintergrund (WWM-Feeling) */
+  body::before{
+    content:"";position:fixed;inset:-30% -30% -30% -30%;z-index:0;pointer-events:none;
+    background:
+      conic-gradient(from 0deg at 50% 35%,
+        rgba(30,116,220,0) 0deg, rgba(30,116,220,.10) 12deg, rgba(30,116,220,0) 24deg,
+        rgba(143,211,255,0) 60deg, rgba(143,211,255,.09) 72deg, rgba(143,211,255,0) 84deg,
+        rgba(245,168,28,0) 160deg, rgba(245,168,28,.07) 172deg, rgba(245,168,28,0) 184deg,
+        rgba(30,116,220,0) 260deg, rgba(30,116,220,.10) 272deg, rgba(30,116,220,0) 284deg);
+    animation:spin 60s linear infinite;
   }
-  header h1{
-    margin:0;font-size:clamp(22px,4.5vw,40px);font-weight:800;letter-spacing:.5px;
-    background:linear-gradient(180deg,#fff3c0,var(--gold) 45%,var(--gold2));
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-    text-shadow:0 2px 16px rgba(255,180,0,.25);
-  }
-  header p{margin:4px 0 0;opacity:.8;font-size:14px}
-  .layout{
-    flex:1;display:grid;grid-template-columns:1fr 300px;gap:20px;
-    max-width:1150px;width:100%;margin:0 auto;padding:14px 18px 26px;
-  }
-  @media(max-width:860px){.layout{grid-template-columns:1fr}.ladder-wrap{order:-1}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .layout,header,footer{position:relative;z-index:1}
 
-  /* ---------- Spielfeld ---------- */
-  .stage{display:flex;flex-direction:column;gap:18px;min-height:420px;justify-content:flex-end}
-  .qcard{
-    background:linear-gradient(180deg,#0f2c66,#0a1f49);
-    border:2px solid #2f6bd6;border-radius:16px;padding:22px 24px;
-    box-shadow:0 0 0 3px #06122e, 0 18px 40px rgba(0,0,0,.5);
-    position:relative;
+  /* ===== Kopf mit Logo ===== */
+  header{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 12px 4px;text-align:center}
+  .brandlogo{width:min(300px,72vw);height:auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+  header h1{
+    margin:6px 0 0;font-size:clamp(20px,4.4vw,38px);font-weight:900;letter-spacing:.6px;line-height:1.05;
+    background:linear-gradient(180deg,#fff7df,var(--gold-h) 40%,var(--gold) 70%,#c77e00);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 2px 20px rgba(245,168,28,.35);
   }
-  .qmeta{display:flex;justify-content:space-between;font-size:13px;opacity:.8;margin-bottom:10px}
-  .qtext{font-size:clamp(17px,2.4vw,22px);font-weight:600;line-height:1.4}
-  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  header p{margin:2px 0 0;opacity:.8;font-size:13px;letter-spacing:.5px}
+
+  .layout{flex:1;display:grid;grid-template-columns:1fr 310px;gap:22px;
+    max-width:1180px;width:100%;margin:0 auto;padding:12px 18px 26px}
+  @media(max-width:880px){.layout{grid-template-columns:1fr}.ladder-wrap{order:-1}}
+
+  /* ===== Bühne ===== */
+  .stage{display:flex;flex-direction:column;gap:18px;min-height:440px;justify-content:flex-end}
+
+  .qcard{
+    position:relative;border-radius:18px;padding:24px 26px;
+    background:linear-gradient(180deg,rgba(18,45,102,.96),rgba(8,24,58,.96));
+    border:2px solid transparent;
+    background-clip:padding-box;
+    box-shadow:0 0 0 2px var(--line), 0 0 34px rgba(30,116,220,.35), 0 22px 50px rgba(0,0,0,.55);
+  }
+  .qcard::before{ /* Gold-Rahmenglanz */
+    content:"";position:absolute;inset:-2px;border-radius:18px;z-index:-1;
+    background:linear-gradient(180deg,var(--gold-h),var(--blau) 55%,var(--gold));
+    filter:blur(.3px);opacity:.9;
+  }
+  .qmeta{display:flex;justify-content:space-between;align-items:center;font-size:13px;opacity:.85;margin-bottom:10px}
+  .qmeta .kat{color:var(--arc);font-weight:700;letter-spacing:.4px}
+  .qmeta .amt{color:var(--gold-h);font-weight:800}
+  .qtext{font-size:clamp(17px,2.5vw,23px);font-weight:600;line-height:1.4;text-align:center;padding:6px 4px 4px}
+
+  /* klassische WWM-Hexagon-Antworten */
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
   @media(max-width:560px){.answers{grid-template-columns:1fr}}
   .ans{
-    display:flex;align-items:center;gap:12px;cursor:pointer;
-    background:linear-gradient(180deg,#0e2559,#0a1c41);
-    border:2px solid #2f6bd6;border-radius:40px;padding:12px 18px;
-    font-size:16px;color:var(--text);text-align:left;transition:.15s;
+    --c1:#0f3170; --c2:#0a1f49; --edge:var(--blau);
+    position:relative;display:flex;align-items:center;gap:12px;cursor:pointer;
+    padding:13px 20px;font-size:16px;color:var(--text);text-align:left;border:none;
+    background:linear-gradient(180deg,var(--c1),var(--c2));
+    clip-path:polygon(22px 0,calc(100% - 22px) 0,100% 50%,calc(100% - 22px) 100%,22px 100%,0 50%);
+    transition:transform .12s, filter .12s;
+    outline:2px solid var(--edge);outline-offset:-2px;
   }
-  .ans:hover:not(.locked){background:linear-gradient(180deg,#12408f,#0e2b63);border-color:var(--ring)}
-  .ans .letter{color:var(--gold);font-weight:800;min-width:22px}
-  .ans.selected{background:linear-gradient(180deg,#c78a00,#8a5f00);border-color:var(--gold)}
-  .ans.correct{background:linear-gradient(180deg,#18a24f,#0d6a34);border-color:#39ff9e;animation:pulse .5s}
-  .ans.wrong{background:linear-gradient(180deg,#c0392b,#7d221a);border-color:#ff7b6b}
-  .ans.disabled{opacity:.35;pointer-events:none}
-  .ans.hidden5050{visibility:hidden}
-  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+  .ans::after{content:"";position:absolute;left:52px;top:8px;bottom:8px;width:2px;
+    background:linear-gradient(180deg,transparent,rgba(245,168,28,.55),transparent)}
+  .ans:hover:not(.locked){filter:brightness(1.12);transform:translateY(-1px)}
+  .ans .letter{color:var(--gold-h);font-weight:900;min-width:20px;font-size:18px;text-shadow:0 1px 2px #000}
+  .ans .txt{flex:1}
+  .ans.selected{--c1:#e0a41c;--c2:#a06400;--edge:var(--gold-h);color:#221700;animation:blink .5s steps(2) 3}
+  .ans.selected .letter{color:#3a2a00}
+  @keyframes blink{50%{filter:brightness(1.5)}}
+  .ans.correct{--c1:#22b866;--c2:#0c7a3d;--edge:#7bffb2;color:#032611;animation:winpop .5s}
+  .ans.correct .letter{color:#053}
+  .ans.wrong{--c1:#e6483a;--c2:#8f221a;--edge:#ff9c8f;color:#2a0600}
+  @keyframes winpop{0%,100%{transform:scale(1)}45%{transform:scale(1.05)}}
+  .ans.disabled{opacity:.28;pointer-events:none}
+  .ans.gone{visibility:hidden}
+  .ans .kbd{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:11px;opacity:.35}
 
-  /* ---------- Joker ---------- */
-  .lifelines{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .ll{
-    width:64px;height:44px;border-radius:24px;border:2px solid var(--gold);
-    background:radial-gradient(circle at 50% 30%,#12408f,#0a1c41);
-    color:var(--gold);font-weight:800;font-size:13px;cursor:pointer;transition:.15s;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .ll:hover:not(.used){box-shadow:0 0 14px var(--ring);transform:translateY(-2px)}
-  .ll.used{opacity:.3;text-decoration:line-through;cursor:not-allowed;border-color:#556}
-
-  /* ---------- Geld-Leiter ---------- */
-  .ladder-wrap{background:var(--panel);border:1px solid #2f6bd6;border-radius:14px;padding:12px}
-  .ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column-reverse}
-  .ladder li{
-    display:flex;justify-content:space-between;padding:6px 12px;border-radius:8px;
-    font-weight:600;font-size:14px;color:#cfe0ff;
-  }
-  .ladder li .lvl{opacity:.6;min-width:26px}
-  .ladder li.safe{color:#fff}
-  .ladder li.safe .amt{color:var(--gold)}
-  .ladder li.current{background:linear-gradient(90deg,var(--gold2),var(--gold));color:#241a00}
-  .ladder li.current .lvl{opacity:.9}
-  .ladder li.won{color:#5fe08a}
-
-  /* ---------- Overlay / Buttons ---------- */
-  .center{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
-    background:linear-gradient(180deg,#0f2c66,#0a1f49);border:2px solid #2f6bd6;border-radius:16px;
-    padding:34px 26px;box-shadow:0 18px 40px rgba(0,0,0,.5)}
-  .btn{
-    border:none;border-radius:40px;padding:14px 30px;font-size:17px;font-weight:800;cursor:pointer;
-    background:linear-gradient(180deg,var(--gold),var(--gold2));color:#241a00;transition:.15s;
-  }
-  .btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
-  .btn.ghost{background:transparent;border:2px solid var(--gold);color:var(--gold)}
-  .big{font-size:clamp(22px,4vw,34px);font-weight:800}
-  .muted{opacity:.85;font-size:15px;max-width:520px;line-height:1.5}
-  .toast{
-    position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:50;
-    background:#0b1e44;border:1px solid var(--gold);color:#fff;padding:10px 18px;border-radius:12px;
-    font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.3s;pointer-events:none;
-    max-width:90vw;text-align:center;
-  }
-  .toast.show{opacity:1}
-  .explain{margin-top:14px;font-size:14px;line-height:1.5;background:#06122e;border-left:4px solid var(--gold);
-    padding:10px 14px;border-radius:6px;display:none}
+  .explain{margin-top:16px;font-size:14px;line-height:1.55;background:rgba(4,9,20,.75);
+    border-left:4px solid var(--gold);padding:11px 15px;border-radius:8px;display:none;animation:fade .3s}
   .explain.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+
+  /* ===== Joker ===== */
+  .lifelines{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .ll{
+    position:relative;min-width:66px;height:48px;padding:0 14px;border-radius:26px;
+    border:2px solid var(--gold);color:var(--gold-h);font-weight:900;font-size:14px;cursor:pointer;
+    background:radial-gradient(circle at 50% 25%,#173a86,#0a1c41);
+    display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s;
+    box-shadow:0 4px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.15);
+  }
+  .ll:hover:not(.used){box-shadow:0 0 18px var(--arc);transform:translateY(-2px)}
+  .ll.used{opacity:.32;cursor:not-allowed;border-color:#556}
+  .ll.used::after{content:"";position:absolute;left:12%;right:12%;top:50%;height:2px;background:var(--rot);transform:rotate(-12deg)}
+
+  /* ===== Geld-Leiter ===== */
+  .ladder-wrap{background:var(--panel);border:1px solid rgba(143,211,255,.35);border-radius:16px;padding:14px;
+    box-shadow:0 14px 40px rgba(0,0,0,.45), inset 0 0 30px rgba(30,116,220,.12);backdrop-filter:blur(3px);height:fit-content}
+  .ladder-wrap h3{margin:2px 0 10px;text-align:center;font-size:13px;letter-spacing:2px;color:var(--arc);opacity:.9}
+  .ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column-reverse;gap:3px}
+  .ladder li{display:flex;justify-content:space-between;align-items:center;padding:6px 14px;border-radius:9px;
+    font-weight:700;font-size:14px;color:#cfe0ff;border:1px solid transparent}
+  .ladder li .lvl{opacity:.5;min-width:26px;font-size:12px}
+  .ladder li.safe{color:#fff;border-color:rgba(245,168,28,.25)}
+  .ladder li.safe .amt{color:var(--gold-h)}
+  .ladder li.won{color:var(--gruen)}
+  .ladder li.won .amt{color:var(--gruen)}
+  .ladder li.current{background:linear-gradient(90deg,var(--gold),var(--gold-h));color:#241a00;
+    box-shadow:0 0 18px rgba(245,168,28,.6);animation:cur 1.4s ease-in-out infinite}
+  .ladder li.current .lvl,.ladder li.current .amt{opacity:1;color:#241a00}
+  @keyframes cur{50%{filter:brightness(1.12)}}
+
+  /* ===== Overlays / Buttons ===== */
+  .center{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
+    position:relative;border-radius:18px;padding:34px 28px;
+    background:linear-gradient(180deg,rgba(18,45,102,.96),rgba(8,24,58,.96));
+    box-shadow:0 0 0 2px var(--line),0 0 34px rgba(30,116,220,.35),0 22px 50px rgba(0,0,0,.55)}
+  .center::before{content:"";position:absolute;inset:-2px;border-radius:18px;z-index:-1;
+    background:linear-gradient(180deg,var(--gold-h),var(--blau) 55%,var(--gold))}
+  .btn{border:none;border-radius:40px;padding:14px 32px;font-size:17px;font-weight:900;cursor:pointer;
+    background:linear-gradient(180deg,var(--gold-h),var(--gold));color:#241a00;transition:.15s;
+    box-shadow:0 6px 18px rgba(245,168,28,.4)}
+  .btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
+  .btn.ghost{background:transparent;border:2px solid var(--gold);color:var(--gold-h);box-shadow:none}
+  .big{font-size:clamp(22px,4.4vw,36px);font-weight:900;
+    background:linear-gradient(180deg,#fff,var(--alu) 60%,#8FA3B8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .prize{font-size:clamp(24px,5vw,40px);font-weight:900;color:var(--gold-h);text-shadow:0 2px 20px rgba(245,168,28,.5)}
+  .muted{opacity:.9;font-size:15px;max-width:560px;line-height:1.55}
+  .muted b{color:var(--gold-h)}
   .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-  footer{text-align:center;font-size:12px;opacity:.5;padding:8px 0 16px}
+
+  .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:60;
+    background:linear-gradient(180deg,#12336f,#0a1c41);border:2px solid var(--gold);color:#fff;
+    padding:12px 20px;border-radius:14px;font-size:14px;box-shadow:0 10px 34px rgba(0,0,0,.6);
+    opacity:0;transition:.3s;pointer-events:none;max-width:92vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(4px)}
+  .toast .tt{display:block;font-size:12px;letter-spacing:1px;color:var(--gold-h);margin-bottom:3px}
+
+  #confetti{position:fixed;inset:0;z-index:55;pointer-events:none;display:none}
+  footer{text-align:center;font-size:12px;opacity:.55;padding:6px 0 16px}
+  footer b{color:var(--gold-h)}
 </style>
 </head>
 <body>
+<canvas id="confetti"></canvas>
 <div class="toast" id="toast"></div>
 
 <header>
-  <h1>💡 Wer wird Eloxal‑Millionär</h1>
-  <p>Das Quiz rund um Eloxieren, Anodisation &amp; Oberflächentechnik</p>
+  <!-- Jacobi Eloxal Logo -->
+  <svg viewBox="0 0 300 74" class="brandlogo" role="img" aria-label="Jacobi Eloxal">
+    <defs>
+      <linearGradient id="jxg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#1E74DC"/><stop offset="1" stop-color="#8FD3FF"/>
+      </linearGradient>
+    </defs>
+    <circle cx="37" cy="37" r="32" fill="url(#jxg)" stroke="#17131F" stroke-width="4"/>
+    <text x="37" y="49" text-anchor="middle" font-family="system-ui,sans-serif" font-size="32" font-weight="800" letter-spacing="1" fill="#fff">JX</text>
+    <text x="82" y="36" font-family="system-ui,sans-serif" font-size="30" font-weight="800" fill="#C9D2DC">JACOBI</text>
+    <text x="83" y="62" font-family="system-ui,sans-serif" font-size="20" font-weight="700" letter-spacing="6" fill="#F5A81C">ELOXAL</text>
+  </svg>
+  <h1>Wer wird Eloxal‑Millionär</h1>
+  <p>Das große Quiz rund um Eloxieren &amp; Oberflächentechnik</p>
 </header>
 
 <div class="layout">
-  <div class="stage" id="stage"><!-- dynamisch --></div>
-
+  <div class="stage" id="stage"></div>
   <div class="ladder-wrap">
+    <h3>GEWINNLEITER</h3>
     <ol class="ladder" id="ladder"></ol>
   </div>
 </div>
 
-<footer>Fragenkatalog: <span id="qcount"></span> Fragen · Jede Runde zufällig · Jacobi Eloxal</footer>
+<footer>Katalog: <b id="qcount"></b> Fragen · jede Runde neu gemischt · © Jacobi Eloxal GmbH</footer>
 
 <script src="fragen.js"></script>
 <script>
-/* =========================================================
- *  Konfiguration
- * ========================================================= */
-const GELDLEITER = [50,100,200,300,500,1000,2000,4000,8000,16000,32000,64000,125000,500000,1000000];
-const SICHER = [4, 9];                     // Index in GELDLEITER = Sicherheitsstufen (500 €, 16.000 €)
-// Schwierigkeit je Stufe: Level 1-5 leicht, 6-10 mittel, 11-15 schwer
-function stufeSchwierigkeit(level){ return level < 5 ? 1 : level < 10 ? 2 : 3; }
+/* ============ Konfiguration ============ */
+const GELDLEITER=[50,100,200,300,500,1000,2000,4000,8000,16000,32000,64000,125000,500000,1000000];
+const SICHER=[4,9];
+const SPEICHER_KEY="eloxal_millionaer_gesehen";
 
-const SPEICHER_KEY = "eloxal_millionaer_gesehen";
+/* ============ Fragen-Auswahl ohne Wiederholung ============ */
+function idOf(q){return q.f}
+function ladeGesehen(){try{return JSON.parse(localStorage.getItem(SPEICHER_KEY))||{}}catch(e){return{}}}
+function speicherGesehen(m){try{localStorage.setItem(SPEICHER_KEY,JSON.stringify(m))}catch(e){}}
 
-/* =========================================================
- *  Fragen-Auswahl (Katalog) – ohne Wiederholung
- * ========================================================= */
-function idOf(q){ return q.f; }               // Frage-Text als eindeutige ID
-
-function ladeGesehen(){
-  try{ return JSON.parse(localStorage.getItem(SPEICHER_KEY)) || {}; }
-  catch(e){ return {}; }
-}
-function speicherGesehen(map){
-  try{ localStorage.setItem(SPEICHER_KEY, JSON.stringify(map)); }catch(e){}
-}
-
-/* Zieht 15 Fragen (5 je Schwierigkeit), bevorzugt lange nicht gesehene. */
 function baueFragenset(){
-  const gesehen = ladeGesehen();
-  const nachStufe = {1:[],2:[],3:[]};
-  FRAGENKATALOG.forEach(q => { if(nachStufe[q.s]) nachStufe[q.s].push(q); });
-
-  function ziehe(pool, anzahl, benutzt){
-    // Sortiere: zuerst nie/lange nicht gesehene, dann leichter Zufall
-    const kandidaten = pool.filter(q => !benutzt.has(idOf(q)));
-    kandidaten.sort((a,b)=>{
-      const ga = gesehen[idOf(a)] || 0, gb = gesehen[idOf(b)] || 0;
-      if(ga !== gb) return ga - gb;          // seltener gesehen zuerst
-      return Math.random() - 0.5;            // sonst zufällig
-    });
-    return kandidaten.slice(0, anzahl);
+  const gesehen=ladeGesehen(), nachStufe={1:[],2:[],3:[]};
+  FRAGENKATALOG.forEach(q=>{if(nachStufe[q.s])nachStufe[q.s].push(q)});
+  function ziehe(pool,anz,benutzt){
+    const k=pool.filter(q=>!benutzt.has(idOf(q)));
+    k.sort((a,b)=>{const ga=gesehen[idOf(a)]||0,gb=gesehen[idOf(b)]||0;return ga!==gb?ga-gb:Math.random()-.5});
+    return k.slice(0,anz);
   }
-
-  const benutzt = new Set();
-  let set = [];
-  [1,2,3].forEach(s=>{
-    const gezogen = ziehe(nachStufe[s], 5, benutzt);
-    gezogen.forEach(q=>benutzt.add(idOf(q)));
-    set = set.concat(gezogen);
-  });
-
-  // Falls ein Pool zu klein ist, mit übrigen Fragen auffüllen
-  if(set.length < 15){
-    const rest = FRAGENKATALOG.filter(q=>!benutzt.has(idOf(q)));
-    rest.sort(()=>Math.random()-0.5);
-    set = set.concat(rest.slice(0, 15 - set.length));
-  }
-
-  // Merken, dass diese Fragen gezeigt wurden (für nächste Runden)
-  set.forEach(q=>{ gesehen[idOf(q)] = (gesehen[idOf(q)]||0) + 1; });
+  const benutzt=new Set(); let set=[];
+  [1,2,3].forEach(s=>{const g=ziehe(nachStufe[s],5,benutzt);g.forEach(q=>benutzt.add(idOf(q)));set=set.concat(g)});
+  if(set.length<15){const rest=FRAGENKATALOG.filter(q=>!benutzt.has(idOf(q)));rest.sort(()=>Math.random()-.5);set=set.concat(rest.slice(0,15-set.length))}
+  set.forEach(q=>{gesehen[idOf(q)]=(gesehen[idOf(q)]||0)+1});
   speicherGesehen(gesehen);
-
-  // Antworten je Frage mischen und richtigen Index nachführen
   return set.map(q=>{
-    const opts = q.a.map((text,i)=>({text, korrekt:i===q.r}));
-    for(let i=opts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [opts[i],opts[j]]=[opts[j],opts[i]]; }
-    return {frage:q.f, kategorie:q.k, erklaerung:q.e, optionen:opts,
-            richtigerIndex:opts.findIndex(o=>o.korrekt)};
+    const opts=q.a.map((text,i)=>({text,korrekt:i===q.r}));
+    for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]]}
+    return {frage:q.f,kategorie:q.k,erklaerung:q.e,optionen:opts,richtigerIndex:opts.findIndex(o=>o.korrekt)};
   });
 }
 
-/* =========================================================
- *  Spielzustand
- * ========================================================= */
-let fragen=[], level=0, joker={fifty:false, publikum:false, telefon:false};
-let entschieden=false;
+/* ============ Zustand ============ */
+let fragen=[],level=0,joker={fifty:false,publikum:false,telefon:false},entschieden=false;
+const stage=document.getElementById('stage'),ladderEl=document.getElementById('ladder'),toastEl=document.getElementById('toast');
+document.getElementById('qcount').textContent=FRAGENKATALOG.length;
+function euro(n){return n.toLocaleString('de-DE')+" €"}
+function toast(titel,msg){toastEl.innerHTML=`<span class="tt">${titel}</span>${msg}`;toastEl.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toastEl.classList.remove('show'),4200)}
+function gesicherterBetrag(){let b=0;SICHER.forEach(i=>{if(level>i)b=GELDLEITER[i]});return b}
 
-const stage  = document.getElementById('stage');
-const ladderEl = document.getElementById('ladder');
-const toastEl = document.getElementById('toast');
-document.getElementById('qcount').textContent = FRAGENKATALOG.length;
-
-function euro(n){ return n.toLocaleString('de-DE') + " €"; }
-function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toast._t);
-  toast._t=setTimeout(()=>toastEl.classList.remove('show'),3200); }
-
-function gesicherterBetrag(){
-  // höchste erreichte Sicherheitsstufe unterhalb des aktuellen Levels
-  let betrag = 0;
-  SICHER.forEach(idx=>{ if(level > idx) betrag = GELDLEITER[idx]; });
-  return betrag;
-}
-
-/* =========================================================
- *  Rendering
- * ========================================================= */
+/* ============ Rendering ============ */
 function renderLadder(){
   ladderEl.innerHTML='';
-  GELDLEITER.forEach((betrag,i)=>{
+  GELDLEITER.forEach((b,i)=>{
     const li=document.createElement('li');
-    li.innerHTML=`<span class="lvl">${i+1}</span><span class="amt">${euro(betrag)}</span>`;
-    if(SICHER.includes(i)) li.classList.add('safe');
-    if(i===level) li.classList.add('current');
-    if(i<level) li.classList.add('won');
+    li.innerHTML=`<span class="lvl">${i+1}</span><span class="amt">${euro(b)}</span>`;
+    if(SICHER.includes(i))li.classList.add('safe');
+    if(i===level)li.classList.add('current');
+    if(i<level)li.classList.add('won');
     ladderEl.appendChild(li);
   });
 }
-
 function renderStart(){
   renderLadder();
-  stage.innerHTML=`
-    <div class="center">
-      <div class="big">Bereit für die Million? 🏆</div>
-      <p class="muted">15 Fragen rund um Eloxal, Anodisation, Färben, Verdichten und typische
-      Fehler. Drei Joker helfen dir. Sicherheitsstufen bei <b>500 €</b> und <b>16.000 €</b>.
-      Die Fragen werden jede Runde neu aus dem Katalog gezogen – es wird selten langweilig!</p>
-      <button class="btn" onclick="spielStart()">Spiel starten</button>
-    </div>`;
+  stage.innerHTML=`<div class="center">
+    <div class="big">Bereit für die Million? 🏆</div>
+    <p class="muted">15 Fragen rund um Eloxal, Anodisation, Färben, Verdichten und typische
+    Fehlerbilder. Drei Joker helfen dir, Sicherheitsstufen bei <b>500 €</b> und <b>16.000 €</b>.
+    Die Fragen werden jede Runde neu aus dem Katalog gezogen – kaum eine Partie gleicht der anderen.</p>
+    <button class="btn" onclick="spielStart()">▶ Spiel starten</button>
+  </div>`;
 }
-
 function renderFrage(){
-  entschieden=false;
-  renderLadder();
-  const q=fragen[level];
-  const betrag=GELDLEITER[level];
-  const letters=['A','B','C','D'];
+  entschieden=false;renderLadder();
+  const q=fragen[level],betrag=GELDLEITER[level],L=['A','B','C','D'];
   stage.innerHTML=`
     <div class="lifelines">
-      <button class="ll ${joker.fifty?'used':''}"    id="j5050"   onclick="jokerFifty()"   title="50:50 – zwei falsche Antworten entfernen">50:50</button>
-      <button class="ll ${joker.publikum?'used':''}" id="jpub"    onclick="jokerPublikum()" title="Publikumsjoker">👥</button>
-      <button class="ll ${joker.telefon?'used':''}"  id="jtel"    onclick="jokerTelefon()"  title="Telefonjoker">📞</button>
+      <button class="ll ${joker.fifty?'used':''}" id="j5050" onclick="jokerFifty()" title="50:50 – zwei falsche Antworten entfernen">50:50</button>
+      <button class="ll ${joker.publikum?'used':''}" id="jpub" onclick="jokerPublikum()" title="Publikumsjoker">👥&nbsp;Publikum</button>
+      <button class="ll ${joker.telefon?'used':''}" id="jtel" onclick="jokerTelefon()" title="Telefonjoker">📞&nbsp;Telefon</button>
     </div>
     <div class="qcard">
-      <div class="qmeta"><span>Frage ${level+1} / 15 · ${q.kategorie}</span><span>Für ${euro(betrag)}</span></div>
+      <div class="qmeta"><span class="kat">${q.kategorie}</span><span>Frage ${level+1}/15</span><span class="amt">${euro(betrag)}</span></div>
       <div class="qtext">${q.frage}</div>
       <div class="answers" id="answers">
-        ${q.optionen.map((o,i)=>`
-          <button class="ans" data-i="${i}" onclick="waehle(${i})">
-            <span class="letter">${letters[i]}</span><span class="txt">${o.text}</span>
-          </button>`).join('')}
+        ${q.optionen.map((o,i)=>`<button class="ans" data-i="${i}" onclick="waehle(${i})">
+          <span class="letter">${L[i]}</span><span class="txt">${o.text}</span></button>`).join('')}
       </div>
       <div class="explain" id="explain"></div>
     </div>`;
 }
 
-/* =========================================================
- *  Spielablauf
- * ========================================================= */
-function spielStart(){
-  fragen=baueFragenset();
-  level=0;
-  joker={fifty:false, publikum:false, telefon:false};
-  renderFrage();
-}
-
+/* ============ Ablauf ============ */
+function spielStart(){fragen=baueFragenset();level=0;joker={fifty:false,publikum:false,telefon:false};renderFrage()}
 function waehle(i){
-  if(entschieden) return;
-  entschieden=true;
-  const q=fragen[level];
-  const btns=[...document.querySelectorAll('.ans')];
+  if(entschieden)return;entschieden=true;
+  const q=fragen[level],btns=[...document.querySelectorAll('.ans')];
   btns.forEach(b=>b.classList.add('locked'));
-  const chosen=btns[i];
-  chosen.classList.add('selected');
-
-  // kleine Spannungspause
+  btns[i].classList.add('selected');
   setTimeout(()=>{
-    const richtig = i===q.richtigerIndex;
-    btns[q.richtigerIndex].classList.remove('selected');
+    const richtig=i===q.richtigerIndex;
+    btns[i].classList.remove('selected');
     btns[q.richtigerIndex].classList.add('correct');
-    if(!richtig) chosen.classList.add('wrong');
-
+    if(!richtig)btns[i].classList.add('wrong');
     const ex=document.getElementById('explain');
     ex.innerHTML=`<b>${richtig?'✅ Richtig!':'❌ Leider falsch.'}</b> ${q.erklaerung}`;
     ex.classList.add('show');
-
-    setTimeout(()=> richtig ? weiter() : verloren(), richtig?1400:2600);
-  }, 900);
+    setTimeout(()=>richtig?weiter():verloren(),richtig?1500:2800);
+  },1100);
 }
-
-function weiter(){
-  if(level===GELDLEITER.length-1){ gewonnen(); return; }
-  level++;
-  renderFrage();
-}
-
+function weiter(){if(level===GELDLEITER.length-1){gewonnen();return}level++;renderFrage()}
 function verloren(){
   renderLadder();
-  const betrag=gesicherterBetrag();
-  const q=fragen[level];
-  stage.innerHTML=`
-    <div class="center">
-      <div class="big">💥 Schade!</div>
-      <p class="muted">Die richtige Antwort war:<br><b>${q.optionen[q.richtigerIndex].text}</b></p>
-      <p class="muted">${q.erklaerung}</p>
-      <div class="big" style="color:var(--gold)">Gesicherter Gewinn: ${euro(betrag)}</div>
-      <div class="row">
-        <button class="btn" onclick="spielStart()">Nochmal spielen</button>
-        <button class="btn ghost" onclick="renderStart()">Zum Start</button>
-      </div>
-    </div>`;
+  const betrag=gesicherterBetrag(),q=fragen[level];
+  stage.innerHTML=`<div class="center">
+    <div class="big">💥 Schade!</div>
+    <p class="muted">Richtig gewesen wäre:<br><b>${q.optionen[q.richtigerIndex].text}</b></p>
+    <p class="muted">${q.erklaerung}</p>
+    <div class="prize">Gesicherter Gewinn: ${euro(betrag)}</div>
+    <div class="row"><button class="btn" onclick="spielStart()">🔄 Nochmal spielen</button>
+    <button class="btn ghost" onclick="renderStart()">Zum Start</button></div></div>`;
 }
-
 function gewonnen(){
-  renderLadder();
-  stage.innerHTML=`
-    <div class="center">
-      <div class="big">🎉 ELOXAL‑MILLIONÄR! 🎉</div>
-      <p class="muted">Alle 15 Fragen richtig! Du beherrschst das Eloxieren aus dem Effeff.</p>
-      <div class="big" style="color:var(--gold)">Gewinn: 1.000.000 €</div>
-      <div class="row">
-        <button class="btn" onclick="spielStart()">Nochmal spielen</button>
-        <button class="btn ghost" onclick="renderStart()">Zum Start</button>
-      </div>
-    </div>`;
+  renderLadder();konfetti();
+  stage.innerHTML=`<div class="center">
+    <div class="big">🎉 ELOXAL‑MILLIONÄR! 🎉</div>
+    <p class="muted">Alle 15 Fragen richtig – du beherrschst das Eloxieren aus dem Effeff!</p>
+    <div class="prize">1.000.000 €</div>
+    <div class="row"><button class="btn" onclick="spielStart()">🔄 Nochmal spielen</button>
+    <button class="btn ghost" onclick="renderStart()">Zum Start</button></div></div>`;
 }
 
-/* =========================================================
- *  Joker
- * ========================================================= */
+/* ============ Joker ============ */
+function sichtbareIndizes(q){return q.optionen.map((o,i)=>i).filter(i=>{const b=document.querySelector(`.ans[data-i="${i}"]`);return b&&!b.classList.contains('gone')})}
 function jokerFifty(){
-  if(joker.fifty||entschieden) return;
-  joker.fifty=true; document.getElementById('j5050').classList.add('used');
-  const q=fragen[level];
-  const falsche=q.optionen.map((o,i)=>i).filter(i=>i!==q.richtigerIndex);
-  // zwei zufällige falsche entfernen
-  falsche.sort(()=>Math.random()-0.5);
-  falsche.slice(0,2).forEach(i=>{
-    const b=document.querySelector(`.ans[data-i="${i}"]`);
-    b.classList.add('disabled','hidden5050');
-  });
+  if(joker.fifty||entschieden)return;joker.fifty=true;document.getElementById('j5050').classList.add('used');
+  const q=fragen[level];const falsche=q.optionen.map((o,i)=>i).filter(i=>i!==q.richtigerIndex);
+  falsche.sort(()=>Math.random()-.5);
+  falsche.slice(0,2).forEach(i=>{const b=document.querySelector(`.ans[data-i="${i}"]`);b.classList.add('disabled','gone')});
+  toast('50:50','Zwei falsche Antworten wurden entfernt.');
 }
-
 function jokerPublikum(){
-  if(joker.publikum||entschieden) return;
-  joker.publikum=true; document.getElementById('jpub').classList.add('used');
-  const q=fragen[level];
-  // Publikum liegt meistens richtig – Verteilung erzeugen
-  const n=q.optionen.length;
-  let werte=new Array(n).fill(0);
-  const richtig=q.richtigerIndex;
-  const sichtbar=q.optionen.map((o,i)=>i).filter(i=>{
-    const b=document.querySelector(`.ans[data-i="${i}"]`);
-    return b && !b.classList.contains('hidden5050');
-  });
-  const trefferChance=55+Math.floor(Math.random()*30); // 55–85 % aufs richtige
-  werte[richtig]=trefferChance;
-  let rest=100-trefferChance;
-  const andere=sichtbar.filter(i=>i!==richtig);
-  andere.forEach((i,idx)=>{
-    const v = idx===andere.length-1 ? rest : Math.floor(Math.random()*rest*0.7);
-    werte[i]=v; rest-=v;
-  });
-  const letters=['A','B','C','D'];
-  const txt=sichtbar.map(i=>`${letters[i]}: ${werte[i]}%`).join('  ·  ');
-  toast('👥 Publikum: '+txt);
+  if(joker.publikum||entschieden)return;joker.publikum=true;document.getElementById('jpub').classList.add('used');
+  const q=fragen[level],n=q.optionen.length,werte=new Array(n).fill(0),richtig=q.richtigerIndex;
+  const sicht=sichtbareIndizes(q),treffer=55+Math.floor(Math.random()*30);
+  werte[richtig]=treffer;let rest=100-treffer;const andere=sicht.filter(i=>i!==richtig);
+  andere.forEach((i,idx)=>{const v=idx===andere.length-1?rest:Math.floor(Math.random()*rest*.7);werte[i]=v;rest-=v});
+  const L=['A','B','C','D'];
+  const bars=sicht.map(i=>`<div style="display:flex;align-items:center;gap:8px;margin:3px 0">
+    <b style="width:16px;color:var(--gold-h)">${L[i]}</b>
+    <span style="flex:1;height:12px;background:#0a1c41;border-radius:6px;overflow:hidden;display:inline-block">
+      <span style="display:block;height:100%;width:${werte[i]}%;background:linear-gradient(90deg,var(--blau),var(--arc))"></span></span>
+    <span style="width:38px;text-align:right">${werte[i]}%</span></div>`).join('');
+  toast('👥 Publikumsjoker',`<div style="min-width:220px">${bars}</div>`);
 }
-
 function jokerTelefon(){
-  if(joker.telefon||entschieden) return;
-  joker.telefon=true; document.getElementById('jtel').classList.add('used');
-  const q=fragen[level];
-  const letters=['A','B','C','D'];
-  const sichtbar=q.optionen.map((o,i)=>i).filter(i=>{
-    const b=document.querySelector(`.ans[data-i="${i}"]`);
-    return b && !b.classList.contains('hidden5050');
-  });
-  // Telefonjoker ist ziemlich sicher, aber nicht immer
-  const sicher=Math.random()<0.8;
-  let tipp = sicher ? q.richtigerIndex
-                    : sichtbar[Math.floor(Math.random()*sichtbar.length)];
-  const phrasen = sicher
-    ? [`Ganz klar, das ist ${letters[tipp]}.`,
-       `Da bin ich mir sicher: Antwort ${letters[tipp]}.`,
-       `Das hatten wir letzte Woche im Betrieb – ${letters[tipp]}!`]
-    : [`Hmm, ich bin nicht ganz sicher… ich würde ${letters[tipp]} sagen.`,
-       `Schwierig. Vielleicht ${letters[tipp]}? Ohne Gewähr.`];
-  toast('📞 Fachkollege: '+phrasen[Math.floor(Math.random()*phrasen.length)]);
+  if(joker.telefon||entschieden)return;joker.telefon=true;document.getElementById('jtel').classList.add('used');
+  const q=fragen[level],L=['A','B','C','D'],sicht=sichtbareIndizes(q);
+  const sicher=Math.random()<.8;const tipp=sicher?q.richtigerIndex:sicht[Math.floor(Math.random()*sicht.length)];
+  const p=sicher?[`Ganz klar, das ist ${L[tipp]}.`,`Da bin ich mir sicher: Antwort ${L[tipp]}.`,`Das hatten wir letzte Woche im Betrieb – ${L[tipp]}!`]
+                :[`Hmm, nicht ganz sicher… ich würde ${L[tipp]} sagen.`,`Schwierig. Vielleicht ${L[tipp]}? Ohne Gewähr.`];
+  toast('📞 Fachkollege',p[Math.floor(Math.random()*p.length)]);
 }
 
-/* =========================================================
- *  Start
- * ========================================================= */
+/* ============ Konfetti ============ */
+function konfetti(){
+  const c=document.getElementById('confetti'),ctx=c.getContext('2d');
+  c.style.display='block';c.width=innerWidth;c.height=innerHeight;
+  const cols=['#F5A81C','#1E74DC','#8FD3FF','#C9D2DC','#ffd166','#2fbf6b'];
+  const P=Array.from({length:160},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height,
+    r:4+Math.random()*6,vy:2+Math.random()*4,vx:-1.5+Math.random()*3,
+    col:cols[Math.floor(Math.random()*cols.length)],rot:Math.random()*6.28,vr:-.2+Math.random()*.4}));
+  let t=0;
+  (function loop(){
+    ctx.clearRect(0,0,c.width,c.height);
+    P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;
+      ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);ctx.restore();});
+    t++;if(t<300)requestAnimationFrame(loop);else c.style.display='none';
+  })();
+}
+addEventListener('resize',()=>{const c=document.getElementById('confetti');if(c.style.display==='block'){c.width=innerWidth;c.height=innerHeight}});
+
+/* Tastatur A/B/C/D + 1-4 */
+addEventListener('keydown',e=>{
+  const m={a:0,b:1,c:2,d:3,'1':0,'2':1,'3':2,'4':3};const k=e.key.toLowerCase();
+  if(k in m){const b=document.querySelector(`.ans[data-i="${m[k]}"]`);if(b&&!b.classList.contains('disabled')&&!entschieden)waehle(m[k]);}
+});
+
 renderStart();
 </script>
 </body>

@@ -148,6 +148,46 @@
     return tex;
   }
 
+  /* Soft dark blob planted under props as a cheap contact shadow. */
+  function aoTexture() {
+    var c = makeCanvas(128, 128);
+    var g = c.getContext('2d');
+    var grad = g.createRadialGradient(64, 64, 8, 64, 64, 62);
+    grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+    grad.addColorStop(0.7, 'rgba(0,0,0,0.25)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }
+
+  /* Scrolling LED ticker: message drawn twice so texture offset wraps
+   * seamlessly at repeat 0.5. */
+  function tickerTexture() {
+    var msg = 'JACOBI ELOXAL  +++  WELLE FUER WELLE QUALITAET  +++  VORSICHT: KORROSIONSBANDE IN HALLE 1  +++  SCHUTZSCHICHT PRUEFEN  +++  ';
+    var c = makeCanvas(2048, 64);
+    var g = c.getContext('2d');
+    g.fillStyle = '#04070a';
+    g.fillRect(0, 0, 2048, 64);
+    g.font = '700 40px monospace';
+    g.textBaseline = 'middle';
+    g.shadowColor = '#9fe348';
+    g.shadowBlur = 12;
+    g.fillStyle = '#9fe348';
+    // squeeze one full message into 1024px, then repeat it for the wrap
+    var w = g.measureText(msg).width;
+    g.save();
+    g.scale(1024 / w, 1);
+    g.fillText(msg, 0, 34);
+    g.fillText(msg, w, 34);
+    g.restore();
+    var tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.repeat.x = 0.5;
+    return tex;
+  }
+
   /* Soft round dot used by steam/dust point clouds. */
   function puffTexture() {
     var c = makeCanvas(64, 64);
@@ -164,7 +204,8 @@
   function build(scene) {
     var colliders = [];   // {minX,maxX,minZ,maxZ}
     var solids = [];      // meshes that block hitscan shots
-    var animated = { steams: [], beacons: [], pools: [], dust: null, sparks: null };
+    var animated = { steams: [], beacons: [], pools: [], dust: null, sparks: null,
+      leds: [], fans: [], chains: [], ticker: null, flicker: null };
     var half = HALL / 2;
 
     function addCollider(cx, cz, sx, sz) {
@@ -393,6 +434,155 @@
     crane.add(hookLoad);
     scene.add(crane);
 
+    // --- hall props: forklift, control cabinet, fans, chains, ticker -------
+    var aoTex = aoTexture();
+    function contactShadow(x, z, size) {
+      var blob = new THREE.Mesh(new THREE.PlaneGeometry(size, size),
+        new THREE.MeshBasicMaterial({ map: aoTex, transparent: true, depthWrite: false }));
+      blob.rotation.x = -Math.PI / 2;
+      blob.position.set(x, 0.012, z);
+      scene.add(blob);
+    }
+    crateSpots.forEach(function (cs) { contactShadow(cs[0], cs[1], cs[2] * 2.1); });
+    [[-12, -4], [13, 5], [-3, -26], [4, 27], [-26, 20], [27, -19]].forEach(function (bp) {
+      contactShadow(bp[0], bp[1], 2.2);
+    });
+
+    // company forklift, parked
+    (function () {
+      var fk = new THREE.Group();
+      var bodyMat = new THREE.MeshStandardMaterial({ color: lin(0xd97f2a), roughness: 0.5, metalness: 0.6 });
+      var darkMat = new THREE.MeshStandardMaterial({ color: lin(0x22262e), roughness: 0.7, metalness: 0.4 });
+      var body = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.85, 1.9), bodyMat);
+      body.position.set(0, 0.85, 0.2);
+      body.castShadow = true;
+      fk.add(body);
+      var counter = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.6, 0.5), bodyMat);
+      counter.position.set(0, 0.75, 1.3);
+      fk.add(counter);
+      var seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.5, 0.45), darkMat);
+      seat.position.set(0, 1.5, 0.45);
+      fk.add(seat);
+      // overhead guard
+      [[-0.5, -0.6], [0.5, -0.6], [-0.5, 0.9], [0.5, 0.9]].forEach(function (pp) {
+        var post = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.4, 0.07), darkMat);
+        post.position.set(pp[0], 1.95, pp[1]);
+        fk.add(post);
+      });
+      var roof = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.07, 1.7), darkMat);
+      roof.position.set(0, 2.68, 0.15);
+      fk.add(roof);
+      // mast + forks
+      [-0.3, 0.3].forEach(function (mx) {
+        var bar = new THREE.Mesh(new THREE.BoxGeometry(0.09, 2.3, 0.09), darkMat);
+        bar.position.set(mx, 1.15, -1.15);
+        fk.add(bar);
+      });
+      var cross = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.09, 0.09), darkMat);
+      cross.position.set(0, 1.9, -1.15);
+      fk.add(cross);
+      [-0.28, 0.28].forEach(function (fx) {
+        var fork = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.05, 1.15), new THREE.MeshStandardMaterial({
+          color: lin(0x3a4048), roughness: 0.5, metalness: 0.8
+        }));
+        fork.position.set(fx, 0.1, -1.75);
+        fk.add(fork);
+      });
+      var wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.22, 14);
+      var wheelMat = new THREE.MeshStandardMaterial({ color: lin(0x17131F), roughness: 0.9 });
+      [[-0.62, -0.55], [0.62, -0.55], [-0.62, 1.0], [0.62, 1.0]].forEach(function (wp) {
+        var wheel = new THREE.Mesh(wheelGeo, wheelMat);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(wp[0], 0.32, wp[1]);
+        fk.add(wheel);
+      });
+      fk.position.set(-21, 0, 27);
+      fk.rotation.y = 2.5;
+      scene.add(fk);
+      solids.push(body);
+      contactShadow(-21, 27, 4.2);
+      addCollider(-21, 27, 3.2, 3.2);
+    })();
+
+    // control cabinet with blinking status LEDs
+    (function () {
+      var cab = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.1, 0.5),
+        new THREE.MeshStandardMaterial({ color: lin(0x515c68), roughness: 0.5, metalness: 0.6 }));
+      cab.position.set(12, 1.05, -half + 0.4);
+      cab.castShadow = true;
+      scene.add(cab);
+      solids.push(cab);
+      addCollider(12, -half + 0.4, 2.0, 0.8);
+      var seam = new THREE.Mesh(new THREE.BoxGeometry(0.02, 1.9, 0.02),
+        new THREE.MeshStandardMaterial({ color: lin(0x2a2f38), roughness: 0.8 }));
+      seam.position.set(12, 1.05, -half + 0.66);
+      scene.add(seam);
+      var ledColors = [0xff3b30, 0x9fe348, 0xE8A33D, 0x9fe348, 0x58c7f0, 0xff3b30];
+      for (var li2 = 0; li2 < 6; li2++) {
+        var ledMat = new THREE.MeshBasicMaterial({ color: ledColors[li2] });
+        var led = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.03), ledMat);
+        led.position.set(11.4 + (li2 % 3) * 0.6, 2.4 - Math.floor(li2 / 3) * 0.25, -half + 0.67);
+        scene.add(led);
+        animated.leds.push({
+          mat: ledMat, on: new THREE.Color(ledColors[li2]),
+          off: new THREE.Color(ledColors[li2]).multiplyScalar(0.15),
+          phase: Math.random() * 6, speed: 0.4 + Math.random() * 1.2
+        });
+      }
+    })();
+
+    // slow industrial wall fans
+    [[half - 0.45, 7.6, -12, -Math.PI / 2], [-half + 0.45, 7.6, 12, Math.PI / 2]].forEach(function (fp) {
+      var fan = new THREE.Group();
+      var ring = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.09, 8, 20), steel);
+      fan.add(ring);
+      var blades = new THREE.Group();
+      for (var b3 = 0; b3 < 3; b3++) {
+        var blade = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.85, 0.05), steel);
+        blade.position.y = 0.48;
+        var holder = new THREE.Group();
+        holder.rotation.z = (b3 / 3) * Math.PI * 2;
+        holder.add(blade);
+        blades.add(holder);
+      }
+      var hub = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.14, 10), steel);
+      hub.rotation.x = Math.PI / 2;
+      blades.add(hub);
+      fan.add(blades);
+      fan.position.set(fp[0], fp[1], fp[2]);
+      fan.rotation.y = fp[3];
+      scene.add(fan);
+      animated.fans.push(blades);
+    });
+
+    // chains with hooks hanging from the ceiling girders, swaying gently
+    [[-6, -8], [-6, -11], [18, 6]].forEach(function (cp, ci) {
+      var chain = new THREE.Group();
+      var link = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 2.6, 8), steel);
+      link.position.y = -1.3;
+      chain.add(link);
+      var hook = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.035, 8, 14), steel);
+      hook.position.y = -2.72;
+      chain.add(hook);
+      chain.position.set(cp[0], 10.1, cp[1]);
+      scene.add(chain);
+      animated.chains.push({ group: chain, phase: ci * 2.1 });
+    });
+
+    // LED ticker board high on the east wall
+    (function () {
+      var tex = tickerTexture();
+      var board = new THREE.Mesh(new THREE.PlaneGeometry(15, 1.0),
+        new THREE.MeshBasicMaterial({ map: tex }));
+      board.position.set(half - 0.15, 5.9, 8);
+      board.rotation.y = -Math.PI / 2;
+      scene.add(board);
+      var frame = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.3, 15.5), steel);
+      frame.position.set(half - 0.08, 5.9, 8);
+      scene.add(frame);
+      animated.ticker = tex;
+    })();
+
     // --- lights ------------------------------------------------------------
     scene.add(new THREE.AmbientLight(0x39415a, 0.4));
     var hemi = new THREE.HemisphereLight(0x5a6a8c, 0x231a10, 0.45);
@@ -401,7 +591,7 @@
     var key = new THREE.DirectionalLight(0xfff2dd, 0.85);
     key.position.set(14, 18, 8);
     key.castShadow = true;
-    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.mapSize.set(2048, 2048);
     key.shadow.camera.left = -40; key.shadow.camera.right = 40;
     key.shadow.camera.top = 40; key.shadow.camera.bottom = -40;
     scene.add(key);
@@ -411,7 +601,7 @@
       color: 0xffe6b0, transparent: true, opacity: 0.05, depthWrite: false,
       blending: THREE.AdditiveBlending, side: THREE.DoubleSide
     });
-    [[-18, 0], [18, 0], [0, -16], [0, 16]].forEach(function (lp) {
+    [[-18, 0], [18, 0], [0, -16], [0, 16]].forEach(function (lp, li) {
       var lamp = new THREE.PointLight(0xffe6b0, 0.75, 32, 2);
       lamp.position.set(lp[0], 8.6, lp[1]);
       scene.add(lamp);
@@ -427,9 +617,13 @@
       );
       bulb.position.copy(lamp.position);
       scene.add(bulb);
-      var cone = new THREE.Mesh(new THREE.ConeGeometry(3.6, 8.6, 20, 1, true), coneMat);
+      var cone = new THREE.Mesh(new THREE.ConeGeometry(3.6, 8.6, 20, 1, true),
+        li === 2 ? coneMat.clone() : coneMat);
       cone.position.set(lp[0], 4.3, lp[1]);
       scene.add(cone);
+      if (li === 2) {
+        animated.flicker = { light: lamp, bulb: bulb, cone: cone, base: 0.75, t: 5, burst: 0 };
+      }
     });
 
     // rotating orange warn beacons high on the side walls
@@ -577,6 +771,46 @@
           }
           sk.light.position.set(spot[0], spot[1], spot[2]);
           sk.light.intensity = 2.2;
+        }
+      }
+
+      // status LEDs blink, fans turn, chains sway, ticker scrolls
+      for (var l2 = 0; l2 < animated.leds.length; l2++) {
+        var led = animated.leds[l2];
+        var on = Math.sin(t * led.speed * Math.PI + led.phase) > -0.2;
+        led.mat.color.copy(on ? led.on : led.off);
+      }
+      for (var f2 = 0; f2 < animated.fans.length; f2++) {
+        animated.fans[f2].rotation.z += dt * (2.2 + f2 * 0.5);
+      }
+      for (var c2 = 0; c2 < animated.chains.length; c2++) {
+        var ch = animated.chains[c2];
+        ch.group.rotation.x = Math.sin(t * 0.6 + ch.phase) * 0.05;
+        ch.group.rotation.z = Math.cos(t * 0.45 + ch.phase) * 0.05;
+      }
+      if (animated.ticker) {
+        animated.ticker.offset.x = (animated.ticker.offset.x + dt * 0.03) % 0.5;
+      }
+
+      // one hall lamp has a loose contact and flickers now and then
+      var fl2 = animated.flicker;
+      if (fl2) {
+        fl2.t -= dt;
+        if (fl2.t <= 0 && fl2.burst <= 0) {
+          fl2.burst = 0.4 + Math.random() * 0.9;
+          fl2.t = 7 + Math.random() * 12;
+        }
+        if (fl2.burst > 0) {
+          fl2.burst -= dt;
+          var lit = Math.random() > 0.45;
+          fl2.light.intensity = lit ? fl2.base : 0.04;
+          fl2.bulb.material.color.setHex(lit ? 0xffe6b0 : 0x2c2417);
+          fl2.cone.material.opacity = lit ? 0.05 : 0.005;
+          if (fl2.burst <= 0) {
+            fl2.light.intensity = fl2.base;
+            fl2.bulb.material.color.setHex(0xffe6b0);
+            fl2.cone.material.opacity = 0.05;
+          }
         }
       }
     }

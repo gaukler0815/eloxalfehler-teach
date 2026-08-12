@@ -126,6 +126,153 @@
     }
   }
 
+  // --- gibs, decals, muzzle smoke -------------------------------------------
+  var gibs = [];
+  var gibMatCache = {};
+  function gibMaterial(color) {
+    if (!gibMatCache[color]) {
+      gibMatCache[color] = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(color).convertSRGBToLinear(),
+        roughness: 0.95, metalness: 0.1, flatShading: true
+      });
+    }
+    return gibMatCache[color];
+  }
+  function spawnGibs(pos, ecfg) {
+    var n = Math.round(4 + ecfg.radius * 5);
+    for (var i = 0; i < n; i++) {
+      var r = ecfg.radius * (0.12 + Math.random() * 0.16);
+      var m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), gibMaterial(ecfg.color));
+      m.position.set(pos.x, ecfg.height * 0.5, pos.z);
+      var a = Math.random() * Math.PI * 2;
+      gibs.push({
+        mesh: m, r: r, life: 1.6,
+        vel: new THREE.Vector3(Math.cos(a) * (2 + Math.random() * 3),
+          2.5 + Math.random() * 3, Math.sin(a) * (2 + Math.random() * 3)),
+        spin: new THREE.Vector3(Math.random() * 8, Math.random() * 8, Math.random() * 8)
+      });
+      scene.add(m);
+    }
+  }
+  function updateGibs(dt) {
+    for (var i = gibs.length - 1; i >= 0; i--) {
+      var g = gibs[i];
+      g.life -= dt;
+      g.vel.y -= 14 * dt;
+      g.mesh.position.addScaledVector(g.vel, dt);
+      g.mesh.rotation.x += g.spin.x * dt;
+      g.mesh.rotation.y += g.spin.y * dt;
+      if (g.mesh.position.y < g.r) {           // bounce off the floor once
+        g.mesh.position.y = g.r;
+        g.vel.y = Math.abs(g.vel.y) * 0.35;
+        g.vel.x *= 0.6; g.vel.z *= 0.6;
+      }
+      if (g.life < 0.4) { g.mesh.scale.setScalar(Math.max(0.01, g.life / 0.4)); }
+      if (g.life <= 0) {
+        scene.remove(g.mesh);
+        g.mesh.geometry.dispose();
+        gibs.splice(i, 1);
+      }
+    }
+  }
+
+  var decals = [];
+  var decalCount = 0;
+  var splatTex = (function () {
+    var c = document.createElement('canvas');
+    c.width = c.height = 128;
+    var g = c.getContext('2d');
+    for (var i = 0; i < 14; i++) {
+      var x = 34 + Math.random() * 60, y = 34 + Math.random() * 60;
+      var r = 6 + Math.random() * 22;
+      var grad = g.createRadialGradient(x, y, 1, x, y, r);
+      grad.addColorStop(0, 'rgba(96,44,20,0.75)');
+      grad.addColorStop(0.6, 'rgba(70,32,14,0.45)');
+      grad.addColorStop(1, 'rgba(60,28,12,0)');
+      g.fillStyle = grad;
+      g.beginPath();
+      g.arc(x, y, r, 0, Math.PI * 2);
+      g.fill();
+    }
+    var tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
+    return tex;
+  })();
+  function spawnDecal(pos, radius) {
+    var size = radius * 3 + Math.random();
+    var geo = new THREE.PlaneGeometry(size, size);
+    geo.rotateZ(Math.random() * Math.PI * 2);
+    var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      map: splatTex, transparent: true, opacity: 0.85, depthWrite: false
+    }));
+    m.rotation.x = -Math.PI / 2;
+    decalCount++;
+    m.position.set(pos.x, 0.02 + (decalCount % 20) * 0.001, pos.z);
+    scene.add(m);
+    decals.push({ mesh: m, life: 22 });
+    if (decals.length > 24) {
+      var old = decals.shift();
+      scene.remove(old.mesh);
+      old.mesh.geometry.dispose();
+      old.mesh.material.dispose();
+    }
+  }
+  function updateDecals(dt) {
+    for (var i = decals.length - 1; i >= 0; i--) {
+      var d = decals[i];
+      d.life -= dt;
+      if (d.life < 6) { d.mesh.material.opacity = Math.max(0, d.life / 6) * 0.85; }
+      if (d.life <= 0) {
+        scene.remove(d.mesh);
+        d.mesh.geometry.dispose();
+        d.mesh.material.dispose();
+        decals.splice(i, 1);
+      }
+    }
+  }
+
+  var smokes = [];
+  var smokeTex = (function () {
+    var c = document.createElement('canvas');
+    c.width = c.height = 64;
+    var g = c.getContext('2d');
+    var grad = g.createRadialGradient(32, 32, 2, 32, 32, 30);
+    grad.addColorStop(0, 'rgba(200,200,200,0.55)');
+    grad.addColorStop(1, 'rgba(200,200,200,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  })();
+  function spawnSmoke(pos) {
+    for (var i = 0; i < 2; i++) {
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: smokeTex, transparent: true, opacity: 0.22, depthWrite: false
+      }));
+      sp.position.copy(pos);
+      sp.scale.setScalar(0.07);
+      smokes.push({
+        sprite: sp, life: 0.6,
+        vel: new THREE.Vector3((Math.random() - 0.5) * 0.4, 0.6 + Math.random() * 0.4,
+          (Math.random() - 0.5) * 0.4)
+      });
+      scene.add(sp);
+    }
+  }
+  function updateSmokes(dt) {
+    for (var i = smokes.length - 1; i >= 0; i--) {
+      var sm = smokes[i];
+      sm.life -= dt;
+      sm.sprite.position.addScaledVector(sm.vel, dt);
+      sm.sprite.scale.addScalar(dt * 0.6);
+      sm.sprite.material.opacity = Math.max(0, sm.life / 0.6) * 0.22;
+      if (sm.life <= 0) {
+        scene.remove(sm.sprite);
+        sm.sprite.material.dispose();
+        smokes.splice(i, 1);
+      }
+    }
+  }
+
   // --- tracers --------------------------------------------------------------
   var tracers = [];
   function tracer(from, to, color) {
@@ -299,6 +446,7 @@
     camera.getWorldDirection(baseDir);
     var muzzle = ES.weapons.muzzleWorld();
     ejectCasing();
+    spawnSmoke(muzzle);
 
     var targets = world.solids.concat(ES.enemies.hittables());
     var anyHit = false, anyKill = false, anyHead = false;
@@ -332,8 +480,10 @@
             var pts = Math.round(e.cfg.score * diff.scoreMult) +
               (ud.isHead ? cfg.scoring.headshotBonus : 0);
             score += pts;
-            burst(hit.point, 0xa8502a, 14, 5, 8);
+            burst(hit.point, 0xa8502a, 10, 5, 8);
             burst(hit.point, e.cfg.eyeColor, 6, 4, 5);
+            spawnGibs(e.group.position, e.cfg);
+            spawnDecal(e.group.position, e.cfg.radius);
             ES.enemies.remove(scene, e);
           }
         } else {
@@ -346,6 +496,9 @@
     if (anyKill) { sound.kill(); showHitmarker(true); }
     else if (anyHit) { if (anyHead) { sound.headshot(); } else { sound.hit(); } showHitmarker(false); }
   }
+
+  // headless test hook: fire through the full hit-resolution path
+  ES.debug = { shoot: attemptShot, camera: camera, world: world, raycaster: raycaster, player: player };
 
   var hitmarkerT = null;
   function showHitmarker(kill) {
@@ -684,6 +837,9 @@
 
     updateParticles(dt);
     updateTracers(dt);
+    updateGibs(dt);
+    updateDecals(dt);
+    updateSmokes(dt);
     if (fxEnabled && composer) { composer.render(); }
     else { renderer.render(scene, camera); }
   }

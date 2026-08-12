@@ -221,14 +221,23 @@
     var puffTex = puffTexture();
 
     // --- floor / ceiling ---------------------------------------------------
-    var floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(HALL, HALL),
-      new THREE.MeshStandardMaterial({ map: floorTexture(), roughness: 0.78, metalness: 0.3 })
-    );
+    var floorMat = new THREE.MeshStandardMaterial({
+      map: floorTexture(), roughness: 0.78, metalness: 0.3,
+      transparent: true, opacity: 0.95
+    });
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(HALL, HALL), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
     solids.push(floor);
+
+    // polished-concrete look: a real-time mirror shimmers through the floor
+    var mirror = new THREE.Reflector(new THREE.PlaneGeometry(HALL, HALL), {
+      clipBias: 0.003, textureWidth: 1024, textureHeight: 1024, color: 0x454c54
+    });
+    mirror.rotation.x = -Math.PI / 2;
+    mirror.position.y = -0.04;
+    scene.add(mirror);
 
     var ceil = new THREE.Mesh(
       new THREE.PlaneGeometry(HALL, HALL),
@@ -246,6 +255,31 @@
       strip.position.set(sx, WALL_H - 0.05, 0);
       scene.add(strip);
     });
+
+    // slanted volumetric-looking shafts under the skylights
+    (function () {
+      var c2 = makeCanvas(64, 256);
+      var g2 = c2.getContext('2d');
+      var grad2 = g2.createLinearGradient(0, 0, 0, 256);
+      grad2.addColorStop(0, 'rgba(255,255,255,0.9)');
+      grad2.addColorStop(1, 'rgba(255,255,255,0)');
+      g2.fillStyle = grad2;
+      g2.fillRect(0, 0, 64, 256);
+      var shaftTex = new THREE.CanvasTexture(c2);
+      var shaftMat = new THREE.MeshBasicMaterial({
+        map: shaftTex, color: 0x9fb8e8, transparent: true, opacity: 0.05,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+      });
+      [-18, 0, 18].forEach(function (sx) {
+        [-14, 10].forEach(function (sz) {
+          var shaft = new THREE.Mesh(new THREE.PlaneGeometry(16, 11.5), shaftMat);
+          shaft.rotation.y = Math.PI / 2;
+          shaft.rotation.z = 0.16;
+          shaft.position.set(sx + 0.9, 5.4, sz);
+          scene.add(shaft);
+        });
+      });
+    })();
 
     // ceiling girders (I-beam look: dark boxes) across both axes
     var girderMat = new THREE.MeshStandardMaterial({ color: lin(0x2a2f38), roughness: 0.7, metalness: 0.6 });
@@ -818,6 +852,8 @@
     return {
       colliders: colliders,
       solids: solids,
+      mirror: mirror,
+      floorMat: floorMat,
       bounds: { min: -half + 1, max: half - 1 },
       crane: { trolley: trolley, cable: cable, load: hookLoad },
       update: update,

@@ -69,14 +69,54 @@
   // post-processing: render -> bloom (bright lights/emissives glow) -> FXAA
   var fxEnabled = localStorage.getItem('eloxal-strike-fx') !== '0';
   var composer = null, bloomPass = null, fxaaPass = null;
+  // final grade: chromatic aberration, contrast/saturation, vignette, grain
+  var GradeShader = {
+    uniforms: { tDiffuse: { value: null }, time: { value: 0 } },
+    vertexShader: [
+      'varying vec2 vUv;',
+      'void main() {',
+      '  vUv = uv;',
+      '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+      '}'
+    ].join('\n'),
+    fragmentShader: [
+      'uniform sampler2D tDiffuse;',
+      'uniform float time;',
+      'varying vec2 vUv;',
+      'float rand(vec2 co) { return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453); }',
+      'void main() {',
+      '  vec2 d = vUv - 0.5;',
+      '  float r2 = dot(d, d);',
+      '  float ca = 0.006 * r2;',
+      '  vec3 col;',
+      '  col.r = texture2D(tDiffuse, vUv + d * ca).r;',
+      '  col.g = texture2D(tDiffuse, vUv).g;',
+      '  col.b = texture2D(tDiffuse, vUv - d * ca).b;',
+      '  col = (col - 0.5) * 1.05 + 0.5;',
+      '  float l = dot(col, vec3(0.299, 0.587, 0.114));',
+      '  col = mix(vec3(l), col, 1.08);',
+      '  col *= 1.0 - 0.28 * smoothstep(0.12, 0.6, r2);',
+      '  col += (rand(vUv * 913.7 + fract(time) * 41.3) - 0.5) * 0.028;',
+      '  gl_FragColor = vec4(col, 1.0);',
+      '}'
+    ].join('\n')
+  };
+  var ssaoPass = null, gradePass = null;
+
   function setupComposer() {
     var w = window.innerWidth, h = window.innerHeight;
     composer = new THREE.EffectComposer(renderer);
-    composer.addPass(new THREE.RenderPass(scene, camera));
+    ssaoPass = new THREE.SSAOPass(scene, camera, w, h);
+    ssaoPass.kernelRadius = 0.9;
+    ssaoPass.minDistance = 0.0008;
+    ssaoPass.maxDistance = 0.06;
+    composer.addPass(ssaoPass);
     bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(w, h), 0.45, 0.55, 0.82);
     composer.addPass(bloomPass);
     // render targets are linear in r134 — convert back to sRGB at the end
     composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader));
+    gradePass = new THREE.ShaderPass(GradeShader);
+    composer.addPass(gradePass);
     fxaaPass = new THREE.ShaderPass(THREE.FXAAShader);
     composer.addPass(fxaaPass);
     updateFxSizes();
@@ -89,6 +129,17 @@
     fxaaPass.material.uniforms.resolution.value.set(1 / (w * pr), 1 / (h * pr));
   }
   setupComposer();
+
+  // crisp floor/wall textures at flat viewing angles
+  (function () {
+    var maxAniso = renderer.capabilities.getMaxAnisotropy();
+    scene.traverse(function (o) {
+      if (o.isMesh && o.material && o.material.map) {
+        o.material.map.anisotropy = maxAniso;
+        o.material.map.needsUpdate = true;
+      }
+    });
+  })();
 
   window.addEventListener('resize', function () {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -778,6 +829,9 @@
     fxEnabled = on;
     fxBtn.textContent = on ? '\u2728 Effekte: An' : '\u2728 Effekte: Aus';
     localStorage.setItem('eloxal-strike-fx', on ? '1' : '0');
+    // the mirror floor is part of the expensive path
+    world.mirror.visible = on;
+    world.floorMat.opacity = on ? 0.95 : 1;
   }
   fxBtn.addEventListener('click', function () { applyFx(!fxEnabled); });
   applyFx(fxEnabled);
@@ -840,8 +894,12 @@
     updateGibs(dt);
     updateDecals(dt);
     updateSmokes(dt);
-    if (fxEnabled && composer) { composer.render(); }
-    else { renderer.render(scene, camera); }
+    if (fxEnabled && composer) {
+      gradePass.uniforms.time.value = clockT;
+      composer.render();
+    } else {
+      renderer.render(scene, camera);
+    }
   }
 
   setState('menu');

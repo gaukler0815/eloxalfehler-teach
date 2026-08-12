@@ -24,6 +24,11 @@ Welle für Welle in der First-Person-Perspektive.
   Munitions-Pickups, Kopftreffer-Bonus, Punktewertung und Rekord je
   Schwierigkeitsgrad (localStorage).
 - **Sound komplett synthetisiert** (WebAudio, keine Audiodateien), abschaltbar.
+- **AAA-Grafikkette** (im Menü abschaltbar für schwache Rechner): Bloom,
+  SSAO-Umgebungsverdeckung, spiegelnder Industrieboden (Realtime-Reflector),
+  Farb-Grading mit Filmkorn/Vignette/Chromatic Aberration, FXAA,
+  ACES-Tone-Mapping, Environment-Reflexionen, Lichtschächte, Funkenflug,
+  Zerplatz-Effekte mit Physik-Brocken und bleibenden Rostflecken.
 
 ## Steuerung
 

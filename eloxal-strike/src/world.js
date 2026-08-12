@@ -164,7 +164,7 @@
   function build(scene) {
     var colliders = [];   // {minX,maxX,minZ,maxZ}
     var solids = [];      // meshes that block hitscan shots
-    var animated = { steams: [], beacons: [], pools: [], dust: null };
+    var animated = { steams: [], beacons: [], pools: [], dust: null, sparks: null };
     var half = HALL / 2;
 
     function addCollider(cx, cz, sx, sz) {
@@ -256,7 +256,7 @@
     // --- logo signs on two walls ------------------------------------------
     var logoTex = logoTexture();
     var logoMat = new THREE.MeshStandardMaterial({
-      map: logoTex, emissive: 0xffffff, emissiveMap: logoTex, emissiveIntensity: 0.7,
+      map: logoTex, emissive: 0xffffff, emissiveMap: logoTex, emissiveIntensity: 0.9,
       roughness: 0.6
     });
     [[0, 7.4, -half + 0.12, 0], [0, 7.4, half - 0.12, Math.PI]].forEach(function (p) {
@@ -464,6 +464,27 @@
       animated.beacons.push({ group: beacon, light: blink });
     });
 
+    // electric sparks: one pooled point cloud, bursting from changing spots
+    var SPARKS = 70;
+    var sparkPos = new Float32Array(SPARKS * 3);
+    var sparkVel = new Float32Array(SPARKS * 3);
+    var sparkLife = new Float32Array(SPARKS);
+    for (var sp = 0; sp < SPARKS; sp++) { sparkPos[sp * 3 + 1] = -5; }
+    var sparkGeo = new THREE.BufferGeometry();
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+    var sparkPoints = new THREE.Points(sparkGeo, new THREE.PointsMaterial({
+      map: puffTex, color: 0xffc36b, size: 0.16, transparent: true, opacity: 0.95,
+      depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
+    }));
+    scene.add(sparkPoints);
+    var sparkLight = new THREE.PointLight(0xffc36b, 0, 14, 2);
+    scene.add(sparkLight);
+    animated.sparks = {
+      pos: sparkPos, vel: sparkVel, life: sparkLife, geo: sparkGeo,
+      light: sparkLight, timer: 2, next: 0,
+      spots: [[-28, 4.2, 0], [28, 4.2, 0], [0, 4.2, -24], [0, 4.2, 24]]
+    };
+
     // dust motes drifting through the hall
     var dustCount = 220;
     var dustPos = new Float32Array(dustCount * 3);
@@ -475,7 +496,7 @@
     var dustGeo = new THREE.BufferGeometry();
     dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
     var dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
-      map: puffTex, color: 0xbfcbd8, size: 0.14, transparent: true, opacity: 0.32,
+      map: puffTex, color: 0xbfcbd8, size: 0.09, transparent: true, opacity: 0.2,
       depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
     }));
     scene.add(dust);
@@ -511,7 +532,52 @@
       }
       if (animated.dust) {
         animated.dust.rotation.y = t * 0.006;
-        animated.dust.material.opacity = 0.26 + Math.sin(t * 0.7) * 0.07;
+        animated.dust.material.opacity = 0.16 + Math.sin(t * 0.7) * 0.05;
+      }
+
+      // sparks: advance live ones, periodically burst at a new spot
+      var sk = animated.sparks;
+      if (sk) {
+        for (var q = 0; q < sk.life.length; q++) {
+          if (sk.life[q] <= 0) { continue; }
+          sk.life[q] -= dt;
+          sk.vel[q * 3 + 1] -= 12 * dt;
+          sk.pos[q * 3] += sk.vel[q * 3] * dt;
+          sk.pos[q * 3 + 1] += sk.vel[q * 3 + 1] * dt;
+          sk.pos[q * 3 + 2] += sk.vel[q * 3 + 2] * dt;
+          if (sk.life[q] <= 0 || sk.pos[q * 3 + 1] < 0.03) {
+            sk.life[q] = 0;
+            sk.pos[q * 3 + 1] = -5;
+          }
+        }
+        sk.geo.attributes.position.needsUpdate = true;
+        sk.light.intensity = Math.max(0, sk.light.intensity - dt * 6);
+        sk.timer -= dt;
+        if (sk.timer <= 0) {
+          sk.timer = 2.5 + Math.random() * 4;
+          var spot;
+          if (Math.random() < 0.3 && trolley) {
+            spot = [trolley.position.x, 8.0, trolley.position.z];
+          } else {
+            spot = sk.spots[Math.floor(Math.random() * sk.spots.length)];
+          }
+          var burstN = 10 + Math.floor(Math.random() * 8);
+          for (var b2 = 0; b2 < sk.life.length && burstN > 0; b2++) {
+            if (sk.life[b2] > 0) { continue; }
+            burstN--;
+            sk.life[b2] = 0.35 + Math.random() * 0.5;
+            sk.pos[b2 * 3] = spot[0];
+            sk.pos[b2 * 3 + 1] = spot[1];
+            sk.pos[b2 * 3 + 2] = spot[2];
+            var a = Math.random() * Math.PI * 2;
+            var sv = 1.5 + Math.random() * 3;
+            sk.vel[b2 * 3] = Math.cos(a) * sv;
+            sk.vel[b2 * 3 + 1] = Math.random() * 2.5;
+            sk.vel[b2 * 3 + 2] = Math.sin(a) * sv;
+          }
+          sk.light.position.set(spot[0], spot[1], spot[2]);
+          sk.light.intensity = 2.2;
+        }
       }
     }
 

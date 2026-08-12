@@ -66,10 +66,35 @@
     pmrem.dispose();
   })();
 
+  // post-processing: render -> bloom (bright lights/emissives glow) -> FXAA
+  var fxEnabled = localStorage.getItem('eloxal-strike-fx') !== '0';
+  var composer = null, bloomPass = null, fxaaPass = null;
+  function setupComposer() {
+    var w = window.innerWidth, h = window.innerHeight;
+    composer = new THREE.EffectComposer(renderer);
+    composer.addPass(new THREE.RenderPass(scene, camera));
+    bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(w, h), 0.45, 0.55, 0.82);
+    composer.addPass(bloomPass);
+    // render targets are linear in r134 — convert back to sRGB at the end
+    composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader));
+    fxaaPass = new THREE.ShaderPass(THREE.FXAAShader);
+    composer.addPass(fxaaPass);
+    updateFxSizes();
+  }
+  function updateFxSizes() {
+    if (!composer) { return; }
+    var w = window.innerWidth, h = window.innerHeight;
+    composer.setSize(w, h);
+    var pr = renderer.getPixelRatio();
+    fxaaPass.material.uniforms.resolution.value.set(1 / (w * pr), 1 / (h * pr));
+  }
+  setupComposer();
+
   window.addEventListener('resize', function () {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    updateFxSizes();
   });
 
   // --- particles ------------------------------------------------------------
@@ -595,6 +620,15 @@
   muteBtn.addEventListener('click', function () { applyMute(!sound.isMuted()); });
   if (localStorage.getItem('eloxal-strike-muted') === '1') { applyMute(true); }
 
+  var fxBtn = $('btn-fx');
+  function applyFx(on) {
+    fxEnabled = on;
+    fxBtn.textContent = on ? '\u2728 Effekte: An' : '\u2728 Effekte: Aus';
+    localStorage.setItem('eloxal-strike-fx', on ? '1' : '0');
+  }
+  fxBtn.addEventListener('click', function () { applyFx(!fxEnabled); });
+  applyFx(fxEnabled);
+
   // --- main loop ------------------------------------------------------------
   var last = performance.now();
   var menuAngle = 0;
@@ -650,7 +684,8 @@
 
     updateParticles(dt);
     updateTracers(dt);
-    renderer.render(scene, camera);
+    if (fxEnabled && composer) { composer.render(); }
+    else { renderer.render(scene, camera); }
   }
 
   setState('menu');

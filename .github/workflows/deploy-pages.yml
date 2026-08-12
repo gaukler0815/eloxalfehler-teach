@@ -1,12 +1,14 @@
-# Deploys the Eloxal Rebels game to GitHub Pages so it can be played from any
-# browser (desktop, tablet, phone) at:
-#   https://gaukler0815.github.io/eloxalfehler-teach/
+# Deploys the games to GitHub Pages so they can be played from any browser
+# (desktop, tablet, phone):
+#   Eloxal Rebels (Angry-Birds-style): https://gaukler0815.github.io/eloxalfehler-teach/
+#   Eloxal Strike (3D first-person shooter): https://gaukler0815.github.io/eloxalfehler-teach/strike/
 #
-# Publishes the eloxal-rebels/ folder to a gh-pages branch; GitHub serves that
-# branch as the Pages site automatically. (The artifact-based deploy needs the
-# Pages site pre-created, which the workflow token is not allowed to do — the
-# branch route needs no manual setup at all.)
-# Runs on every push to main that touches the game, or manually via the
+# Publishes a staging folder (eloxal-rebels/ at the site root, eloxal-strike/
+# under /strike/) to a gh-pages branch; GitHub serves that branch as the Pages
+# site automatically. (The artifact-based deploy needs the Pages site
+# pre-created, which the workflow token is not allowed to do — the branch
+# route needs no manual setup at all.)
+# Runs on every push to main that touches a game, or manually via the
 # Actions tab ("Run workflow").
 name: Deploy game to GitHub Pages
 
@@ -15,6 +17,7 @@ on:
     branches: [main]
     paths:
       - 'eloxal-rebels/**'
+      - 'eloxal-strike/**'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -34,17 +37,21 @@ jobs:
 
       - name: Run game tests
         run: |
-          for f in eloxal-rebels/tests/*.test.js; do node "$f"; done
+          for f in eloxal-rebels/tests/*.test.js eloxal-strike/tests/*.test.js; do node "$f"; done
 
-      - name: Publish eloxal-rebels/ to the gh-pages branch
+      - name: Publish both games to the gh-pages branch
         run: |
-          cd eloxal-rebels
+          mkdir stage
+          cp -r eloxal-rebels/. stage/
+          mkdir stage/strike
+          cp -r eloxal-strike/. stage/strike/
+          cd stage
           touch .nojekyll
           git init -b gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Deploy game from ${GITHUB_SHA}"
+          git commit -m "Deploy games from ${GITHUB_SHA}"
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

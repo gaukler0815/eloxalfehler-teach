@@ -3,18 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NEON SNAKE</title>
+<title>ELOXAL SNAKE</title>
 <style>
   :root {
-    --bg: #05070f;
-    --panel: rgba(16, 24, 48, 0.72);
-    --panel-border: rgba(120, 160, 255, 0.18);
-    --text: #e8eeff;
-    --text-dim: #8fa0c9;
-    --accent: #6c8cff;
-    --green: #34f5a3;
-    --gold: #ffd166;
-    --red: #ff5470;
+    --bg: #17131F;          /* Eloxal-Schwarz */
+    --panel: rgba(30, 26, 40, 0.82);
+    --panel-border: rgba(201, 210, 220, 0.16);
+    --text: #EDF1F6;
+    --text-dim: #9aa3b4;
+    --alu: #C9D2DC;
+    --blau: #1E74DC;
+    --blau-hell: #8FD3FF;
+    --gold: #F5A81C;
+    --rot: #E33A2C;
+    --titan: #B4A996;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
@@ -32,9 +34,9 @@
     position: fixed;
     inset: 0;
     background:
-      radial-gradient(1200px 700px at 20% -10%, rgba(52, 245, 163, 0.10), transparent 60%),
-      radial-gradient(1000px 700px at 90% 110%, rgba(108, 140, 255, 0.14), transparent 60%),
-      radial-gradient(700px 500px at 70% 20%, rgba(255, 84, 112, 0.06), transparent 60%);
+      radial-gradient(1200px 700px at 20% -10%, rgba(30, 116, 220, 0.12), transparent 60%),
+      radial-gradient(1000px 700px at 90% 110%, rgba(143, 211, 255, 0.08), transparent 60%),
+      radial-gradient(700px 500px at 70% 20%, rgba(245, 168, 28, 0.05), transparent 60%);
     pointer-events: none;
     z-index: 0;
   }
@@ -60,12 +62,18 @@
     justify-content: space-between;
   }
   .hud-group { display: flex; gap: 10px; align-items: stretch; }
+  #hudLogo {
+    width: 44px;
+    height: 44px;
+    align-self: center;
+    filter: drop-shadow(0 2px 8px rgba(30, 116, 220, 0.5));
+  }
   .stat {
     background: var(--panel);
     border: 1px solid var(--panel-border);
     border-radius: 14px;
     padding: 8px 14px;
-    min-width: 86px;
+    min-width: 92px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     text-align: center;
@@ -89,7 +97,7 @@
     left: 0; bottom: 0;
     height: 3px;
     width: 100%;
-    background: linear-gradient(90deg, var(--gold), var(--red));
+    background: linear-gradient(90deg, var(--gold), var(--rot));
     transform-origin: left;
   }
   .iconbtn {
@@ -104,7 +112,7 @@
     -webkit-backdrop-filter: blur(10px);
     transition: transform 0.12s, border-color 0.2s;
   }
-  .iconbtn:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .iconbtn:hover { transform: translateY(-1px); border-color: var(--blau); }
   .iconbtn:active { transform: translateY(1px); }
 
   /* ---------- Spielfeld ---------- */
@@ -113,9 +121,9 @@
     border-radius: 20px;
     overflow: hidden;
     box-shadow:
-      0 0 0 1px rgba(120, 160, 255, 0.16),
+      0 0 0 1px rgba(201, 210, 220, 0.14),
       0 30px 80px rgba(0, 0, 0, 0.6),
-      0 0 90px rgba(52, 245, 163, 0.05);
+      0 0 90px rgba(30, 116, 220, 0.08);
   }
   canvas { display: block; }
 
@@ -127,31 +135,37 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 18px;
-    background: rgba(5, 8, 18, 0.68);
+    gap: 14px;
+    background: rgba(23, 19, 31, 0.78);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     text-align: center;
-    padding: 24px;
+    padding: 20px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.35s ease;
     z-index: 5;
+    overflow-y: auto;
   }
   .overlay.visible { opacity: 1; pointer-events: auto; }
 
+  .brandlogo {
+    width: min(260px, 62vw);
+    height: auto;
+    filter: drop-shadow(0 4px 18px rgba(30, 116, 220, 0.35));
+  }
   .logo {
-    font-size: clamp(34px, 7vw, 56px);
+    font-size: clamp(30px, 6.4vw, 50px);
     font-weight: 800;
     letter-spacing: 0.08em;
     line-height: 1.05;
-    background: linear-gradient(100deg, var(--green) 10%, #19b8ff 55%, var(--accent) 90%);
+    background: linear-gradient(100deg, var(--alu) 5%, var(--blau-hell) 45%, var(--blau) 95%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 0 24px rgba(52, 245, 163, 0.35));
+    filter: drop-shadow(0 0 22px rgba(30, 116, 220, 0.4));
   }
-  .tagline { color: var(--text-dim); font-size: 14px; margin-top: -8px; }
+  .tagline { color: var(--text-dim); font-size: 14px; margin-top: -6px; }
 
   .choices { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
   .choice {
@@ -164,25 +178,25 @@
     cursor: pointer;
     transition: all 0.18s;
   }
-  .choice:hover { color: var(--text); border-color: var(--accent); }
+  .choice:hover { color: var(--text); border-color: var(--blau); }
   .choice.active {
-    color: #041018;
-    background: linear-gradient(100deg, var(--green), #19b8ff);
+    color: #17131F;
+    background: linear-gradient(100deg, var(--blau-hell), var(--blau));
     border-color: transparent;
     font-weight: 700;
-    box-shadow: 0 0 18px rgba(52, 245, 163, 0.35);
+    box-shadow: 0 0 18px rgba(30, 116, 220, 0.4);
   }
   .choice-label {
     font-size: 10px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--text-dim);
-    margin-bottom: -10px;
+    margin-bottom: -8px;
   }
 
   .bigbtn {
-    background: linear-gradient(100deg, var(--green), #19b8ff);
-    color: #041018;
+    background: linear-gradient(100deg, #ffc14d, var(--gold));
+    color: #17131F;
     border: none;
     border-radius: 16px;
     padding: 14px 44px;
@@ -190,11 +204,23 @@
     font-weight: 800;
     letter-spacing: 0.06em;
     cursor: pointer;
-    box-shadow: 0 8px 30px rgba(25, 184, 255, 0.35);
+    box-shadow: 0 8px 30px rgba(245, 168, 28, 0.35);
     transition: transform 0.12s, box-shadow 0.2s;
   }
-  .bigbtn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(52, 245, 163, 0.45); }
+  .bigbtn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(245, 168, 28, 0.5); }
   .bigbtn:active { transform: translateY(1px); }
+  .ghostbtn {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 12px 26px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.12s;
+  }
+  .ghostbtn:hover { border-color: var(--gold); transform: translateY(-1px); }
 
   .hint { color: var(--text-dim); font-size: 12px; line-height: 1.7; }
   .hint kbd {
@@ -206,13 +232,9 @@
     font-size: 11px;
   }
 
-  #finalStats {
-    display: flex;
-    gap: 22px;
-    justify-content: center;
-  }
+  #finalStats { display: flex; gap: 22px; justify-content: center; }
   #finalStats .fs { text-align: center; }
-  #finalStats .fs .n { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  #finalStats .fs .n { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
   #finalStats .fs .l { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); }
   #newRecord {
     display: none;
@@ -224,9 +246,81 @@
     animation: pulseGold 1.2s ease-in-out infinite;
   }
   @keyframes pulseGold {
-    0%, 100% { opacity: 1; text-shadow: 0 0 18px rgba(255, 209, 102, 0.8); }
-    50% { opacity: 0.6; text-shadow: 0 0 4px rgba(255, 209, 102, 0.3); }
+    0%, 100% { opacity: 1; text-shadow: 0 0 18px rgba(245, 168, 28, 0.8); }
+    50% { opacity: 0.6; text-shadow: 0 0 4px rgba(245, 168, 28, 0.3); }
   }
+
+  /* ---------- Bestenliste ---------- */
+  .namerow { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  #nameInput {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 11px 14px;
+    width: 190px;
+    text-align: center;
+    outline: none;
+  }
+  #nameInput:focus { border-color: var(--gold); }
+  #nameInput::placeholder { color: var(--text-dim); text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .err { color: var(--rot); font-size: 12px; min-height: 16px; font-weight: 600; }
+
+  .boardwrap { width: min(86vw, 380px); }
+  .boardtabs { display: flex; gap: 6px; justify-content: center; margin-bottom: 10px; }
+  .boardtabs .tab {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
+    color: var(--text-dim);
+    border-radius: 999px;
+    padding: 5px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .boardtabs .tab.active {
+    color: #17131F;
+    background: var(--alu);
+    border-color: transparent;
+  }
+  table.board {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  table.board td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(201, 210, 220, 0.08);
+    text-align: left;
+  }
+  table.board td.rank { width: 34px; color: var(--text-dim); font-weight: 700; }
+  table.board td.um { text-align: right; font-weight: 700; color: var(--blau-hell); }
+  table.board tr.top1 td.rank { color: var(--gold); }
+  table.board tr.own td {
+    background: rgba(245, 168, 28, 0.1);
+    color: var(--gold);
+    font-weight: 800;
+  }
+  table.board tr.own td.um { color: var(--gold); }
+  .board-empty { color: var(--text-dim); font-size: 13px; padding: 12px 0; }
+  .board-title {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--titan);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .board-title svg { width: 24px; height: 24px; }
 
   /* ---------- Touch-Steuerung ---------- */
   #dpad {
@@ -245,7 +339,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
-  #dpad button:active { background: rgba(108, 140, 255, 0.3); }
+  #dpad button:active { background: rgba(30, 116, 220, 0.35); }
   #dpad .blank { visibility: hidden; }
   @media (pointer: coarse) {
     #dpad { display: grid; }
@@ -253,18 +347,32 @@
 </style>
 </head>
 <body>
+<!-- JX-Logo als wiederverwendbare Symbole -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="jxg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1E74DC"/><stop offset="1" stop-color="#8FD3FF"/>
+    </linearGradient>
+    <g id="jxbadge">
+      <circle cx="37" cy="37" r="32" fill="url(#jxg)" stroke="#17131F" stroke-width="4"/>
+      <text x="37" y="49" text-anchor="middle" font-family="system-ui,sans-serif" font-size="32" font-weight="800" letter-spacing="1" fill="#fff">JX</text>
+    </g>
+  </defs>
+</svg>
+
 <div id="app">
   <div id="hud">
     <div class="hud-group">
-      <div class="stat"><div class="label">Punkte</div><div class="value" id="scoreVal">0</div></div>
-      <div class="stat"><div class="label">Rekord</div><div class="value" id="bestVal">0</div></div>
+      <svg id="hudLogo" viewBox="0 0 74 74" role="img" aria-label="Jacobi Eloxal"><use href="#jxbadge"/></svg>
+      <div class="stat"><div class="label">Schicht</div><div class="value"><span id="scoreVal">0</span> µm</div></div>
+      <div class="stat"><div class="label">Rekord</div><div class="value"><span id="bestVal">0</span> µm</div></div>
       <div class="stat" id="comboStat">
         <div class="label">Combo</div><div class="value" id="comboVal">×2</div>
         <div id="comboBar"></div>
       </div>
     </div>
     <div class="hud-group">
-      <div class="stat"><div class="label">Level</div><div class="value" id="levelVal">1</div></div>
+      <div class="stat"><div class="label">Charge</div><div class="value" id="levelVal">1</div></div>
       <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
       <button class="iconbtn" id="pauseBtn" title="Pause (Leertaste)">⏸</button>
     </div>
@@ -274,8 +382,13 @@
     <canvas id="game"></canvas>
 
     <div class="overlay visible" id="startOverlay">
-      <div class="logo">NEON<br>SNAKE</div>
-      <div class="tagline">Der Klassiker. Neu geladen.</div>
+      <svg viewBox="0 0 300 74" class="brandlogo" role="img" aria-label="Jacobi Eloxal">
+        <use href="#jxbadge"/>
+        <text x="82" y="36" font-family="system-ui,sans-serif" font-size="30" font-weight="800" fill="#C9D2DC">JACOBI</text>
+        <text x="83" y="62" font-family="system-ui,sans-serif" font-size="20" font-weight="700" letter-spacing="6" fill="#F5A81C">ELOXAL</text>
+      </svg>
+      <div class="logo">ELOXAL SNAKE</div>
+      <div class="tagline">Zieh dein Alu-Profil durchs Becken und lass die Schicht wachsen.</div>
       <div class="choice-label">Schwierigkeit</div>
       <div class="choices" id="diffChoices">
         <button class="choice" data-diff="0">Entspannt</button>
@@ -284,13 +397,17 @@
       </div>
       <div class="choice-label">Modus</div>
       <div class="choices" id="modeChoices">
-        <button class="choice active" data-mode="walls">🧱 Klassisch – Wände töten</button>
+        <button class="choice active" data-mode="walls">🧱 Klassisch – Beckenrand tötet</button>
         <button class="choice" data-mode="wrap">🌀 Portal – Ränder verbunden</button>
       </div>
-      <button class="bigbtn" id="startBtn">SPIELEN</button>
+      <div class="namerow">
+        <button class="bigbtn" id="startBtn">SPIELEN</button>
+        <button class="ghostbtn" id="boardBtn">Bestenliste</button>
+      </div>
       <div class="hint">
         <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> oder <kbd>WASD</kbd> zum Steuern
         &nbsp;·&nbsp; <kbd>Leertaste</kbd> Pause<br>
+        Rote Farbtropfen = +2 µm · Gold-Charge = +10 µm · Combos vervielfachen alles.<br>
         Auf dem Handy: Wischen oder Steuerkreuz
       </div>
     </div>
@@ -302,15 +419,33 @@
     </div>
 
     <div class="overlay" id="gameoverOverlay">
-      <div class="logo" style="font-size: 38px;">GAME OVER</div>
+      <div class="logo" style="font-size: 36px;">AUSSCHUSS!</div>
+      <div class="tagline">Die Charge ist hinüber – ab ins Prüfprotokoll damit.</div>
       <div id="newRecord">★ Neuer Rekord ★</div>
       <div id="finalStats">
-        <div class="fs"><div class="n" id="fsScore">0</div><div class="l">Punkte</div></div>
+        <div class="fs"><div class="n"><span id="fsScore">0</span> µm</div><div class="l">Schicht</div></div>
         <div class="fs"><div class="n" id="fsLength">0</div><div class="l">Länge</div></div>
         <div class="fs"><div class="n" id="fsCombo">×1</div><div class="l">Max-Combo</div></div>
       </div>
+      <div id="entrySection">
+        <div class="namerow">
+          <input type="text" id="nameInput" maxlength="12" placeholder="DEIN NAME" autocomplete="off">
+          <button class="ghostbtn" id="submitBtn">Eintragen</button>
+        </div>
+        <div class="err" id="nameErr"></div>
+      </div>
+      <div class="boardwrap" id="endBoard" style="display:none"></div>
       <button class="bigbtn" id="retryBtn">NOCHMAL</button>
       <div class="hint"><kbd>Enter</kbd> für neue Runde</div>
+    </div>
+
+    <div class="overlay" id="boardOverlay">
+      <div class="board-title">
+        <svg viewBox="0 0 74 74" role="img" aria-label="Jacobi Eloxal"><use href="#jxbadge"/></svg>
+        Prüfprotokoll — Bestenliste
+      </div>
+      <div class="boardwrap" id="mainBoard"></div>
+      <button class="bigbtn" id="boardCloseBtn">ZURÜCK</button>
     </div>
   </div>
 
@@ -339,8 +474,85 @@
     { name: "Hardcore",  baseStep: 112, minStep: 55 },
   ];
   const COMBO_WINDOW = 4000;   // ms, um die Combo zu halten
-  const BONUS_EVERY = 5;       // jedes n-te Futter spawnt einen Bonus-Stern
+  const BONUS_EVERY = 5;       // jeder n-te Farbtropfen spawnt eine Gold-Charge
   const BONUS_LIFETIME = 6500; // ms
+  const DROP_UM = 2;           // µm pro Farbtropfen
+  const BONUS_UM = 10;         // µm pro Gold-Charge
+
+  // Eloxal-Farbkarte (siehe eloxal-rebels/CLAUDE.md)
+  const C = {
+    alu: "#C9D2DC", blau: "#1E74DC", blauHell: "#8FD3FF",
+    gold: "#F5A81C", rot: "#E33A2C", titan: "#B4A996", schwarz: "#17131F",
+  };
+
+  // ================= Bestenliste (Regeln wie in Eloxal Rebels) =================
+  const leaderboard = (() => {
+    const KEY = "eloxal-snake.scores.v1";
+    const BLOCKLIST = ["ARSCH", "SCHEISS", "FICK", "FOTZE", "NAZI", "HITLER", "SEX", "HURE"];
+
+    function load() {
+      try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+      catch (e) { return []; }
+    }
+    function save(list) {
+      try { localStorage.setItem(KEY, JSON.stringify(list)); }
+      catch (e) { /* Speicher voll/deaktiviert — Bestenliste ist best effort */ }
+    }
+    function sanitizeName(raw) {
+      let n = (raw || "").toUpperCase();
+      n = n.replace(/[^A-ZÄÖÜ0-9 ]/g, "");
+      n = n.replace(/\s+/g, " ").trim();
+      return n.slice(0, 12);
+    }
+    function isBlocked(name) {
+      const flat = name.replace(/\s/g, "");
+      return BLOCKLIST.some((bad) => flat.indexOf(bad) !== -1);
+    }
+    function uniqueName(name, list) {
+      const taken = new Set(list.map((e) => e.name));
+      if (!taken.has(name)) return name;
+      for (let i = 2; i < 1000; i++) {
+        const suffix = " " + i;
+        const candidate = name.slice(0, 12 - suffix.length) + suffix;
+        if (!taken.has(candidate)) return candidate;
+      }
+      return name;
+    }
+    function todayKey(ts) {
+      const d = new Date(ts);
+      return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    }
+    function submit(rawName, um) {
+      const name = sanitizeName(rawName);
+      if (!name) return { error: "Bitte einen Namen eingeben." };
+      if (isBlocked(name)) return { error: "Dieser Name ist nicht erlaubt." };
+      const list = load();
+      const entry = { name: uniqueName(name, list), um: um | 0, ts: Date.now() };
+      list.push(entry);
+      save(list);
+      return { entry };
+    }
+    function table(scope) {
+      let list = load();
+      if (scope === "today") {
+        const tk = todayKey(Date.now());
+        list = list.filter((e) => todayKey(e.ts) === tk);
+      }
+      list.sort((a, b) => b.um - a.um || a.ts - b.ts);
+      return list;
+    }
+    function view(scope, ownEntry, topN) {
+      const sorted = table(scope);
+      const top = sorted.slice(0, topN || 10).map((e, i) => ({ rank: i + 1, ...e }));
+      let own = null;
+      if (ownEntry) {
+        const r = sorted.findIndex((e) => e.ts === ownEntry.ts && e.name === ownEntry.name);
+        if (r >= 0) own = { rank: r + 1, ...ownEntry, isOwn: true };
+      }
+      return { top, own };
+    }
+    return { submit, view };
+  })();
 
   // ================= DOM =================
   const canvas = document.getElementById("game");
@@ -348,18 +560,20 @@
   const $ = (id) => document.getElementById(id);
   const scoreVal = $("scoreVal"), bestVal = $("bestVal"), levelVal = $("levelVal");
   const comboStat = $("comboStat"), comboVal = $("comboVal"), comboBar = $("comboBar");
-  const startOverlay = $("startOverlay"), pauseOverlay = $("pauseOverlay"), gameoverOverlay = $("gameoverOverlay");
+  const startOverlay = $("startOverlay"), pauseOverlay = $("pauseOverlay"),
+        gameoverOverlay = $("gameoverOverlay"), boardOverlay = $("boardOverlay");
 
   // ================= Zustand =================
   let cell = 20, boardW = 0, boardH = 0, dpr = 1;
-  let state = "start"; // start | play | pause | over
+  let state = "start"; // start | play | pause | over | board
   let snake, prevSnake, dir, dirQueue, food, bonus, foodsEaten;
   let score = 0, level = 1, combo = 1, maxCombo = 1, lastEatTime = 0;
   let stepTime = 145, acc = 0, lastFrame = 0;
   let particles = [], popups = [], shake = 0, flash = 0;
   let diffIdx = 1, mode = "walls";
-  let best = +(localStorage.getItem("neonsnake.best") || 0);
-  let muted = localStorage.getItem("neonsnake.muted") === "1";
+  let best = +(localStorage.getItem("eloxal-snake.best") || 0);
+  let muted = localStorage.getItem("eloxal-snake.muted") === "1";
+  let ownEntry = null, submitted = false;
   bestVal.textContent = best;
 
   // ================= Audio (WebAudio-Synth) =================
@@ -400,7 +614,7 @@
   $("soundBtn").addEventListener("click", () => {
     ensureAudio();
     muted = !muted;
-    localStorage.setItem("neonsnake.muted", muted ? "1" : "0");
+    localStorage.setItem("eloxal-snake.muted", muted ? "1" : "0");
     if (masterGain) masterGain.gain.value = muted ? 0 : 0.4;
     updateSoundBtn();
     sfx.click();
@@ -446,6 +660,7 @@
     acc = 0; particles = []; popups = []; shake = 0; flash = 0;
     bonus = null;
     food = freeCell();
+    ownEntry = null; submitted = false;
     scoreVal.textContent = "0";
     levelVal.textContent = "1";
     comboStat.style.display = "none";
@@ -458,10 +673,10 @@
     if (dirQueue.length < 2) { dirQueue.push({ x: nx, y: ny }); sfx.turn(); }
   }
 
-  function addScore(points, x, y, color) {
-    score += points;
+  function addScore(um, x, y, color) {
+    score += um;
     scoreVal.textContent = score;
-    popups.push({ x: (x + 0.5) * cell, y: (y + 0.3) * cell, text: "+" + points, life: 1, color });
+    popups.push({ x: (x + 0.5) * cell, y: (y + 0.3) * cell, text: "+" + um + " µm", life: 1, color });
   }
 
   function bumpCombo(now) {
@@ -508,8 +723,8 @@
     if (food && hx === food.x && hy === food.y) {
       ate = true;
       bumpCombo(now);
-      addScore(10 * combo, hx, hy, "#ff5470");
-      spawnBurst(hx, hy, "#ff5470");
+      addScore(DROP_UM * combo, hx, hy, C.rot);
+      spawnBurst(hx, hy, C.rot);
       sfx.eat();
       flash = 0.25;
       foodsEaten++;
@@ -517,12 +732,12 @@
       if (foodsEaten % BONUS_EVERY === 0 && !bonus) {
         bonus = { ...freeCell(), born: now };
       }
-      // Level & Tempo
+      // Charge & Tempo
       const newLevel = 1 + ((foodsEaten / BONUS_EVERY) | 0);
       if (newLevel !== level) {
         level = newLevel;
         levelVal.textContent = level;
-        popups.push({ x: boardW / 2, y: boardH / 2, text: "LEVEL " + level, life: 1.4, color: "#6c8cff", big: true });
+        popups.push({ x: boardW / 2, y: boardH / 2, text: "CHARGE " + level, life: 1.4, color: C.blauHell, big: true });
       }
       const d = DIFFS[diffIdx];
       stepTime = Math.max(d.minStep, d.baseStep - (level - 1) * 9);
@@ -530,8 +745,8 @@
     if (bonus && hx === bonus.x && hy === bonus.y) {
       ate = true;
       bumpCombo(now);
-      addScore(50 * combo, hx, hy, "#ffd166");
-      spawnBurst(hx, hy, "#ffd166", 34, 4.5);
+      addScore(BONUS_UM * combo, hx, hy, C.gold);
+      spawnBurst(hx, hy, C.gold, 34, 4.5);
       sfx.bonus();
       flash = 0.4;
       bonus = null;
@@ -549,27 +764,102 @@
     state = "over";
     shake = 14;
     sfx.over();
-    spawnBurst(snake[0].x, snake[0].y, "#34f5a3", 46, 5.5);
-    spawnBurst(snake[0].x, snake[0].y, "#ff5470", 26, 3.5);
+    spawnBurst(snake[0].x, snake[0].y, C.alu, 46, 5.5);
+    spawnBurst(snake[0].x, snake[0].y, C.rot, 26, 3.5);
     const isRecord = score > best;
     if (isRecord) {
       best = score;
-      localStorage.setItem("neonsnake.best", best);
+      localStorage.setItem("eloxal-snake.best", best);
       bestVal.textContent = best;
     }
     $("fsScore").textContent = score;
     $("fsLength").textContent = snake.length;
     $("fsCombo").textContent = "×" + maxCombo;
     $("newRecord").style.display = isRecord && score > 0 ? "block" : "none";
+    // Eintragen nur anbieten, wenn es etwas einzutragen gibt
+    $("entrySection").style.display = score > 0 ? "block" : "none";
+    $("endBoard").style.display = "none";
+    $("nameErr").textContent = "";
+    $("nameInput").value = localStorage.getItem("eloxal-snake.name") || "";
     setTimeout(() => gameoverOverlay.classList.add("visible"), 650);
   }
 
+  // ================= Bestenlisten-UI =================
+  function renderBoard(container, own) {
+    let scope = "total";
+    function draw() {
+      const { top, own: ownRow } = leaderboard.view(scope, own, 10);
+      let html =
+        '<div class="boardtabs">' +
+        '<button class="tab' + (scope === "total" ? " active" : "") + '" data-scope="total">Gesamt</button>' +
+        '<button class="tab' + (scope === "today" ? " active" : "") + '" data-scope="today">Heute</button>' +
+        "</div>";
+      if (!top.length) {
+        html += '<div class="board-empty">Noch keine Einträge — trag dich als Erster ein!</div>';
+      } else {
+        html += '<table class="board"><tbody>';
+        for (const e of top) {
+          const isOwn = ownRow && e.ts === ownRow.ts && e.name === ownRow.name;
+          html += '<tr class="' + (e.rank === 1 ? "top1 " : "") + (isOwn ? "own" : "") + '">' +
+            '<td class="rank">' + e.rank + '.</td><td>' + e.name + '</td>' +
+            '<td class="um">' + e.um + ' µm</td></tr>';
+        }
+        if (ownRow && ownRow.rank > 10) {
+          html += '<tr class="own"><td class="rank">' + ownRow.rank + '.</td><td>' + ownRow.name + '</td>' +
+            '<td class="um">' + ownRow.um + ' µm</td></tr>';
+        }
+        html += "</tbody></table>";
+      }
+      container.innerHTML = html;
+      container.querySelectorAll(".tab").forEach(t => {
+        t.addEventListener("click", () => { scope = t.dataset.scope; sfx.click(); draw(); });
+      });
+    }
+    draw();
+  }
+
+  $("submitBtn").addEventListener("click", () => {
+    if (submitted) return;
+    const raw = $("nameInput").value;
+    const res = leaderboard.submit(raw, score);
+    if (res.error) {
+      $("nameErr").textContent = res.error;
+      return;
+    }
+    submitted = true;
+    ownEntry = res.entry;
+    localStorage.setItem("eloxal-snake.name", res.entry.name);
+    sfx.bonus();
+    $("entrySection").style.display = "none";
+    $("endBoard").style.display = "block";
+    renderBoard($("endBoard"), ownEntry);
+  });
+  $("nameInput").addEventListener("keydown", (e) => {
+    e.stopPropagation(); // Enter im Feld soll nicht sofort neu starten
+    if (e.key === "Enter") $("submitBtn").click();
+  });
+
+  $("boardBtn").addEventListener("click", () => {
+    ensureAudio(); sfx.click();
+    state = "board";
+    renderBoard($("mainBoard"), null);
+    startOverlay.classList.remove("visible");
+    boardOverlay.classList.add("visible");
+  });
+  $("boardCloseBtn").addEventListener("click", () => {
+    sfx.click();
+    state = "start";
+    boardOverlay.classList.remove("visible");
+    startOverlay.classList.add("visible");
+  });
+
   // ================= Rendering =================
   function segColor(i, n, alpha = 1) {
-    // Farbverlauf: Neongrün am Kopf -> Cyan am Schwanz
+    // Eloxalschicht zieht auf: Alu am Kopf -> tiefes Eloxalblau am Schwanz
     const t = n <= 1 ? 0 : i / (n - 1);
-    const hue = 152 + t * 46;
-    return `hsla(${hue}, 95%, ${62 - t * 10}%, ${alpha})`;
+    const sat = 22 + t * 52;   // #C9D2DC ~ hsl(211,22%,83%) -> #1E74DC ~ hsl(213,74%,49%)
+    const lig = 83 - t * 34;
+    return `hsla(212, ${sat}%, ${lig}%, ${alpha})`;
   }
 
   function lerpPoint(a, b, t, wrapAware) {
@@ -582,28 +872,28 @@
   }
 
   function drawBoard(time) {
-    // Hintergrund
+    // Elektrolytbecken
     const g = ctx.createLinearGradient(0, 0, boardW, boardH);
-    g.addColorStop(0, "#0a1124");
-    g.addColorStop(0.5, "#070d1c");
-    g.addColorStop(1, "#060913");
+    g.addColorStop(0, "#201a2e");
+    g.addColorStop(0.5, "#1a1526");
+    g.addColorStop(1, "#17131F");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, boardW, boardH);
 
-    // wandernde Glow-Blasen
+    // wandernde Glow-Blasen im Bad
     for (let i = 0; i < 3; i++) {
       const ox = boardW * (0.5 + 0.42 * Math.sin(time * 0.00013 + i * 2.1));
       const oy = boardH * (0.5 + 0.42 * Math.cos(time * 0.00011 + i * 1.7));
       const rg = ctx.createRadialGradient(ox, oy, 0, ox, oy, boardW * 0.35);
-      const cols = ["rgba(52,245,163,0.045)", "rgba(108,140,255,0.05)", "rgba(255,84,112,0.03)"];
+      const cols = ["rgba(30,116,220,0.06)", "rgba(143,211,255,0.045)", "rgba(245,168,28,0.03)"];
       rg.addColorStop(0, cols[i]);
       rg.addColorStop(1, "transparent");
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, boardW, boardH);
     }
 
-    // Gitter
-    ctx.strokeStyle = "rgba(120, 160, 255, 0.055)";
+    // Gitter (Warengestell)
+    ctx.strokeStyle = "rgba(201, 210, 220, 0.05)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = 1; x < COLS; x++) { ctx.moveTo(x * cell, 0); ctx.lineTo(x * cell, boardH); }
@@ -613,7 +903,7 @@
     // Rand im Portal-Modus markieren
     if (mode === "wrap" && state === "play") {
       const pulse = 0.25 + 0.15 * Math.sin(time * 0.004);
-      ctx.strokeStyle = `rgba(108, 140, 255, ${pulse})`;
+      ctx.strokeStyle = `rgba(143, 211, 255, ${pulse})`;
       ctx.lineWidth = 2;
       ctx.strokeRect(1, 1, boardW - 2, boardH - 2);
     }
@@ -621,30 +911,36 @@
 
   function drawFood(time) {
     if (!food) return;
-    const fx = (food.x + 0.5) * cell, fy = (food.y + 0.5) * cell;
+    // Roter Farbtropfen
+    const fx = (food.x + 0.5) * cell, fy = (food.y + 0.55) * cell;
     const pulse = 1 + 0.1 * Math.sin(time * 0.006);
-    const r = cell * 0.34 * pulse;
+    const r = cell * 0.3 * pulse;
     ctx.save();
-    ctx.shadowColor = "#ff5470";
-    ctx.shadowBlur = 18;
+    ctx.shadowColor = C.rot;
+    ctx.shadowBlur = 16;
     const rg = ctx.createRadialGradient(fx - r * 0.3, fy - r * 0.3, r * 0.1, fx, fy, r);
-    rg.addColorStop(0, "#ff8fa5");
-    rg.addColorStop(1, "#e0284e");
+    rg.addColorStop(0, "#ff7f74");
+    rg.addColorStop(1, C.rot);
     ctx.fillStyle = rg;
+    // Tropfenform: Kreis + Spitze oben
     ctx.beginPath();
-    ctx.arc(fx, fy, r, 0, Math.PI * 2);
+    ctx.arc(fx, fy, r, Math.PI * 0.85, Math.PI * 0.15, false);
+    ctx.quadraticCurveTo(fx + r * 0.35, fy - r * 1.15, fx, fy - r * 1.7);
+    ctx.quadraticCurveTo(fx - r * 0.35, fy - r * 1.15, fx - r * Math.cos(Math.PI * 0.15), fy + r * Math.sin(Math.PI * 0.85));
+    ctx.closePath();
     ctx.fill();
-    // Blatt
+    // Glanzpunkt
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "#34f5a3";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
     ctx.beginPath();
-    ctx.ellipse(fx + r * 0.35, fy - r * 1.05, r * 0.38, r * 0.18, -0.7, 0, Math.PI * 2);
+    ctx.arc(fx - r * 0.32, fy - r * 0.25, r * 0.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
   function drawBonus(time, now) {
     if (!bonus) return;
+    // Gold-Charge
     const bx = (bonus.x + 0.5) * cell, by = (bonus.y + 0.5) * cell;
     const left = 1 - (now - bonus.born) / BONUS_LIFETIME;
     const rot = time * 0.003;
@@ -652,16 +948,16 @@
     ctx.save();
     ctx.translate(bx, by);
     // Timer-Ring
-    ctx.strokeStyle = "rgba(255, 209, 102, 0.85)";
+    ctx.strokeStyle = "rgba(245, 168, 28, 0.85)";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.arc(0, 0, cell * 0.52, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * left);
     ctx.stroke();
     // Stern
     ctx.rotate(rot);
-    ctx.shadowColor = "#ffd166";
+    ctx.shadowColor = C.gold;
     ctx.shadowBlur = 20;
-    ctx.fillStyle = "#ffd166";
+    ctx.fillStyle = C.gold;
     ctx.beginPath();
     for (let i = 0; i < 10; i++) {
       const rad = i % 2 === 0 ? R : r;
@@ -703,17 +999,17 @@
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         // Glow-Pass
-        ctx.strokeStyle = segColor(gi, n, 0.85);
+        ctx.strokeStyle = segColor(gi, n, 0.9);
         ctx.shadowColor = segColor(gi, n, 1);
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 12;
         ctx.lineWidth = w;
         ctx.beginPath();
         ctx.moveTo(chunk[i - 1].x, chunk[i - 1].y);
         ctx.lineTo(chunk[i].x, chunk[i].y);
         ctx.stroke();
-        // heller Kern
+        // heller Metall-Kern
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
         ctx.lineWidth = w * 0.45;
         ctx.stroke();
         ctx.restore();
@@ -721,20 +1017,23 @@
       idx += chunk.length;
     }
 
-    // Kopf
+    // Kopf: blankes Alu mit Konturlinie
     const head = pts[0];
     const hr = cell * 0.5;
     ctx.save();
-    ctx.shadowColor = "#7dffb0";
-    ctx.shadowBlur = 22;
+    ctx.shadowColor = C.alu;
+    ctx.shadowBlur = 18;
     const hg = ctx.createRadialGradient(head.x - hr * 0.3, head.y - hr * 0.3, hr * 0.1, head.x, head.y, hr);
-    hg.addColorStop(0, "#b6ffd6");
-    hg.addColorStop(1, "#22d488");
+    hg.addColorStop(0, "#f2f6fa");
+    hg.addColorStop(1, C.alu);
     ctx.fillStyle = hg;
     ctx.beginPath();
     ctx.arc(head.x, head.y, hr, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
+    ctx.strokeStyle = C.schwarz;
+    ctx.lineWidth = Math.max(1.5, hr * 0.12);
+    ctx.stroke();
 
     // Augen in Blickrichtung
     const ex = dir.x, ey = dir.y;
@@ -745,7 +1044,7 @@
       const cy = head.y + ey * eyeFwd + py * eyeOff * s;
       ctx.fillStyle = "#ffffff";
       ctx.beginPath(); ctx.arc(cx, cy, hr * 0.26, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#0a1020";
+      ctx.fillStyle = C.schwarz;
       ctx.beginPath(); ctx.arc(cx + ex * hr * 0.1, cy + ey * hr * 0.1, hr * 0.13, 0, Math.PI * 2); ctx.fill();
     }
     ctx.restore();
@@ -841,6 +1140,7 @@
     W: [0, -1], S: [0, 1], A: [-1, 0], D: [1, 0],
   };
   window.addEventListener("keydown", (e) => {
+    if (e.target && e.target.tagName === "INPUT") return;
     if (e.key === " " || e.key === "p" || e.key === "P") {
       e.preventDefault();
       if (state === "play") pause();
@@ -892,6 +1192,7 @@
     state = "play";
     startOverlay.classList.remove("visible");
     gameoverOverlay.classList.remove("visible");
+    boardOverlay.classList.remove("visible");
   }
   function pause() {
     state = "pause";

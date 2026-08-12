@@ -407,7 +407,7 @@
       <div class="hint">
         <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> oder <kbd>WASD</kbd> zum Steuern
         &nbsp;·&nbsp; <kbd>Leertaste</kbd> Pause<br>
-        Rote Farbtropfen = +2 µm · Gold-Charge = +10 µm · Combos vervielfachen alles.<br>
+        Alu-Teile einsammeln = +2 µm · Gold-Charge = +10 µm · Combos vervielfachen alles.<br>
         Auf dem Handy: Wischen oder Steuerkreuz
       </div>
     </div>
@@ -474,9 +474,9 @@
     { name: "Hardcore",  baseStep: 112, minStep: 55 },
   ];
   const COMBO_WINDOW = 4000;   // ms, um die Combo zu halten
-  const BONUS_EVERY = 5;       // jeder n-te Farbtropfen spawnt eine Gold-Charge
+  const BONUS_EVERY = 5;       // jedes n-te Alu-Teil spawnt eine Gold-Charge
   const BONUS_LIFETIME = 6500; // ms
-  const DROP_UM = 2;           // µm pro Farbtropfen
+  const DROP_UM = 2;           // µm pro Alu-Teil
   const BONUS_UM = 10;         // µm pro Gold-Charge
 
   // Eloxal-Farbkarte (siehe eloxal-rebels/CLAUDE.md)
@@ -649,6 +649,11 @@
     }
   }
 
+  // Alu-Teil spawnen: 0 = Winkelprofil, 1 = Unterlegscheibe, 2 = Sechskantmutter
+  function spawnFood() {
+    return { ...freeCell(), kind: (Math.random() * 3) | 0, rot: Math.random() * Math.PI * 2 };
+  }
+
   function reset() {
     const cx = (COLS / 2) | 0, cy = (ROWS / 2) | 0;
     snake = [{ x: cx, y: cy }, { x: cx - 1, y: cy }, { x: cx - 2, y: cy }, { x: cx - 3, y: cy }];
@@ -659,7 +664,7 @@
     stepTime = DIFFS[diffIdx].baseStep;
     acc = 0; particles = []; popups = []; shake = 0; flash = 0;
     bonus = null;
-    food = freeCell();
+    food = spawnFood();
     ownEntry = null; submitted = false;
     scoreVal.textContent = "0";
     levelVal.textContent = "1";
@@ -723,12 +728,13 @@
     if (food && hx === food.x && hy === food.y) {
       ate = true;
       bumpCombo(now);
-      addScore(DROP_UM * combo, hx, hy, C.rot);
-      spawnBurst(hx, hy, C.rot);
+      addScore(DROP_UM * combo, hx, hy, C.alu);
+      spawnBurst(hx, hy, C.alu, 16, 3.2);
+      spawnBurst(hx, hy, C.blauHell, 10, 2.6);
       sfx.eat();
       flash = 0.25;
       foodsEaten++;
-      food = freeCell();
+      food = spawnFood();
       if (foodsEaten % BONUS_EVERY === 0 && !bonus) {
         bonus = { ...freeCell(), born: now };
       }
@@ -909,32 +915,90 @@
     }
   }
 
+  // Metallischer Verlauf für ein Alu-Teil der Größe s (leicht atmend über "pulse")
+  function aluGradient(s, pulse) {
+    const g = ctx.createLinearGradient(-s, -s, s, s);
+    g.addColorStop(0, "#f2f6fa");
+    g.addColorStop(0.45, C.alu);
+    g.addColorStop(0.55, "#9fadbd");
+    g.addColorStop(1, "#8493a5");
+    return g;
+  }
+
   function drawFood(time) {
     if (!food) return;
-    // Roter Farbtropfen
-    const fx = (food.x + 0.5) * cell, fy = (food.y + 0.55) * cell;
-    const pulse = 1 + 0.1 * Math.sin(time * 0.006);
-    const r = cell * 0.3 * pulse;
+    const fx = (food.x + 0.5) * cell, fy = (food.y + 0.5) * cell;
+    const pulse = 1 + 0.06 * Math.sin(time * 0.005);
+    const s = cell * 0.36 * pulse;      // halbe Kantenlänge des Teils
+    const wobble = food.rot + 0.15 * Math.sin(time * 0.002 + food.rot);
+    const outline = Math.max(1.2, s * 0.16);
+
     ctx.save();
-    ctx.shadowColor = C.rot;
-    ctx.shadowBlur = 16;
-    const rg = ctx.createRadialGradient(fx - r * 0.3, fy - r * 0.3, r * 0.1, fx, fy, r);
-    rg.addColorStop(0, "#ff7f74");
-    rg.addColorStop(1, C.rot);
-    ctx.fillStyle = rg;
-    // Tropfenform: Kreis + Spitze oben
+    ctx.translate(fx, fy);
+    ctx.rotate(wobble);
+    ctx.shadowColor = C.blauHell;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = aluGradient(s, pulse);
+    ctx.strokeStyle = C.schwarz;
+    ctx.lineWidth = outline;
+    ctx.lineJoin = "round";
+
+    if (food.kind === 0) {
+      // Winkelprofil (L)
+      const w = s * 0.75; // Schenkelbreite
+      ctx.beginPath();
+      ctx.moveTo(-s, -s);
+      ctx.lineTo(-s + w, -s);
+      ctx.lineTo(-s + w, s - w);
+      ctx.lineTo(s, s - w);
+      ctx.lineTo(s, s);
+      ctx.lineTo(-s, s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+      // Bohrungen in beiden Schenkeln
+      ctx.fillStyle = "#2a2338";
+      ctx.beginPath();
+      ctx.arc(-s + w / 2, -s * 0.35, s * 0.16, 0, Math.PI * 2);
+      ctx.arc(s * 0.45, s - w / 2, s * 0.16, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (food.kind === 1) {
+      // Unterlegscheibe
+      ctx.beginPath();
+      ctx.arc(0, 0, s, 0, Math.PI * 2);
+      ctx.arc(0, 0, s * 0.42, 0, Math.PI * 2, true);
+      ctx.fill("evenodd");
+      ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.42, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      // Sechskantmutter
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
+        ctx[i === 0 ? "moveTo" : "lineTo"](Math.cos(a) * s, Math.sin(a) * s);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.4, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "#2a2338";
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.4, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Glanzkante oben links
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = outline * 0.6;
     ctx.beginPath();
-    ctx.arc(fx, fy, r, Math.PI * 0.85, Math.PI * 0.15, false);
-    ctx.quadraticCurveTo(fx + r * 0.35, fy - r * 1.15, fx, fy - r * 1.7);
-    ctx.quadraticCurveTo(fx - r * 0.35, fy - r * 1.15, fx - r * Math.cos(Math.PI * 0.15), fy + r * Math.sin(Math.PI * 0.85));
-    ctx.closePath();
-    ctx.fill();
-    // Glanzpunkt
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
-    ctx.beginPath();
-    ctx.arc(fx - r * 0.32, fy - r * 0.25, r * 0.2, 0, Math.PI * 2);
-    ctx.fill();
+    if (food.kind === 1 || food.kind === 2) {
+      ctx.arc(0, 0, s * 0.8, Math.PI * 0.9, Math.PI * 1.35);
+    } else {
+      ctx.moveTo(-s * 0.85, -s * 0.6);
+      ctx.lineTo(-s * 0.85, s * 0.6);
+    }
+    ctx.stroke();
     ctx.restore();
   }
 

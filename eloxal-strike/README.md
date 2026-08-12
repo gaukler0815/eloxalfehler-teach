@@ -30,6 +30,12 @@ Welle für Welle in der First-Person-Perspektive.
   ACES-Tone-Mapping, Environment-Reflexionen, Lichtschächte, Funkenflug,
   Zerplatz-Effekte mit Physik-Brocken und bleibenden Rostflecken.
 
+- **Multiplayer (Deathmatch):** Welt aufmachen, Kollegen joinen über die
+  Raumliste, bis 8 Spieler, erster mit 15 Abschüssen gewinnt — mit
+  Spielerfiguren, Namensschildern, Killfeed, Scoreboard und Respawn.
+  Benötigt den kleinen Server aus `server/` (siehe `DEPLOY.md`);
+  der Einzelspieler läuft weiterhin komplett ohne Server.
+
 ## Steuerung
 
 | Taste | Aktion |

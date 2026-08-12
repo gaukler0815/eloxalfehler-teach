@@ -415,7 +415,7 @@
   // --- input ----------------------------------------------------------------
   document.addEventListener('keydown', function (e) {
     keys[e.code] = true;
-    if (state === 'playing') {
+    if (state === 'playing' || state === 'mp') {
       if (e.code === 'KeyR') { ES.weapons.startReload(); }
       if (e.code === 'Digit1') { ES.weapons.switchTo(0); }
       if (e.code === 'Digit2') { ES.weapons.switchTo(1); }
@@ -433,7 +433,7 @@
   });
 
   canvas.addEventListener('mousedown', function (e) {
-    if (state !== 'playing' && state !== 'intermission') { return; }
+    if (state !== 'playing' && state !== 'intermission' && state !== 'mp') { return; }
     if (document.pointerLockElement !== canvas) {
       canvas.requestPointerLock();
       return;
@@ -450,10 +450,10 @@
     if (e.button === 2) { ES.weapons.setAim(false); }
   });
   document.addEventListener('contextmenu', function (e) {
-    if (state === 'playing' || state === 'intermission') { e.preventDefault(); }
+    if (state === 'playing' || state === 'intermission' || state === 'mp') { e.preventDefault(); }
   });
   document.addEventListener('wheel', function (e) {
-    if (state === 'playing' && document.pointerLockElement === canvas) {
+    if ((state === 'playing' || state === 'mp') && document.pointerLockElement === canvas) {
       ES.weapons.cycle(e.deltaY > 0 ? 1 : -1);
     }
   });
@@ -461,7 +461,7 @@
   var pausedFrom = 'playing';
   document.addEventListener('pointerlockchange', function () {
     if (document.pointerLockElement !== canvas &&
-        (state === 'playing' || state === 'intermission')) {
+        (state === 'playing' || state === 'intermission' || state === 'mp')) {
       pausedFrom = state;
       setState('paused');
     }
@@ -486,6 +486,7 @@
   }
 
   function attemptShot() {
+    if (state === 'mp' && ES.mp.blocked()) { return; }
     var w = ES.weapons.tryFire();
     if (!w) { return; }
     player.pitch += (w.pellets > 1 ? 0.03 : 0.012);
@@ -500,6 +501,7 @@
     spawnSmoke(muzzle);
 
     var targets = world.solids.concat(ES.enemies.hittables());
+    if (state === 'mp') { targets = targets.concat(ES.mp.hittables()); }
     var anyHit = false, anyKill = false, anyHead = false;
 
     for (var p = 0; p < w.pellets; p++) {
@@ -519,7 +521,13 @@
         var hit = hits[0];
         end = hit.point;
         var ud = hit.object.userData;
-        if (ud && ud.enemy) {
+        if (ud && ud.mpAvatar) {
+          var pdmg = cfg.falloff(w.damage, hit.distance, w.range);
+          if (ud.isHead) { pdmg *= w.headshotMult; anyHead = true; }
+          anyHit = true;
+          burst(hit.point, ud.mpAvatar.color, 5, 3.5, 6);
+          ES.mp.onLocalHit(ud.mpAvatar, pdmg, ud.isHead);
+        } else if (ud && ud.enemy) {
           var e = ud.enemy;
           var dmg = cfg.falloff(w.damage, hit.distance, w.range);
           if (ud.isHead) { dmg *= w.headshotMult; anyHead = true; }
@@ -543,6 +551,8 @@
       }
       tracer(muzzle, end, w.color);
     }
+
+    if (state === 'mp') { ES.mp.onLocalShot(baseDir, w.id); }
 
     if (anyKill) { sound.kill(); showHitmarker(true); }
     else if (anyHit) { if (anyHead) { sound.headshot(); } else { sound.hit(); } showHitmarker(false); }
@@ -630,14 +640,16 @@
 
   // --- player ---------------------------------------------------------------
   function hurtPlayer(dmg) {
-    if (state !== 'playing' && state !== 'intermission') { return; }
+    if (state !== 'playing' && state !== 'intermission' && state !== 'mp') { return; }
+    if (state === 'mp' && ES.mp.blocked()) { return; }
     player.hp -= dmg;
     player.lastHurt = clockT;
     player.shake = Math.min(0.7, player.shake + 0.3);
     sound.hurt();
     if (player.hp <= 0) {
       player.hp = 0;
-      gameOver();
+      if (state === 'mp') { ES.mp.localDied(); }
+      else { gameOver(); }
     }
   }
 
@@ -675,7 +687,7 @@
     }
 
     // regen
-    if (diff.playerRegen && player.hp > 0 && player.hp < cfg.player.hp &&
+    if ((diff.playerRegen || state === 'mp') && player.hp > 0 && player.hp < cfg.player.hp &&
         clockT - player.lastHurt > cfg.player.regenDelaySec) {
       player.hp = Math.min(cfg.player.hp, player.hp + cfg.player.regenPerSec * dt);
     }
@@ -733,10 +745,11 @@
   function setState(s) {
     state = s;
     ui.menu.classList.toggle('hidden', s !== 'menu');
-    ui.hud.classList.toggle('hidden', s === 'menu' || s === 'gameover');
+    ui.hud.classList.toggle('hidden', s === 'menu' || s === 'gameover' || s === 'mplobby');
     ui.pause.classList.toggle('hidden', s !== 'paused');
     ui.gameover.classList.toggle('hidden', s !== 'gameover');
-    document.body.classList.toggle('ingame', s === 'playing' || s === 'intermission');
+    $('mp').classList.toggle('hidden', s !== 'mplobby');
+    document.body.classList.toggle('ingame', s === 'playing' || s === 'intermission' || s === 'mp');
   }
 
   function startGame() {
@@ -806,6 +819,7 @@
   });
   $('btn-pause-menu').addEventListener('click', function () {
     sound.stopDrone();
+    if (pausedFrom === 'mp') { ES.mp.leaveToMenu(); }
     setState('menu');
     refreshBestLabel();
   });
@@ -854,13 +868,19 @@
     world.crane.cable.position.x = trolleyX;
     world.crane.load.position.x = trolleyX;
 
-    if (state === 'menu') {
+    if (state === 'menu' || state === 'mplobby') {
       // slow cinematic orbit around the hall behind the menu
       menuAngle += dt * 0.08;
       camera.position.set(Math.sin(menuAngle) * 24, 6.5, Math.cos(menuAngle) * 24);
       camera.lookAt(0, 2, 0);
       camera.fov = 65;
       camera.updateProjectionMatrix();
+    } else if (state === 'mp') {
+      updatePlayer(dt);
+      ES.mp.update(dt);
+      updateHud();
+      ui.waveNum.textContent = 'DM';
+      ui.enemiesLeft.textContent = ES.mp.hittables().length / 2;
     } else if (state === 'playing' || state === 'intermission') {
       updatePlayer(dt);
       ES.enemies.update(dt, {
@@ -901,6 +921,12 @@
       renderer.render(scene, camera);
     }
   }
+
+  ES.mp.init({
+    canvas: canvas, scene: scene, world: world, camera: camera, player: player,
+    setState: setState, showBanner: showBanner, burst: burst, tracer: tracer,
+    hurtPlayer: hurtPlayer, showHitmarker: showHitmarker
+  });
 
   setState('menu');
   requestAnimationFrame(frame);

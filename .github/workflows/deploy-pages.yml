@@ -38,6 +38,8 @@ jobs:
       - name: Run game tests
         run: |
           for f in eloxal-rebels/tests/*.test.js eloxal-strike/tests/*.test.js; do node "$f"; done
+          node --check eloxal-strike/server/server.js
+          for f in eloxal-strike/src/*.js; do node --check "$f"; done
 
       - name: Publish both games to the gh-pages branch
         run: |

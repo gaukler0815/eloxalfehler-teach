@@ -17,6 +17,11 @@ Einfach `index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig
 - **Sound** (per Web Audio erzeugt, keine externen Dateien): Richtig-/Falsch-,
   Auswahl-, Joker- und Gewinn-Klänge plus dezente Spannungsmusik. Ton lässt sich
   jederzeit über den 🔊-Knopf oben rechts an/aus schalten (wird gemerkt).
+- **Rangliste:** Am Ende jeder Partie – egal ob gewonnen oder bei welcher Frage
+  du scheiterst – kannst du dich mit Namen eintragen. Sortiert wird nach
+  erreichter Stufe (richtige Antworten) und Gewinnsumme; die Top 10 werden mit
+  🥇🥈🥉 angezeigt. Die Liste wird lokal im Browser gespeichert (`localStorage`)
+  und ist auch über den Knopf **🏆 Rangliste** im Startbildschirm erreichbar.
 - **Konfetti** beim Millionengewinn
 - **Erklärung nach jeder Antwort** – man lernt beim Spielen
 - **Tastatur:** A–D oder 1–4

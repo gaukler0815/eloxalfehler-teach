@@ -160,6 +160,23 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(4px)}
   .toast .tt{display:block;font-size:12px;letter-spacing:1px;color:var(--gold-h);margin-bottom:3px}
 
+  /* ===== Rangliste ===== */
+  .lbarea{width:100%;max-width:540px;margin:0 auto}
+  .lbentry{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .lbentry input{flex:1;min-width:170px;padding:12px 18px;border-radius:30px;border:2px solid var(--blau);
+    background:#0a1c41;color:#fff;font-size:16px;outline:none;transition:.15s}
+  .lbentry input:focus{border-color:var(--gold);box-shadow:0 0 12px rgba(245,168,28,.4)}
+  .lbtitle{margin:4px 0 8px;color:var(--gold-h);letter-spacing:1px;font-size:16px}
+  table.lb{width:100%;max-width:540px;border-collapse:collapse;font-size:14px;margin:4px auto 2px}
+  table.lb th{color:var(--arc);font-size:12px;letter-spacing:.5px;padding:6px 8px;text-align:center;
+    border-bottom:1px solid rgba(143,211,255,.3)}
+  table.lb td{padding:7px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)}
+  table.lb td.nm{text-align:left;font-weight:700}
+  table.lb td.d{opacity:.55;font-size:12px}
+  table.lb tr.me td{background:linear-gradient(90deg,rgba(245,168,28,.28),rgba(245,168,28,.05));color:#fff;font-weight:800}
+  table.lb tr.me td:first-child{border-radius:8px 0 0 8px}
+  table.lb tr.me td:last-child{border-radius:0 8px 8px 0}
+
   .soundbtn{position:fixed;top:14px;right:16px;z-index:60;width:46px;height:46px;border-radius:50%;
     border:2px solid var(--gold);background:radial-gradient(circle at 50% 30%,#173a86,#0a1c41);
     color:var(--gold-h);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -325,6 +342,63 @@ function euro(n){return n.toLocaleString('de-DE')+" €"}
 function toast(titel,msg){toastEl.innerHTML=`<span class="tt">${titel}</span>${msg}`;toastEl.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toastEl.classList.remove('show'),4200)}
 function gesicherterBetrag(){let b=0;SICHER.forEach(i=>{if(level>i)b=GELDLEITER[i]});return b}
 
+/* ============ Rangliste ============ */
+const LB_KEY="eloxal_millionaer_rangliste", NAME_KEY="eloxal_millionaer_name";
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function ladeRangliste(){try{return JSON.parse(localStorage.getItem(LB_KEY))||[]}catch(e){return[]}}
+function speichereRangliste(l){try{localStorage.setItem(LB_KEY,JSON.stringify(l))}catch(e){}}
+function addScore(name,punkte,betrag){
+  const l=ladeRangliste();
+  const eintrag={name:name.slice(0,20),punkte,betrag,datum:new Date().toLocaleDateString('de-DE')};
+  l.push(eintrag);
+  l.sort((a,b)=> b.punkte-a.punkte || b.betrag-a.betrag);
+  const idx=l.indexOf(eintrag);
+  speichereRangliste(l);
+  return idx;
+}
+function ranglisteHTML(hi){
+  if(hi===undefined)hi=-1;
+  const l=ladeRangliste();
+  if(!l.length) return `<p class="muted">Noch keine Einträge – trag dich als Erste/r ein! 🥇</p>`;
+  const medaille=i=>['🥇','🥈','🥉'][i]||(i+1);
+  const rows=l.slice(0,10).map((e,i)=>`<tr class="${i===hi?'me':''}">
+    <td>${medaille(i)}</td><td class="nm">${esc(e.name)}</td>
+    <td>${e.punkte}/15</td><td>${euro(e.betrag)}</td><td class="d">${e.datum}</td></tr>`).join('');
+  return `<table class="lb"><thead><tr><th>#</th><th class="nm">Name</th><th>Fragen</th><th>Gewinn</th><th>Datum</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function entryBlock(punkte,betrag){
+  const lastName=localStorage.getItem(NAME_KEY)||'';
+  return `<div id="lbarea" class="lbarea">
+    <p class="muted" style="margin-bottom:6px">In die Rangliste eintragen (Ergebnis <b>${punkte}/15</b> richtig):</p>
+    <div class="lbentry">
+      <input id="lbname" maxlength="20" placeholder="Dein Name" value="${esc(lastName)}"
+        onkeydown="if(event.key==='Enter'){eintragen(${punkte},${betrag})}">
+      <button class="btn" onclick="eintragen(${punkte},${betrag})">🏆 Eintragen</button>
+    </div>
+  </div>
+  <div class="row"><button class="btn" onclick="spielStart()">🔄 Nochmal spielen</button>
+  <button class="btn ghost" onclick="renderStart()">Zum Start</button></div>`;
+}
+function eintragen(punkte,betrag){
+  const inp=document.getElementById('lbname'); if(!inp)return;
+  let name=(inp.value||'').trim(); if(!name)name='Anonym';
+  localStorage.setItem(NAME_KEY,name);
+  const idx=addScore(name,punkte,betrag);
+  Sound.lifeline();
+  const area=document.getElementById('lbarea');
+  if(area) area.innerHTML=`<h3 class="lbtitle">🏆 Rangliste</h3>`+ranglisteHTML(idx);
+}
+function zeigeRangliste(){
+  renderLadder();
+  stage.innerHTML=`<div class="center">
+    <div class="big">🏆 Rangliste</div>
+    ${ranglisteHTML()}
+    <div class="row"><button class="btn" onclick="renderStart()">← Zurück</button>
+    <button class="btn ghost" onclick="ranglisteLoeschen()">Liste leeren</button></div>
+  </div>`;
+}
+function ranglisteLoeschen(){ if(confirm('Rangliste wirklich unwiderruflich löschen?')){speichereRangliste([]);zeigeRangliste();} }
+
 /* ============ Rendering ============ */
 function renderLadder(){
   ladderEl.innerHTML='';
@@ -344,7 +418,8 @@ function renderStart(){
     <p class="muted">15 Fragen rund um Eloxal, Anodisation, Färben, Verdichten und typische
     Fehlerbilder. Drei Joker helfen dir, Sicherheitsstufen bei <b>500 €</b> und <b>16.000 €</b>.
     Die Fragen werden jede Runde neu aus dem Katalog gezogen – kaum eine Partie gleicht der anderen.</p>
-    <button class="btn" onclick="spielStart()">▶ Spiel starten</button>
+    <div class="row"><button class="btn" onclick="spielStart()">▶ Spiel starten</button>
+    <button class="btn ghost" onclick="zeigeRangliste()">🏆 Rangliste</button></div>
   </div>`;
 }
 function renderFrage(){
@@ -397,8 +472,7 @@ function verloren(){
     <p class="muted">Richtig gewesen wäre:<br><b>${q.optionen[q.richtigerIndex].text}</b></p>
     <p class="muted">${q.erklaerung}</p>
     <div class="prize">Gesicherter Gewinn: ${euro(betrag)}</div>
-    <div class="row"><button class="btn" onclick="spielStart()">🔄 Nochmal spielen</button>
-    <button class="btn ghost" onclick="renderStart()">Zum Start</button></div></div>`;
+    ${entryBlock(level,betrag)}</div>`;
 }
 function gewonnen(){
   Sound.suspenseStop();Sound.win();renderLadder();konfetti();
@@ -406,8 +480,7 @@ function gewonnen(){
     <div class="big">🎉 ELOXAL‑MILLIONÄR! 🎉</div>
     <p class="muted">Alle 15 Fragen richtig – du beherrschst das Eloxieren aus dem Effeff!</p>
     <div class="prize">1.000.000 €</div>
-    <div class="row"><button class="btn" onclick="spielStart()">🔄 Nochmal spielen</button>
-    <button class="btn ghost" onclick="renderStart()">Zum Start</button></div></div>`;
+    ${entryBlock(15,1000000)}</div>`;
 }
 
 /* ============ Joker ============ */

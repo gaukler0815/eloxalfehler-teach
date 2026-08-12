@@ -18,6 +18,7 @@
     waveNum: $('wave-num'), scoreNum: $('score-num'), enemiesLeft: $('enemies-left'),
     banner: $('banner'), bannerTitle: $('banner-title'), bannerSub: $('banner-sub'),
     hitmarker: $('hitmarker'), damageOverlay: $('damage-overlay'),
+    crosshair: $('crosshair'),
     goScore: $('go-score'), goWave: $('go-wave'), goKills: $('go-kills'), goBest: $('go-best'),
     diffLabel: $('hud-diff'), bestLabel: $('menu-best')
   };
@@ -171,7 +172,8 @@
     velY: 0, onGround: true,
     hp: cfg.player.hp,
     yaw: 0.26, pitch: 0,
-    lastHurt: -99, shake: 0
+    lastHurt: -99, shake: 0,
+    roll: 0, bobT: 0
   };
   var wave = 0;
   var score = 0;
@@ -216,10 +218,16 @@
     if (e.button === 0) {
       mouseDown = true;
       attemptShot();
+    } else if (e.button === 2) {
+      ES.weapons.setAim(true);
     }
   });
   document.addEventListener('mouseup', function (e) {
     if (e.button === 0) { mouseDown = false; }
+    if (e.button === 2) { ES.weapons.setAim(false); }
+  });
+  document.addEventListener('contextmenu', function (e) {
+    if (state === 'playing' || state === 'intermission') { e.preventDefault(); }
   });
   document.addEventListener('wheel', function (e) {
     if (state === 'playing' && document.pointerLockElement === canvas) {
@@ -238,7 +246,21 @@
 
   // --- shooting -------------------------------------------------------------
   var raycaster = new THREE.Raycaster();
-  var muzzleLocal = new THREE.Vector3(0.28, -0.18, -0.7);
+
+  /* Brass casing kicked out of the breech on every shot. */
+  function ejectCasing() {
+    var m = new THREE.Mesh(
+      new THREE.BoxGeometry(0.032, 0.016, 0.016),
+      new THREE.MeshBasicMaterial({ color: 0xC9A227 })
+    );
+    m.position.copy(camera.localToWorld(new THREE.Vector3(0.28, -0.14, -0.42)));
+    m.rotation.set(Math.random() * 3, Math.random() * 3, 0);
+    var right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+    var v = right.multiplyScalar(1.4 + Math.random())
+      .add(new THREE.Vector3(0, 1.9 + Math.random() * 0.6, 0));
+    particles.push({ mesh: m, vel: v, life: 0.9, gravity: 9 });
+    scene.add(m);
+  }
 
   function attemptShot() {
     var w = ES.weapons.tryFire();
@@ -250,14 +272,14 @@
     camera.getWorldPosition(origin);
     var baseDir = new THREE.Vector3();
     camera.getWorldDirection(baseDir);
-    var muzzle = muzzleLocal.clone();
-    camera.localToWorld(muzzle);
+    var muzzle = ES.weapons.muzzleWorld();
+    ejectCasing();
 
     var targets = world.solids.concat(ES.enemies.hittables());
     var anyHit = false, anyKill = false, anyHead = false;
 
     for (var p = 0; p < w.pellets; p++) {
-      var spread = THREE.MathUtils.degToRad(w.spreadDeg);
+      var spread = THREE.MathUtils.degToRad(w.spreadDeg) * ES.weapons.spreadMult();
       var dir = baseDir.clone();
       dir.x += (Math.random() - 0.5) * spread * 2;
       dir.y += (Math.random() - 0.5) * spread * 2;
@@ -395,7 +417,8 @@
     var f = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0);
     var r = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
     var sprinting = keys.ShiftLeft || keys.ShiftRight;
-    var speed = cfg.player.speed * (sprinting ? cfg.player.sprintMult : 1);
+    var aimF = ES.weapons.aimFactor();
+    var speed = cfg.player.speed * (sprinting ? cfg.player.sprintMult : 1) * (1 - 0.25 * aimF);
     var moving = (f !== 0 || r !== 0);
 
     var sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
@@ -428,16 +451,21 @@
       player.hp = Math.min(cfg.player.hp, player.hp + cfg.player.regenPerSec * dt);
     }
 
-    // camera
+    // camera: shake, head bob while running, slight roll when strafing
     player.shake = Math.max(0, player.shake - dt * 2.2);
     var shakeX = (Math.random() - 0.5) * player.shake * 0.05;
     var shakeY = (Math.random() - 0.5) * player.shake * 0.05;
-    camera.position.set(player.pos.x + shakeX, player.pos.y + shakeY, player.pos.z);
-    camera.rotation.set(player.pitch, player.yaw, 0);
+    if (moving && player.onGround) { player.bobT += dt * (sprinting ? 11 : 8); }
+    var headBob = Math.sin(player.bobT) * 0.028 * (moving && player.onGround ? 1 : 0) * (1 - 0.7 * aimF);
+    var targetRoll = -r * 0.02 * (1 - 0.5 * aimF);
+    player.roll += (targetRoll - player.roll) * Math.min(1, dt * 8);
+    camera.position.set(player.pos.x + shakeX, player.pos.y + shakeY + headBob, player.pos.z);
+    camera.rotation.set(player.pitch, player.yaw, player.roll);
 
-    // sprint FOV
-    var targetFov = (sprinting && moving) ? 82 : 75;
-    camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 8);
+    // FOV: sprint widens, aiming zooms in
+    var baseFov = (sprinting && moving) ? 82 : 75;
+    var targetFov = baseFov * (1 - aimF) + 58 * aimF;
+    camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 10);
     camera.updateProjectionMatrix();
 
     ES.weapons.update(dt, moving ? (sprinting ? 1 : 0.6) : 0);
@@ -458,6 +486,8 @@
     ui.weaponName.textContent = w.name + (s.reloading ? ' — lädt…' : '');
     ui.ammoMag.textContent = s.mag;
     ui.ammoReserve.textContent = (s.reserve === Infinity) ? '∞' : s.reserve;
+
+    ui.crosshair.style.opacity = (1 - ES.weapons.aimFactor()).toFixed(2);
 
     ui.waveNum.textContent = wave;
     ui.scoreNum.textContent = score;
@@ -481,6 +511,7 @@
   }
 
   function startGame() {
+    ES.weapons.setAim(false);
     ES.enemies.clear(scene);
     clearPickups();
     ES.weapons.reset();
@@ -500,6 +531,7 @@
   function gameOver() {
     setState('gameover');
     mouseDown = false;
+    ES.weapons.setAim(false);
     sound.gameOver();
     sound.stopDrone();
     if (document.pointerLockElement === canvas) { document.exitPointerLock(); }

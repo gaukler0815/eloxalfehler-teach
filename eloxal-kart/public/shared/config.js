@@ -43,13 +43,13 @@ export const NET = {
   interpDelay: 0.12,     // seconds remote karts are rendered in the past
 };
 
-// Item catalogue. German display names (UI language), English ids.
+// Item catalogue. German display names on the Eloxal theme, English ids.
 export const ITEMS = {
-  bolt:   { name: 'Blitzbolzen',  desc: 'Geradeaus-Geschoss, prallt von Banden ab' },
-  seeker: { name: 'Zielsucher',   desc: 'Verfolgt den Fahrer vor dir' },
-  turbo:  { name: 'Turbo',        desc: 'Kurzer Geschwindigkeitsschub' },
-  barrel: { name: 'Ölfass',       desc: 'Hindernis für die Verfolger' },
-  shield: { name: 'Schutzschild', desc: 'Blockt einen Treffer ab' },
+  bolt:   { name: 'Lichtbogen',    desc: 'Geradeaus-Blitz, prallt von Banden ab' },
+  seeker: { name: 'Zielsucher',    desc: 'Verfolgt den Fahrer vor dir' },
+  turbo:  { name: 'Strom-Boost',   desc: 'Volle Badspannung – kurzer Schub' },
+  barrel: { name: 'Säurefass',     desc: 'Hindernis für die Verfolger' },
+  shield: { name: 'Eloxalschicht', desc: 'Harte Oxidschicht blockt einen Treffer' },
 };
 
 export const PROJ = {

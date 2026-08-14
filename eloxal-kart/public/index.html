@@ -8,8 +8,10 @@
 <style>
   :root {
     --ui-font: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
-    --accent: #ffd23e;
-    --panel: rgba(16, 24, 40, 0.86);
+    --accent: #F5A81C;        /* Jacobi gold */
+    --brand-blue: #1E74DC;
+    --brand-blue-light: #8FD3FF;
+    --panel: rgba(23, 19, 31, 0.90);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; overflow: hidden; background: #10182a; font-family: var(--ui-font); }
@@ -18,7 +20,9 @@
   /* ---------- overlays ---------- */
   .overlay {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(160deg, #2a9fd8 0%, #7fd4f0 45%, #e8b46a 100%);
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(30, 116, 220, 0.35), transparent 60%),
+      linear-gradient(170deg, #241D33 0%, #332A47 55%, #140F1C 100%);
     z-index: 20;
   }
   .overlay.hidden, .hidden { display: none !important; }
@@ -27,34 +31,35 @@
     box-shadow: 0 18px 60px rgba(0,0,0,.45); max-width: 640px; width: min(92vw, 640px);
     border: 3px solid rgba(255,255,255,.15);
   }
+  .panel .brand { margin-bottom: 10px; }
   .panel h1 {
     font-size: 44px; letter-spacing: 2px; margin-bottom: 2px; color: var(--accent);
-    text-shadow: 3px 3px 0 #b3541e, -1px -1px 0 #7a3010;
+    text-shadow: 3px 3px 0 #1E74DC, -1px -1px 0 #17131F;
     transform: rotate(-1.5deg);
   }
-  .panel .sub { color: #cfe3ff; margin-bottom: 18px; font-size: 15px; }
-  .panel label { display: block; font-size: 13px; color: #9fb6d8; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .panel .sub { color: #C9D2DC; margin-bottom: 18px; font-size: 15px; }
+  .panel label { display: block; font-size: 13px; color: #8FD3FF; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: 1px; }
   .panel input[type=text] {
     width: 100%; padding: 10px 12px; font-size: 18px; border-radius: 10px; border: 2px solid #3a4d6e;
-    background: #0d1626; color: #fff; font-family: inherit;
+    background: #17131F; color: #fff; font-family: inherit;
   }
   .chars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
   .char {
     border: 3px solid transparent; border-radius: 12px; padding: 8px 4px; text-align: center;
-    background: #182642; cursor: pointer; transition: transform .08s;
+    background: #2b2340; cursor: pointer; transition: transform .08s;
   }
   .char:hover { transform: scale(1.05); }
-  .char.sel { border-color: var(--accent); background: #23345c; }
+  .char.sel { border-color: var(--accent); background: #1E74DC44; }
   .char .swatch { width: 34px; height: 34px; border-radius: 50%; margin: 0 auto 6px; border: 3px solid #fff3; }
   .char .cname { font-size: 12px; }
   .buttons { display: flex; gap: 12px; margin-top: 22px; }
   button.big {
     flex: 1; padding: 14px 10px; font-size: 18px; font-weight: bold; border: 0; border-radius: 12px;
-    cursor: pointer; font-family: inherit; color: #1a1a1a; background: var(--accent);
-    box-shadow: 0 4px 0 #b3541e; transition: transform .06s;
+    cursor: pointer; font-family: inherit; color: #17131F; background: var(--accent);
+    box-shadow: 0 4px 0 #8a5c00; transition: transform .06s;
   }
   button.big:active { transform: translateY(3px); box-shadow: none; }
-  button.big.alt { background: #7ed321; box-shadow: 0 4px 0 #3f7a00; }
+  button.big.alt { background: linear-gradient(135deg, #1E74DC, #8FD3FF); color: #fff; box-shadow: 0 4px 0 #0d3a75; }
   button.big:disabled { background: #5a6478; box-shadow: none; color: #99a; cursor: default; }
   .netstatus { margin-top: 12px; font-size: 13px; color: #ffd9a0; min-height: 18px; }
 
@@ -75,7 +80,7 @@
   #minimap { position: absolute; bottom: 16px; left: 14px; width: 170px; height: 170px; opacity: .92; }
   #hud-center {
     position: absolute; top: 26%; width: 100%; text-align: center; font-size: 110px; font-weight: bold;
-    color: var(--accent); text-shadow: 4px 4px 0 #b3541e, 0 0 40px rgba(0,0,0,.4);
+    color: var(--accent); text-shadow: 4px 4px 0 #1E74DC, 0 0 40px rgba(0,0,0,.4);
   }
   #hud-msg {
     position: absolute; top: 15%; width: 100%; text-align: center; font-size: 26px; font-weight: bold;
@@ -115,8 +120,9 @@
 <!-- Hauptmenü -->
 <div id="menu" class="overlay">
   <div class="panel">
+    <div class="brand"></div>
     <h1>ELOXAL KART</h1>
-    <div class="sub">Canyon-Kurs &middot; 3 Runden &middot; Volles Programm: Driften, Items, Abschießen</div>
+    <div class="sub">Der Werks-Funracer der Jacobi Eloxal GmbH &middot; Canyon-Kurs &middot; 3 Runden &middot; Driften, Items, Abschießen</div>
     <label for="name">Dein Name</label>
     <input type="text" id="name" maxlength="16" placeholder="Fahrername">
     <label>Fahrer wählen</label>
@@ -132,6 +138,7 @@
 <!-- Lobby (online) -->
 <div id="lobby" class="overlay hidden">
   <div class="panel">
+    <div class="brand"></div>
     <h1 style="font-size:32px">Startaufstellung…</h1>
     <div class="sub" id="lobby-info">Warte auf Fahrer.</div>
     <ul id="lobby-list" style="list-style:none; font-size:18px; line-height:1.8"></ul>
@@ -164,6 +171,7 @@
 <!-- Ergebnis -->
 <div id="results" class="overlay hidden">
   <div class="panel">
+    <div class="brand"></div>
     <h1 style="font-size:34px" id="results-title">Zieleinlauf</h1>
     <table><tbody id="results-body"></tbody></table>
     <div class="buttons">

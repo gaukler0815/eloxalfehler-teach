@@ -3,6 +3,18 @@
 // floating name tag).
 
 import * as THREE from 'three';
+import { drawLogo } from './branding.js';
+
+let badgeTexCache = null;
+function badgeTexture() {
+  if (badgeTexCache) return badgeTexCache;
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  drawLogo(c.getContext('2d'), 64, 64, 1.6, { wordmark: false });
+  badgeTexCache = new THREE.CanvasTexture(c);
+  badgeTexCache.colorSpace = THREE.SRGBColorSpace;
+  return badgeTexCache;
+}
 
 function nameSprite(text, accent) {
   const c = document.createElement('canvas');
@@ -30,7 +42,8 @@ export class KartView {
 
     const color = new THREE.Color(char.color);
     const accent = new THREE.Color(char.accent);
-    const bodyMat = new THREE.MeshStandardMaterial({ color, metalness: 0.35, roughness: 0.35 });
+    // Anodized paint: metallic with the environment reflection from world.js.
+    const bodyMat = new THREE.MeshStandardMaterial({ color, metalness: 0.6, roughness: 0.28 });
     const accentMat = new THREE.MeshStandardMaterial({ color: accent, metalness: 0.2, roughness: 0.5 });
     const darkMat = new THREE.MeshStandardMaterial({ color: 0x22242a, metalness: 0.1, roughness: 0.9 });
     const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd8dce4, metalness: 0.8, roughness: 0.25 });
@@ -49,6 +62,17 @@ export class KartView {
     const seatBack = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.9, 0.35), accentMat);
     seatBack.position.set(0, 1.35, -1.15);
     this.group.add(seatBack);
+
+    // Jacobi JX badge: on the nose and on the back of the seat.
+    const badgeMat = new THREE.MeshBasicMaterial({ map: badgeTexture(), transparent: true });
+    const noseBadge = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.85), badgeMat);
+    noseBadge.rotation.x = -Math.PI / 2 + 0.42;
+    noseBadge.position.set(0, 1.13, 1.62);
+    this.group.add(noseBadge);
+    const rearBadge = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), badgeMat);
+    rearBadge.rotation.y = Math.PI;
+    rearBadge.position.set(0, 1.35, -1.34);
+    this.group.add(rearBadge);
     const bumper = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.35, 0.4), chromeMat);
     bumper.position.set(0, 0.5, -1.75);
     this.group.add(bumper);
@@ -144,15 +168,23 @@ export class KartView {
     blob.position.y = 0.06;
     this.group.add(blob);
 
-    if (showName) this.group.add(nameSprite(label || char.name, '#' + accent.getHexString()));
+    if (showName) {
+      this.nameSpr = nameSprite(label || char.name, '#' + accent.getHexString());
+      this.group.add(this.nameSpr);
+    }
 
     scene.add(this.group);
   }
 
   // state: { x, z, heading, speed, steer, drifting, driftDir, boostT, spinT,
   //          spinPhase, shieldT }
-  update(dt, state, t) {
+  update(dt, state, t, camPos = null) {
     const g = this.group;
+    // Fade the floating name out when the kart is right at the camera.
+    if (this.nameSpr && camPos) {
+      const d = Math.hypot(state.x - camPos.x, state.z - camPos.z);
+      this.nameSpr.material.opacity = Math.max(0, Math.min(1, (d - 10) / 8));
+    }
     g.position.set(state.x, 0, state.z);
     const spinExtra = state.spinT > 0 ? state.spinPhase : 0;
     const driftLean = state.drifting ? state.driftDir * 0.35 : 0;

@@ -77,12 +77,13 @@ export class Game {
   setupSolo() {
     this.playerId = 'player';
     this.sim = new RaceSim(this.track, { laps: RACE.laps });
-    this.sim.addRacer({ id: 'player', name: this.playerName, charId: this.charId });
+    // Bots first: the player starts from the last grid slot, classic style.
     const others = CHARACTERS.filter((c) => c.id !== this.charId);
     for (let i = 0; i < RACE.maxRacers - 1; i++) {
       const ch = others[i % others.length];
       this.sim.addRacer({ id: 'bot-' + i, name: ch.name, charId: ch.id, isBot: true });
     }
+    this.sim.addRacer({ id: 'player', name: this.playerName, charId: this.charId });
     for (const r of this.sim.racers) this.addView(r.id, r.char, r.kart, r.id === 'player', r.name);
     this.sim.start();
     this.sound.startEngine();
@@ -293,19 +294,25 @@ export class Game {
   }
 
   makeBarrelMesh() {
+    // "Säurefass": acid-green drum with a gold hazard ring.
     const g = new THREE.Group();
     const body = new THREE.Mesh(
       new THREE.CylinderGeometry(1.0, 1.0, 1.6, 12),
-      new THREE.MeshStandardMaterial({ color: 0x6b4a2a, roughness: 0.7 }),
+      new THREE.MeshStandardMaterial({ color: 0x59c122, roughness: 0.5, metalness: 0.3, emissive: 0x1a4000 }),
     );
     body.position.y = 0.8;
     body.castShadow = true;
     const ring = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.04, 1.04, 0.22, 12),
-      new THREE.MeshStandardMaterial({ color: 0x33261a, roughness: 0.6 }),
+      new THREE.CylinderGeometry(1.04, 1.04, 0.24, 12),
+      new THREE.MeshStandardMaterial({ color: 0xf5a81c, roughness: 0.45, metalness: 0.4 }),
     );
     ring.position.y = 0.8;
-    g.add(body, ring);
+    const lid = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.9, 0.9, 0.1, 12),
+      new THREE.MeshBasicMaterial({ color: 0x9fff4d }),
+    );
+    lid.position.y = 1.63;
+    g.add(body, ring, lid);
     g.userData.y = 0;
     return g;
   }
@@ -336,6 +343,19 @@ export class Game {
 
   fixedStep(dt) {
     const input = this.input.read();
+
+    // Debug/demo autopilot (set window.__autopilot = true in the console):
+    // steers the local kart along the centerline like a bot.
+    if (window.__autopilot && this.localKart) {
+      const k = this.localKart;
+      const c = this.track.sample(k.trackS + 13 + Math.max(0, k.speed) * 0.5);
+      let diff = Math.atan2(c.x - k.x, c.z - k.z) - k.heading;
+      while (diff > Math.PI) diff -= 2 * Math.PI;
+      while (diff < -Math.PI) diff += 2 * Math.PI;
+      input.throttle = Math.abs(diff) > 0.8 && k.speed > 20 ? 0.3 : 1;
+      input.steer = Math.max(-1, Math.min(1, diff * 2.4));
+      input.drift = false;
+    }
 
     if (this.mode === 'solo') {
       if (input.fire) this.sim.useItem('player');
@@ -412,7 +432,7 @@ export class Game {
       }
       if (state) {
         v.disp = state === v.disp ? v.disp : state;
-        v.view.update(dt, state, this.time);
+        v.view.update(dt, state, this.time, this.camera.position);
       }
     }
 

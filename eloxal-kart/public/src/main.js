@@ -4,6 +4,10 @@
 import { CHARACTERS } from '../shared/config.js';
 import { Game } from './game.js';
 import { Net } from './net.js';
+import { LOGO_SVG } from './branding.js';
+
+// Jacobi Eloxal logo in every panel.
+for (const el of document.querySelectorAll('.brand')) el.innerHTML = LOGO_SVG;
 
 const canvas = document.getElementById('game-canvas');
 const menu = document.getElementById('menu');

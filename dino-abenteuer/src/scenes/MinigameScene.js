@@ -251,18 +251,26 @@ export default class MinigameScene extends Phaser.Scene {
         .setDepth(2)
     );
 
-    // Sandschicht als RenderTexture, die weggepinselt wird
-    this.sand = this.add.renderTexture(40, 60, b - 80, h - 130).setOrigin(0, 0).setDepth(5);
-    this.sand.fill(0xb08c5a, 1);
-    for (let i = 0; i < 260; i += 1) {
-      this.sand.draw(
-        'partikel',
-        Math.random() * (b - 80),
-        Math.random() * (h - 130),
-        0.5,
-        0x8a6a3f
-      );
+    // Sandschicht als Canvas-Textur. Weggepinselt wird direkt im 2D-Kontext,
+    // hochgeladen wird hoechstens einmal pro Bild (siehe update()).
+    const sw = b - 80;
+    const sh = h - 130;
+    if (this.textures.exists('sandflaeche')) this.textures.remove('sandflaeche');
+    this.sandTex = this.textures.createCanvas('sandflaeche', sw, sh);
+    const sctx = this.sandTex.getContext();
+    sctx.fillStyle = '#b08c5a';
+    sctx.fillRect(0, 0, sw, sh);
+    sctx.fillStyle = '#8a6a3f';
+    for (let i = 0; i < 500; i += 1) {
+      const r = 2 + Math.random() * 5;
+      sctx.beginPath();
+      sctx.arc(Math.random() * sw, Math.random() * sh, r, 0, Math.PI * 2);
+      sctx.fill();
     }
+    this.sandTex.refresh();
+    this.sand = this.add.image(40, 60, 'sandflaeche').setOrigin(0, 0).setDepth(5);
+    this.sandCtx = sctx;
+    this.sandSchmutzig = false;
 
     this.raster = new Array(RASTER_X * RASTER_Y).fill(false);
     this.freigelegt = 0;
@@ -280,17 +288,35 @@ export default class MinigameScene extends Phaser.Scene {
     this.input.on('pointerdown', this.pinseln, this);
   }
 
+  /** Wird pro Bild aufgerufen: Textur nur hochladen, wenn wirklich gewischt wurde. */
+  update() {
+    if (this.sandSchmutzig && this.sandTex) {
+      this.sandTex.refresh();
+      this.sandSchmutzig = false;
+    }
+  }
+
   pinseln(zeiger) {
     if (!this.sand || this.phase2 || !zeiger.isDown) return;
     const lx = zeiger.worldX - this.sand.x;
     const ly = zeiger.worldY - this.sand.y;
-    if (lx < 0 || ly < 0 || lx > this.sand.width || ly > this.sand.height) return;
+    const breite = this.sandTex.width;
+    const hoehe = this.sandTex.height;
+    if (lx < 0 || ly < 0 || lx > breite || ly > hoehe) return;
 
-    this.sand.erase('pinsel', lx - 28, ly - 28);
+    // Wegradieren im 2D-Kontext (Upload passiert gebuendelt in update())
+    const ctx = this.sandCtx;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(lx, ly, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    this.sandSchmutzig = true;
 
     // Alle Rasterfelder markieren, die der Pinsel wirklich beruehrt hat
-    const zellB = this.sand.width / RASTER_X;
-    const zellH = this.sand.height / RASTER_Y;
+    const zellB = breite / RASTER_X;
+    const zellH = hoehe / RASTER_Y;
     const von = { x: Math.floor((lx - 26) / zellB), y: Math.floor((ly - 26) / zellH) };
     const bis = { x: Math.floor((lx + 26) / zellB), y: Math.floor((ly + 26) / zellH) };
     for (let gy = Math.max(0, von.y); gy <= Math.min(RASTER_Y - 1, bis.y); gy += 1) {
@@ -316,7 +342,10 @@ export default class MinigameScene extends Phaser.Scene {
       targets: this.sand,
       alpha: 0,
       duration: 500,
-      onComplete: () => this.sand.destroy(),
+      onComplete: () => {
+        this.sand.destroy();
+        this.sand = null;
+      },
     });
     this.hinweis.setText('🦴  Ziehe jeden Knochen auf seinen Schatten!');
     tonSpielen('checkpoint');
@@ -327,12 +356,12 @@ export default class MinigameScene extends Phaser.Scene {
     // Ablage am unteren Rand: gleichmaessig verteilt, versetzt in zwei Reihen,
     // damit sich die Teile nicht ueberdecken.
     const anzahl = this.fossil.teile.length;
-    const abstand = (this.scale.width - 220) / Math.max(1, anzahl - 1);
+    const abstand = (this.scale.width - 280) / Math.max(1, anzahl - 1);
 
     this.teile = this.fossil.teile.map((t, i) => {
       const start = {
-        x: 110 + i * abstand,
-        y: h - 130 + (i % 2) * 58,
+        x: 140 + i * abstand,
+        y: h - 162 + (i % 2) * 50,
       };
       const s = this.add
         .image(start.x, start.y, t.textur)
@@ -378,7 +407,7 @@ export default class MinigameScene extends Phaser.Scene {
   fertig() {
     tonSpielen('ziel');
     const schonGefunden = Spielstand.get().fossilien[this.fossil.id]?.fertig;
-    Spielstand.fossilSpeichern(this.fossil.id, { fertig: true });
+    Spielstand.fossilSpeichern(this.fossil.id, { fertig: true, name: this.fossil.name });
 
     this.time.delayedCall(400, () => {
       karteZeigen({
@@ -393,12 +422,13 @@ export default class MinigameScene extends Phaser.Scene {
               ? 'Dieses Fossil hattest du schon einmal - Übung macht den Meister!'
               : 'Neues Fossil für deine Sammlung. Forscherinnen arbeiten genau so: erst pinseln, dann puzzeln.',
           }),
-          el('div', {
-            class: 'werte',
-            html: Object.keys(Spielstand.get().fossilien)
-              .map((f) => `<span>✔ ${f}</span>`)
-              .join(''),
-          }),
+          el(
+            'div',
+            { class: 'werte' },
+            Object.entries(Spielstand.get().fossilien).map(([id, f]) =>
+              el('span', { text: `✔ ${f.name || id}` })
+            )
+          ),
         ],
         knoepfe: [
           {

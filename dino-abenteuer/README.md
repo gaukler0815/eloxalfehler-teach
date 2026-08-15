@@ -9,6 +9,17 @@ ist nach `npm install` sofort startklar.
 
 ---
 
+## Wo man es spielt
+
+* **Im Netz (nach dem Merge nach `main`):**
+  <https://gaukler0815.github.io/eloxalfehler-teach/dino-abenteuer/>
+  Der Workflow `.github/workflows/deploy-pages.yml` baut das Spiel und legt es
+  in den Unterordner `dino-abenteuer/` der Pages-Seite. *Eloxal Rebels* bleibt
+  unverändert unter der bisherigen Adresse.
+* **Auf dem Tablet im eigenen WLAN:** `npm run dev -- --host` und die
+  angezeigte Netzwerk-Adresse (`http://192.168.x.x:5173`) am Tablet öffnen.
+* **Lokal am Rechner:** siehe Schnellstart.
+
 ## Schnellstart
 
 ```bash

@@ -357,8 +357,8 @@ export function buildWorld(scene, track) {
       g.fillStyle = BRAND.silver; g.font = '800 62px system-ui, sans-serif';
       g.textAlign = 'left'; g.textBaseline = 'middle';
       g.fillText('JACOBI', 150, 62);
-      g.fillStyle = BRAND.gold; g.font = '700 48px system-ui, sans-serif';
-      g.fillText('E L O X A L   K A R T', 420, 66);
+      g.fillStyle = BRAND.gold; g.font = '700 44px system-ui, sans-serif';
+      g.fillText('E L O X A L   K A R T', 408, 66);
     });
     const beam = new THREE.Mesh(
       new THREE.BoxGeometry(roadW * 2 + 9.5, 3.2, 1.6),

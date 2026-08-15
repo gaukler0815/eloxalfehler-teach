@@ -42,11 +42,12 @@ export class Hud {
       minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
       minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
     }
+    // True top view (looking down): world +X = map right, world +Z = map down.
     const pad = 26, size = 340;
     const scale = (size - pad * 2) / Math.max(maxX - minX, maxZ - minZ);
     this.mapProject = (x, z) => [
       pad + (x - minX) * scale + (size - pad * 2 - (maxX - minX) * scale) / 2,
-      size - (pad + (z - minZ) * scale + (size - pad * 2 - (maxZ - minZ) * scale) / 2),
+      pad + (z - minZ) * scale + (size - pad * 2 - (maxZ - minZ) * scale) / 2,
     ];
   }
 

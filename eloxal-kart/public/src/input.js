@@ -37,13 +37,15 @@ export class Input {
   }
 
   // Returns { throttle, steer, drift, fire } – fire only true for one read.
+  // Steering convention: positive steer = counterclockwise yaw = LEFT on
+  // screen (heading maps to dir via (sin h, cos h)), so the left keys add +1.
   read() {
     const k = this.keys;
     let throttle = 0, steer = 0;
     if (k.has('KeyW') || k.has('ArrowUp') || this.touch.gas) throttle += 1;
     if (k.has('KeyS') || k.has('ArrowDown')) throttle -= 1;
-    if (k.has('KeyA') || k.has('ArrowLeft') || this.touch.left) steer -= 1;
-    if (k.has('KeyD') || k.has('ArrowRight') || this.touch.right) steer += 1;
+    if (k.has('KeyA') || k.has('ArrowLeft') || this.touch.left) steer += 1;
+    if (k.has('KeyD') || k.has('ArrowRight') || this.touch.right) steer -= 1;
     const drift = k.has('Space') || k.has('ShiftLeft') || k.has('ShiftRight') || this.touch.drift;
     const fire = this.firePressed;
     this.firePressed = false;

@@ -9,7 +9,12 @@
 
 export const GRAVITATION = 1000;
 export const BODEN_Y = 640; // Oberkante des Bodens
-export const WELT_H = 760;
+/**
+ * Die Welt reicht deutlich unter den Boden. Dadurch darf die Kamera tiefer
+ * stehen und der Dino laeuft im unteren Drittel statt ganz am Bildrand -
+ * genau dort, wo auf dem Handy die Daumen liegen.
+ */
+export const WELT_H = 860;
 
 const STUFE = 80; // vertikaler Abstand zweier Plattform-Ebenen
 const EBENEN = [BODEN_Y - 95, BODEN_Y - 175, BODEN_Y - 255, BODEN_Y - 335];
@@ -48,7 +53,8 @@ export function levelBauen(cfg) {
     cfg,
     breite: cfg.breite,
     hoehe: WELT_H,
-    start: { x: 110, y: BODEN_Y - 60 },
+    // Etwas weiter rechts starten: am Bildrand liegt auf dem Handy der Daumen.
+    start: { x: 220, y: BODEN_Y - 60 },
     boden: [],
     plattformen: [],
     broeckel: [],

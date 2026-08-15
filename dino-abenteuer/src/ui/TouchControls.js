@@ -1,12 +1,18 @@
 /**
- * Touch-Steuerung: virtueller Joystick links, Sprung- und Spezial-Knopf rechts.
- * Laeuft parallel zur Tastatur - beides darf gleichzeitig benutzt werden.
+ * Touch-Steuerung.
+ *
+ * Der Joystick ist "schwebend": Er ist unsichtbar, bis ein Finger die linke
+ * Bildhaelfte beruehrt, und erscheint dann genau unter dem Finger. So liegt
+ * kein Ring dauerhaft im Bild und nichts verdeckt den Dino.
+ * Sprung- und Kraft-Knopf bleiben sichtbar, damit man sie findet.
+ * Alles laeuft parallel zur Tastatur - beides darf gleichzeitig benutzt werden.
  */
 
 import { el } from './Dialog.js';
 import Spielstand from '../state/storage.js';
 
 const SCHWELLE = 0.34; // ab wann eine Richtung als gedrueckt gilt
+const RADIUS = 62; // Weg des Knopfes bis zum vollen Ausschlag (px)
 
 export function istTouchGeraet() {
   return (
@@ -28,6 +34,7 @@ export default class TouchControls {
       spezial: false,
     };
     this.stickZeiger = null;
+    this.mitte = { x: 0, y: 0 };
     this.aufbauen();
     this.anzeigeAktualisieren();
   }
@@ -35,6 +42,8 @@ export default class TouchControls {
   aufbauen() {
     this.knopf = el('div', { class: 'knob' });
     this.stick = el('div', { class: 'pad-stick' }, [this.knopf]);
+    // Unsichtbare Flaeche: hier darf der Daumen den Joystick aufrufen.
+    this.zone = el('div', { class: 'pad-zone' }, [this.stick]);
 
     this.sprungKnopf = el('button', { class: 'pad-btn', type: 'button' }, [
       el('span', { class: 'ico', text: '⤒' }),
@@ -47,46 +56,38 @@ export default class TouchControls {
 
     this.knoepfe = el('div', { class: 'pad-buttons' }, [this.spezialKnopf, this.sprungKnopf]);
 
-    this.wurzel.replaceChildren(this.stick, this.knoepfe);
+    this.wurzel.replaceChildren(this.zone, this.knoepfe);
     this.ereignisseBinden();
   }
 
   ereignisseBinden() {
-    const stickStart = (ev) => {
+    const start = (ev) => {
+      if (this.stickZeiger !== null) return;
       ev.preventDefault();
       const z = ev.changedTouches ? ev.changedTouches[0] : ev;
       this.stickZeiger = z.identifier !== undefined ? z.identifier : 'maus';
-      this.stick.classList.add('active');
-      this.stickBewegen(z);
+      this.stickZeigen(z);
     };
-    const stickBewegung = (ev) => {
+    const bewegung = (ev) => {
       if (this.stickZeiger === null) return;
       const z = this.zeigerFinden(ev);
       if (!z) return;
       ev.preventDefault();
       this.stickBewegen(z);
     };
-    const stickEnde = (ev) => {
+    const ende = (ev) => {
       if (this.stickZeiger === null) return;
       if (ev.changedTouches && !this.zeigerFinden(ev, true)) return;
-      this.stickZeiger = null;
-      this.stick.classList.remove('active');
-      this.knopf.style.transform = '';
-      Object.assign(this.zustandDaten, {
-        links: false,
-        rechts: false,
-        hoch: false,
-        runter: false,
-      });
+      this.stickVerbergen();
     };
 
-    this.stick.addEventListener('touchstart', stickStart, { passive: false });
-    this.stick.addEventListener('mousedown', stickStart);
-    window.addEventListener('touchmove', stickBewegung, { passive: false });
-    window.addEventListener('mousemove', stickBewegung);
-    window.addEventListener('touchend', stickEnde);
-    window.addEventListener('touchcancel', stickEnde);
-    window.addEventListener('mouseup', stickEnde);
+    this.zone.addEventListener('touchstart', start, { passive: false });
+    this.zone.addEventListener('mousedown', start);
+    window.addEventListener('touchmove', bewegung, { passive: false });
+    window.addEventListener('mousemove', bewegung);
+    window.addEventListener('touchend', ende);
+    window.addEventListener('touchcancel', ende);
+    window.addEventListener('mouseup', ende);
 
     this.knopfBinden(this.sprungKnopf, 'sprung');
     this.knopfBinden(this.spezialKnopf, 'spezial');
@@ -101,18 +102,40 @@ export default class TouchControls {
     return null;
   }
 
+  /** Joystick unter dem Finger aufblenden. */
+  stickZeigen(zeiger) {
+    const r = this.zone.getBoundingClientRect();
+    // Nah am Rand etwas hereinruecken, damit der Ring komplett sichtbar bleibt
+    const x = Math.min(Math.max(zeiger.clientX - r.left, 80), r.width - 20);
+    const y = Math.min(Math.max(zeiger.clientY - r.top, 80), r.height - 80);
+    this.mitte = { x: r.left + x, y: r.top + y };
+    this.stick.style.left = `${x}px`;
+    this.stick.style.top = `${y}px`;
+    this.stick.classList.add('sichtbar');
+    this.knopf.style.transform = '';
+  }
+
+  stickVerbergen() {
+    this.stickZeiger = null;
+    this.stick.classList.remove('sichtbar');
+    this.knopf.style.transform = '';
+    Object.assign(this.zustandDaten, {
+      links: false,
+      rechts: false,
+      hoch: false,
+      runter: false,
+    });
+  }
+
   stickBewegen(zeiger) {
-    const r = this.stick.getBoundingClientRect();
-    const mx = r.left + r.width / 2;
-    const my = r.top + r.height / 2;
-    let dx = (zeiger.clientX - mx) / (r.width / 2);
-    let dy = (zeiger.clientY - my) / (r.height / 2);
+    let dx = (zeiger.clientX - this.mitte.x) / RADIUS;
+    let dy = (zeiger.clientY - this.mitte.y) / RADIUS;
     const laenge = Math.hypot(dx, dy);
     if (laenge > 1) {
       dx /= laenge;
       dy /= laenge;
     }
-    this.knopf.style.transform = `translate(${dx * r.width * 0.3}px, ${dy * r.height * 0.3}px)`;
+    this.knopf.style.transform = `translate(${dx * 34}px, ${dy * 34}px)`;
     this.zustandDaten.links = dx < -SCHWELLE;
     this.zustandDaten.rechts = dx > SCHWELLE;
     this.zustandDaten.hoch = dy < -SCHWELLE;
@@ -164,8 +187,7 @@ export default class TouchControls {
     Object.keys(this.zustandDaten).forEach((k) => {
       this.zustandDaten[k] = false;
     });
-    this.knopf.style.transform = '';
-    this.stick.classList.remove('active');
+    this.stickVerbergen();
     this.sprungKnopf.classList.remove('pressed');
     this.spezialKnopf.classList.remove('pressed');
   }

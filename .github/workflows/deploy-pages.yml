@@ -1,20 +1,22 @@
-# Deploys the Eloxal Rebels game to GitHub Pages so it can be played from any
-# browser (desktop, tablet, phone) at:
-#   https://gaukler0815.github.io/eloxalfehler-teach/
+# Deploys the browser games to GitHub Pages so they can be played from any
+# browser (desktop, tablet, phone):
+#   https://gaukler0815.github.io/eloxalfehler-teach/                  Eloxal Rebels
+#   https://gaukler0815.github.io/eloxalfehler-teach/dino-abenteuer/   Linneas Dino-Abenteuer
 #
-# Publishes the eloxal-rebels/ folder to a gh-pages branch; GitHub serves that
-# branch as the Pages site automatically. (The artifact-based deploy needs the
-# Pages site pre-created, which the workflow token is not allowed to do — the
-# branch route needs no manual setup at all.)
-# Runs on every push to main that touches the game, or manually via the
+# Publishes a site/ folder to a gh-pages branch; GitHub serves that branch as
+# the Pages site automatically. (The artifact-based deploy needs the Pages site
+# pre-created, which the workflow token is not allowed to do — the branch route
+# needs no manual setup at all.)
+# Runs on every push to main that touches a game, or manually via the
 # Actions tab ("Run workflow").
-name: Deploy game to GitHub Pages
+name: Deploy games to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - 'eloxal-rebels/**'
+      - 'dino-abenteuer/**'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -32,19 +34,42 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dino-abenteuer/package-lock.json
+
       - name: Run game tests
         run: |
           for f in eloxal-rebels/tests/*.test.js; do node "$f"; done
 
-      - name: Publish eloxal-rebels/ to the gh-pages branch
+      - name: Build Linneas Dino-Abenteuer
+        working-directory: dino-abenteuer
         run: |
-          cd eloxal-rebels
-          touch .nojekyll
+          npm ci
+          npm run build
+
+      - name: Assemble the site
+        run: |
+          rm -rf site
+          # Eloxal Rebels bleibt an der bisherigen Adresse (Wurzel).
+          cp -r eloxal-rebels site
+          # Das Dino-Spiel kommt in einen Unterordner.
+          mkdir -p site/dino-abenteuer
+          cp -r dino-abenteuer/dist/. site/dino-abenteuer/
+          touch site/.nojekyll
+          ls site site/dino-abenteuer
+
+      - name: Publish site/ to the gh-pages branch
+        run: |
+          cd site
           git init -b gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Deploy game from ${GITHUB_SHA}"
+          git commit -m "Deploy games from ${GITHUB_SHA}"
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

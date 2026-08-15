@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <title>Linneas Dino-Abenteuer</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="description" content="Jump-and-Run mit 30 Leveln, 30 Dinos, Lese- und Mathe-Aufgaben." />
+    <meta name="theme-color" content="#1b7f4b" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Dino-Abenteuer" />
+    <link rel="icon" href="./icons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Phaser-Canvas -->
+      <div id="game"></div>
+
+      <!-- HTML-Overlays (HUD, Touch-Steuerung, Dialoge, Lerneinheiten) -->
+      <div id="hud" class="layer"></div>
+      <div id="touch" class="layer"></div>
+      <div id="overlay" class="layer"></div>
+
+      <!-- Hinweis, wenn das Handy hochkant gehalten wird -->
+      <div id="dreh-hinweis">
+        <div class="dreh-icon">🔄</div>
+        <p>Bitte das Handy <strong>quer</strong> halten!</p>
+      </div>
+
+      <div id="boot-splash">
+        <div class="boot-egg"></div>
+        <p>Linneas Dino-Abenteuer wird geladen …</p>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -21,7 +21,21 @@ let net = null;
 
 // ------------------------------------------------------------ menu setup
 
-nameInput.value = localStorage.getItem('ek-name') || '';
+// localStorage can throw in sandboxed embeds – never let that kill the menu.
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* ignore */ } },
+};
+
+nameInput.value = store.get('ek-name') || '';
+
+// Phones: touch controls appear in game; landscape plays much better.
+if ('ontouchstart' in window) {
+  const hint = document.createElement('div');
+  hint.className = 'netstatus';
+  hint.textContent = '📱 Tipp: Handy quer halten – gefahren wird mit den Bildschirm-Tasten.';
+  document.querySelector('#menu .panel')?.appendChild(hint);
+}
 
 const charsEl = document.getElementById('chars');
 for (const c of CHARACTERS) {
@@ -38,7 +52,7 @@ for (const c of CHARACTERS) {
 
 function playerName() {
   const n = nameInput.value.trim() || 'Fahrer';
-  localStorage.setItem('ek-name', n);
+  store.set('ek-name', n);
   return n;
 }
 

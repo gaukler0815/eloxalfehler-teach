@@ -40,6 +40,30 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.faehigkeit = ABILITIES[dino.ability];
     this.setName(dino.name);
+
+    // Dunkle Kontur hinter dem Dino: Sie hebt ihn von gruenen Baeumen,
+    // dunklen Hoehlen und rotem Vulkangestein gleichermassen ab.
+    this.kontur = scene.add
+      .sprite(x, y, `dino_${dino.id}`, 0)
+      .setDepth(this.depth - 1)
+      .setTint(0x101820)
+      .setAlpha(0.45)
+      .setScale(1.16);
+  }
+
+  /** Kontur dem Dino nachfuehren (Frame, Blickrichtung, Position). */
+  konturNachfuehren() {
+    if (!this.kontur) return;
+    this.kontur.setPosition(this.x, this.y);
+    this.kontur.setFrame(this.frame.name);
+    this.kontur.setFlipX(this.flipX);
+    this.kontur.setAlpha(this.visible ? this.alpha * 0.45 : 0);
+  }
+
+  destroy(fromScene) {
+    this.kontur?.destroy();
+    this.kontur = null;
+    super.destroy(fromScene);
   }
 
   get istGeschuetzt() {
@@ -167,6 +191,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.animationWaehlen(amBoden);
     this.blinkenAktualisieren(zeit);
+    this.konturNachfuehren();
   }
 
   springen(kraft) {

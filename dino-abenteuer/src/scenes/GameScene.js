@@ -248,7 +248,7 @@ export default class GameScene extends Phaser.Scene {
       this.add
         .particles(0, 0, 'partikel', {
           x: { min: 0, max: this.L.breite },
-          y: WELT_H - 20,
+          y: BODEN_Y + 10,
           speedY: { min: -40, max: -14 },
           speedX: { min: -18, max: 18 },
           scale: { start: 0.9, end: 3.2 },

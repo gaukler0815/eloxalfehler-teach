@@ -123,6 +123,48 @@ body {
   }
 }
 
+/* ---------- Dreh-Hinweis (Handy hochkant) ------------------------------- */
+
+#dreh-hinweis {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+  background: #0d1b2a;
+  color: #fff7d6;
+  font-size: 22px;
+  line-height: 1.5;
+}
+
+#dreh-hinweis .dreh-icon {
+  font-size: 72px;
+  animation: drehen 2.2s ease-in-out infinite;
+}
+
+@keyframes drehen {
+  0%,
+  45% {
+    transform: rotate(0deg);
+  }
+  55%,
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+/* Nur auf kleinen Geraeten im Hochformat - Tablets und Desktop bleiben frei. */
+@media (orientation: portrait) and (max-width: 900px) {
+  #dreh-hinweis {
+    display: flex;
+  }
+}
+
 /* ---------- HUD --------------------------------------------------------- */
 
 .hud-bar {

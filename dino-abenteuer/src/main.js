@@ -10,6 +10,24 @@ import MinigameScene from './scenes/MinigameScene.js';
 import { GRAVITATION } from './game/levelGenerator.js';
 import { audioFreischalten } from './audio/sfx.js';
 
+/**
+ * Spielfeldgroesse an das Geraet anpassen.
+ *
+ * Die Hoehe bleibt fest bei 720 (danach ist alles ausgelegt), die Breite
+ * richtet sich nach dem Seitenverhaeltnis des Bildschirms. Auf einem langen
+ * Handy sieht man dadurch etwas mehr vom Level statt schwarzer Balken,
+ * auf einem Tablet bleibt es nahe am klassischen 16:9.
+ */
+function spielflaeche() {
+  const lang = Math.max(window.innerWidth, window.innerHeight);
+  const kurz = Math.min(window.innerWidth, window.innerHeight) || 1;
+  const hoehe = 720;
+  const breite = Math.round(Math.min(1800, Math.max(960, hoehe * (lang / kurz))));
+  return { breite, hoehe };
+}
+
+const flaeche = spielflaeche();
+
 const spiel = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
@@ -17,8 +35,8 @@ const spiel = new Phaser.Game({
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 1280,
-    height: 720,
+    width: flaeche.breite,
+    height: flaeche.hoehe,
   },
   render: {
     antialias: true,

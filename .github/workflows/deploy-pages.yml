@@ -2,6 +2,7 @@
 # browser (desktop, tablet, phone):
 #   https://gaukler0815.github.io/eloxalfehler-teach/                  Eloxal Rebels
 #   https://gaukler0815.github.io/eloxalfehler-teach/dino-abenteuer/   Linneas Dino-Abenteuer
+#   https://gaukler0815.github.io/eloxalfehler-teach/quiz-abenteuer/   Linneas Quiz-Abenteuer
 #
 # Publishes a site/ folder to a gh-pages branch; GitHub serves that branch as
 # the Pages site automatically. (The artifact-based deploy needs the Pages site
@@ -17,6 +18,7 @@ on:
     paths:
       - 'eloxal-rebels/**'
       - 'dino-abenteuer/**'
+      - 'quiz-abenteuer/**'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -39,7 +41,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: dino-abenteuer/package-lock.json
+          cache-dependency-path: |
+            dino-abenteuer/package-lock.json
+            quiz-abenteuer/package-lock.json
 
       - name: Run game tests
         run: |
@@ -51,16 +55,24 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build Linneas Quiz-Abenteuer
+        working-directory: quiz-abenteuer
+        run: |
+          npm ci
+          npm test
+          npm run build
+
       - name: Assemble the site
         run: |
           rm -rf site
           # Eloxal Rebels bleibt an der bisherigen Adresse (Wurzel).
           cp -r eloxal-rebels site
-          # Das Dino-Spiel kommt in einen Unterordner.
-          mkdir -p site/dino-abenteuer
+          # Die beiden Lern-Apps kommen in eigene Unterordner.
+          mkdir -p site/dino-abenteuer site/quiz-abenteuer
           cp -r dino-abenteuer/dist/. site/dino-abenteuer/
+          cp -r quiz-abenteuer/dist/. site/quiz-abenteuer/
           touch site/.nojekyll
-          ls site site/dino-abenteuer
+          ls site site/dino-abenteuer site/quiz-abenteuer
 
       - name: Publish site/ to the gh-pages branch
         run: |

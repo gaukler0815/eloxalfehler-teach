@@ -1,0 +1,76 @@
+{
+  "id": "l06",
+  "world": 2,
+  "name": "Unterm Regal",
+  "subtitle": "Bubbles fliegt tief hinein — Tap: sie steigt und zündet an der Decke.",
+  "width": 2400,
+  "slingshot": {
+    "x": 320,
+    "y": 720
+  },
+  "projectiles": [
+    "bubbles",
+    "ali",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "colL",
+      "material": "stahl",
+      "x": 1900,
+      "y": 880,
+      "w": 44,
+      "h": 200
+    },
+    {
+      "id": "colR",
+      "material": "stahl",
+      "x": 2240,
+      "y": 880,
+      "w": 44,
+      "h": 200
+    },
+    {
+      "id": "shelf",
+      "material": "stahl",
+      "x": 2070,
+      "y": 763,
+      "w": 400,
+      "h": 34
+    },
+    {
+      "id": "topbox",
+      "material": "fehlcharge",
+      "x": 2000,
+      "y": 711,
+      "w": 120,
+      "h": 70
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "fetti",
+      "x": 2000,
+      "y": 952
+    },
+    {
+      "id": "e2",
+      "type": "stauber",
+      "x": 2090,
+      "y": 956
+    },
+    {
+      "id": "e3",
+      "type": "stauber",
+      "x": 2170,
+      "y": 956
+    },
+    {
+      "id": "e4",
+      "type": "kalki",
+      "x": 2180,
+      "y": 716
+    }
+  ]
+}

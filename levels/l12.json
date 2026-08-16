@@ -1,0 +1,136 @@
+{
+  "id": "l12",
+  "world": 3,
+  "name": "Das letzte Becken",
+  "subtitle": "Baron Korrosius braucht drei Treffer — sein Kunststoff-Thron isoliert. Die Wachen auf dem Stahl nicht.",
+  "width": 3000,
+  "slingshot": {
+    "x": 320,
+    "y": 720
+  },
+  "projectiles": [
+    "ali",
+    "bolle",
+    "titania",
+    "buersti",
+    "saeuri"
+  ],
+  "blocks": [
+    {
+      "id": "fass1",
+      "material": "saeurefass",
+      "x": 2200,
+      "y": 945,
+      "w": 70,
+      "h": 70
+    },
+    {
+      "id": "base",
+      "material": "stahl",
+      "x": 2550,
+      "y": 960,
+      "w": 400,
+      "h": 40
+    },
+    {
+      "id": "fass2",
+      "material": "saeurefass",
+      "x": 2550,
+      "y": 905,
+      "w": 70,
+      "h": 70
+    },
+    {
+      "id": "c1",
+      "material": "stahl",
+      "x": 2400,
+      "y": 830,
+      "w": 50,
+      "h": 220
+    },
+    {
+      "id": "c2",
+      "material": "stahl",
+      "x": 2700,
+      "y": 830,
+      "w": 50,
+      "h": 220
+    },
+    {
+      "id": "platform",
+      "material": "stahl",
+      "x": 2550,
+      "y": 700,
+      "w": 420,
+      "h": 40
+    },
+    {
+      "id": "thron",
+      "material": "kunststoff",
+      "x": 2550,
+      "y": 650,
+      "w": 160,
+      "h": 60
+    },
+    {
+      "id": "post",
+      "material": "stahl",
+      "x": 2870,
+      "y": 855,
+      "w": 60,
+      "h": 180
+    },
+    {
+      "id": "rail",
+      "material": "rail",
+      "x": 2870,
+      "y": 958,
+      "w": 160,
+      "h": 26
+    }
+  ],
+  "enemies": [
+    {
+      "id": "boss",
+      "type": "korrosius",
+      "x": 2550,
+      "y": 566
+    },
+    {
+      "id": "e1",
+      "type": "kalki",
+      "x": 2440,
+      "y": 650
+    },
+    {
+      "id": "e2",
+      "type": "lenny",
+      "x": 2660,
+      "y": 650
+    },
+    {
+      "id": "e3",
+      "type": "stauber",
+      "x": 2300,
+      "y": 956
+    },
+    {
+      "id": "e4",
+      "type": "fetti",
+      "x": 2480,
+      "y": 912
+    },
+    {
+      "id": "e5",
+      "type": "lenny",
+      "x": 2870,
+      "y": 735
+    },
+    {
+      "id": "e6",
+      "type": "stauber",
+      "x": 2100,
+      "y": 956
+    }
+  ]
+}

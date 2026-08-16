@@ -1,0 +1,78 @@
+{
+  "id": "l03",
+  "world": 1,
+  "name": "Sprödes Dach",
+  "subtitle": "Fehlcharge-Eloxal zersplittert. Das Säurefass hilft nach.",
+  "width": 1920,
+  "slingshot": {
+    "x": 340,
+    "y": 720
+  },
+  "projectiles": [
+    "bolle",
+    "ali",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "base",
+      "material": "stahl",
+      "x": 1520,
+      "y": 960,
+      "w": 320,
+      "h": 40
+    },
+    {
+      "id": "l",
+      "material": "fehlcharge",
+      "x": 1400,
+      "y": 890,
+      "w": 40,
+      "h": 100
+    },
+    {
+      "id": "r",
+      "material": "fehlcharge",
+      "x": 1640,
+      "y": 890,
+      "w": 40,
+      "h": 100
+    },
+    {
+      "id": "roof",
+      "material": "fehlcharge",
+      "x": 1520,
+      "y": 820,
+      "w": 300,
+      "h": 40
+    },
+    {
+      "id": "barrel",
+      "material": "saeurefass",
+      "x": 1520,
+      "y": 905,
+      "w": 70,
+      "h": 70
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "kalki",
+      "x": 1455,
+      "y": 910
+    },
+    {
+      "id": "e2",
+      "type": "lenny",
+      "x": 1590,
+      "y": 910
+    },
+    {
+      "id": "e3",
+      "type": "stauber",
+      "x": 1520,
+      "y": 776
+    }
+  ]
+}

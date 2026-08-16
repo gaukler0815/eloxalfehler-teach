@@ -1,0 +1,70 @@
+{
+  "id": "l08",
+  "world": 2,
+  "name": "Kontaktstelle",
+  "subtitle": "Bürsti bläst die Isolierung weg, das Blech fällt auf den Stahl. Dann die Schiene: ein Lichtbogen, drei Gegner.",
+  "width": 2400,
+  "slingshot": {
+    "x": 320,
+    "y": 720
+  },
+  "projectiles": [
+    "buersti",
+    "ali",
+    "ali"
+  ],
+  "blocks": [
+    {
+      "id": "rail",
+      "material": "rail",
+      "x": 2150,
+      "y": 958,
+      "w": 150,
+      "h": 26
+    },
+    {
+      "id": "steel",
+      "material": "stahl",
+      "x": 2150,
+      "y": 860,
+      "w": 120,
+      "h": 170
+    },
+    {
+      "id": "spacer",
+      "material": "kartonage",
+      "x": 2150,
+      "y": 753,
+      "w": 220,
+      "h": 44
+    },
+    {
+      "id": "plate",
+      "material": "aluminium",
+      "x": 2150,
+      "y": 716,
+      "w": 160,
+      "h": 30
+    }
+  ],
+  "enemies": [
+    {
+      "id": "e1",
+      "type": "lenny",
+      "x": 2100,
+      "y": 671
+    },
+    {
+      "id": "e2",
+      "type": "kalki",
+      "x": 2200,
+      "y": 671
+    },
+    {
+      "id": "e3",
+      "type": "stauber",
+      "x": 2060,
+      "y": 956
+    }
+  ]
+}

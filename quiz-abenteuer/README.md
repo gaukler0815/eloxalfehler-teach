@@ -40,8 +40,27 @@ npm run icons    # App-Icons neu erzeugen
   gemischt — auswendig lernen funktioniert also nicht, verstehen schon.
 * Nach jeder Antwort erscheint ein **Erklärsatz** („Wusstest du schon?"), auch wenn
   die Antwort richtig war.
+* **Für jedes geschaffte Level gibt es ein Artefakt** — ein Schmuckstück passend
+  zum Thema („Rexis Fangzahn", „Goldene Bienenwabe", „Ring des Saturn" …).
+  Bei drei Sternen bekommt es einen goldenen Rahmen. Alle 100 stehen in der
+  Sammlung unter *Meine Artefakte*, noch nicht gespielte als dunkle Silhouette.
 * **9 Abzeichen** als Fernziel: je eines pro fertiger Welt, dazu 10/25/50/100 Level
   und 100 gesammelte Sterne.
+
+### Wie die Artefakte in 3D-Optik entstehen
+
+Auch hier gibt es keine Bilddateien. Jedes Artefakt wird aus mehreren
+CSS-Ebenen gebaut: Rahmen, Körper mit Metallverlauf (`conic-gradient`),
+vertiefter Kern, wanderndes Glanzlicht und Schlagschatten. Das Symbol steht
+per `translateZ` wirklich vor dem Körper, deshalb wirkt die leichte
+Schaukelbewegung räumlich. Jede Welt hat ihre eigene Form:
+
+| Welt | Form | Farbe |
+|---|---|---|
+| 🦕 Dino-Welt | Sechseck (wie Bernstein) | Grün |
+| 🦊 Tier-Welt | Rundes Medaillon | Orange |
+| 🌳 Natur-Welt | Kristall | Hellgrün |
+| 🚀 Weltraum | Kugel mit Ring | Blau |
 
 ## Die vier Welten
 
@@ -69,6 +88,7 @@ quiz-abenteuer/
     ├── main.js                Start, Service Worker, Debug-Zugriff
     ├── audio/sfx.js           Töne per Web Audio API, keine Sounddateien
     ├── data/
+    │   ├── artefakte.js       100 Belohnungen, passend zu den Level-Themen
     │   ├── frage.js           Frage-Baustein (erste Antwort ist die richtige)
     │   ├── dinos.js           125 Fragen
     │   ├── tiere.js           125 Fragen
@@ -78,8 +98,9 @@ quiz-abenteuer/
     ├── state/storage.js       Spielstand in localStorage
     ├── styles/main.css        große Schrift, dicke Flächen, Welt-Farben
     └── ui/
+        ├── artefakt.js        baut die Artefakte aus CSS-Ebenen
         ├── dom.js             Mini-Helfer statt Framework
-        └── screens.js         Start, Welten, Level, Quiz, Ergebnis, Abzeichen
+        └── screens.js         Start, Welten, Level, Quiz, Ergebnis, Sammlung, Abzeichen
 ```
 
 ### Wie neue Fragen dazukommen

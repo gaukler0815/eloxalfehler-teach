@@ -1,0 +1,128 @@
+/**
+ * Für jedes der 100 Level gibt es ein Artefakt als Belohnung -
+ * passend zum Thema des Levels.
+ *
+ * Die Bilder werden nicht geladen, sondern aus CSS gebaut:
+ * Verlauf, Glanzlicht, Tiefenschatten und eine leichte 3D-Drehung.
+ * Jede Welt hat dabei ihre eigene Form (siehe FORMEN in ui/artefakt.js).
+ *
+ * a(symbol, name) - die Reihenfolge entspricht den Level-Themen der Welt.
+ */
+
+const a = (symbol, name) => ({ symbol, name });
+
+export const ARTEFAKTE = {
+  dinos: [
+    a('🦖', 'Rexis Fangzahn'),
+    a('🌿', 'Versteinerter Farn'),
+    a('🦴', 'Kralle des Jägers'),
+    a('🛡️', 'Panzerplatte'),
+    a('🦕', 'Halswirbel des Riesen'),
+    a('🪶', 'Flughaut-Abdruck'),
+    a('🌊', 'Flossen-Fossil'),
+    a('🥚', 'Versteinertes Dino-Ei'),
+    a('🏆', 'Pokal der Rekorde'),
+    a('🦷', 'Zahn so groß wie eine Banane'),
+    a('🪨', 'Fossilien-Stein'),
+    a('🔎', 'Lupe der Forscher'),
+    a('⏳', 'Sanduhr der Urzeit'),
+    a('🌙', 'Sichelkralle'),
+    a('🐃', 'Horn des Triceratops'),
+    a('📜', 'Schriftrolle der Namen'),
+    a('🪽', 'Feder des Urvogels'),
+    a('👣', 'Versteinerte Fußspur'),
+    a('🗺️', 'Landkarte der Urzeit'),
+    a('☄️', 'Splitter des Asteroiden'),
+    a('🐣', 'Winzling im Bernstein'),
+    a('💎', 'Bernstein mit Insekt'),
+    a('👁️', 'Auge des Jägers'),
+    a('❓', 'Rätselstein'),
+    a('👑', 'Krone der Dino-Welt'),
+  ],
+  tiere: [
+    a('🐕', 'Goldene Hundemarke'),
+    a('🐄', 'Kuhglocke vom Hof'),
+    a('🦊', 'Amulett des Fuchses'),
+    a('🪶', 'Bunte Vogelfeder'),
+    a('🐞', 'Marienkäfer-Brosche'),
+    a('🍯', 'Goldene Bienenwabe'),
+    a('🦫', 'Zahn des Bibers'),
+    a('🐚', 'Perlmutt-Muschel'),
+    a('🐋', 'Kristall des Walgesangs'),
+    a('🦁', 'Medaillon des Löwen'),
+    a('🦜', 'Papageienfeder'),
+    a('🐫', 'Wüstenrose'),
+    a('🧊', 'Ewiger Eiskristall'),
+    a('🦘', 'Bumerang aus Holz'),
+    a('🐤', 'Küken-Anhänger'),
+    a('🐺', 'Wappen des Rudels'),
+    a('🧭', 'Kompass der Zugvögel'),
+    a('🦎', 'Schuppe des Chamäleons'),
+    a('⚡', 'Blitz des Geparden'),
+    a('🐘', 'Elefanten-Statue'),
+    a('🐊', 'Krokodilschuppe'),
+    a('🐸', 'Amulett des Frosches'),
+    a('🕸️', 'Silbernes Spinnennetz'),
+    a('👂', 'Ohr der Fledermaus'),
+    a('👑', 'Krone der Tier-Welt'),
+  ],
+  natur: [
+    a('🍂', 'Rad der vier Jahreszeiten'),
+    a('🌡️', 'Wetterkristall'),
+    a('☁️', 'Perle aus Regentropfen'),
+    a('🌳', 'Scheibe mit Jahresringen'),
+    a('🌸', 'Blütenbrosche'),
+    a('🍄', 'Fliegenpilz-Figur'),
+    a('🌲', 'Anhänger des Waldes'),
+    a('🍀', 'Vierblättriges Kleeblatt'),
+    a('💧', 'Tropfenkristall'),
+    a('🌊', 'Muschel aus dem Fluss'),
+    a('⛰️', 'Stein vom Gipfel'),
+    a('🌋', 'Glühender Lavastein'),
+    a('💎', 'Bergkristall'),
+    a('🪱', 'Medaille des Regenwurms'),
+    a('🍎', 'Goldener Apfel'),
+    a('🌾', 'Bündel goldener Ähren'),
+    a('🍁', 'Herbstblatt aus Gold'),
+    a('♻️', 'Abzeichen der Umwelt'),
+    a('🗑️', 'Medaille des Recyclings'),
+    a('☀️', 'Sonnenscheibe'),
+    a('🌗', 'Scheibe von Tag und Nacht'),
+    a('🌈', 'Regenbogen-Prisma'),
+    a('🎈', 'Wirbel des Windes'),
+    a('🏞️', 'Karte der Lebensräume'),
+    a('👑', 'Krone der Natur'),
+  ],
+  weltraum: [
+    a('☀️', 'Kern der Sonne'),
+    a('🌕', 'Mondstein'),
+    a('🌍', 'Globus der Erde'),
+    a('🔥', 'Glutstein der Venus'),
+    a('🔴', 'Roter Staub vom Mars'),
+    a('🌀', 'Auge des Jupitersturms'),
+    a('🪐', 'Ring des Saturn'),
+    a('🧊', 'Kristall der Eisplaneten'),
+    a('⭐', 'Sternenstaub'),
+    a('✨', 'Karte der Sternbilder'),
+    a('🌌', 'Band der Milchstraße'),
+    a('🕰️', 'Uhr des Sonnensystems'),
+    a('🚀', 'Modellrakete'),
+    a('👨‍🚀', 'Abzeichen der Astronauten'),
+    a('🛰️', 'Modul der Raumstation'),
+    a('👣', 'Fußabdruck auf dem Mond'),
+    a('📡', 'Antenne des Satelliten'),
+    a('💫', 'Eis eines Kometen'),
+    a('☄️', 'Stück eines Meteoriten'),
+    a('🔭', 'Goldenes Teleskop'),
+    a('🍎', 'Apfel der Schwerkraft'),
+    a('🧭', 'Himmelsuhr'),
+    a('🌘', 'Scheibe der Mondphasen'),
+    a('🤖', 'Rad des Mars-Rovers'),
+    a('👑', 'Krone des Weltalls'),
+  ],
+};
+
+/** Artefakt zu einem Level. */
+export function artefaktFuer(level) {
+  return ARTEFAKTE[level.welt.id][level.index];
+}

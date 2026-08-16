@@ -477,6 +477,210 @@ button.levelkachel.naechstes {
   filter: grayscale(1);
 }
 
+/* ---------- Artefakte (3D-Optik, komplett aus CSS) ---------------------- */
+
+.artefakt-buehne {
+  perspective: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 6px;
+}
+
+.artefakt {
+  --a-groesse: 180px;
+  --a-hell: #ffd98a;
+  --a-dunkel: #8a5510;
+  position: relative;
+  width: var(--a-groesse);
+  height: var(--a-groesse);
+  transform-style: preserve-3d;
+  animation: artefakt-schweben 6s ease-in-out infinite;
+}
+
+@keyframes artefakt-schweben {
+  0%,
+  100% {
+    transform: rotateX(9deg) rotateY(-20deg) translateY(0);
+  }
+  50% {
+    transform: rotateX(9deg) rotateY(20deg) translateY(-9px);
+  }
+}
+
+.artefakt > * {
+  position: absolute;
+  inset: 0;
+}
+
+/* Aussenrahmen - traegt bei drei Sternen den goldenen Glanz */
+.artefakt .rahmen {
+  inset: -7%;
+  background: linear-gradient(150deg, #cfd6de, #7c8794 45%, #eef2f6 60%, #6f7b88);
+}
+
+.artefakt.dreisterne .rahmen {
+  background: linear-gradient(150deg, #ffe9a8, #d69b12 45%, #fff6d0 60%, #c8890c);
+  filter: drop-shadow(0 0 12px rgba(255, 210, 63, 0.75));
+}
+
+.artefakt .koerper {
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 45%),
+    conic-gradient(
+      from 210deg,
+      var(--a-hell),
+      var(--a-dunkel) 25%,
+      var(--a-hell) 50%,
+      var(--a-dunkel) 75%,
+      var(--a-hell)
+    );
+  box-shadow:
+    inset 0 -16px 26px rgba(0, 0, 0, 0.5),
+    inset 0 12px 20px rgba(255, 255, 255, 0.35);
+}
+
+.artefakt .kern {
+  inset: 17%;
+  background: radial-gradient(circle at 35% 28%, var(--a-hell), var(--a-dunkel) 72%);
+  box-shadow:
+    inset 0 9px 18px rgba(0, 0, 0, 0.55),
+    inset 0 -7px 12px rgba(255, 255, 255, 0.28);
+}
+
+.artefakt .glanz {
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.6) 45%,
+    transparent 58%
+  );
+  mix-blend-mode: screen;
+  animation: artefakt-glanz 4.5s ease-in-out infinite;
+}
+
+@keyframes artefakt-glanz {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateX(-12%);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateX(12%);
+  }
+}
+
+.artefakt .symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--a-groesse) * 0.4);
+  transform: translateZ(28px);
+  filter: drop-shadow(0 6px 7px rgba(0, 0, 0, 0.6));
+}
+
+/* Ring fuer die Weltraum-Artefakte */
+.artefakt .ring {
+  inset: 40% -18% auto -18%;
+  height: 30%;
+  border: 7px solid var(--a-hell);
+  border-radius: 50%;
+  border-top-color: transparent;
+  transform: rotateX(74deg) rotateZ(-14deg);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.4);
+}
+
+.artefakt .schatten {
+  inset: auto 10% -16% 10%;
+  height: 15%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55), transparent 70%);
+  transform: translateZ(-40px);
+}
+
+/* Formen je Welt */
+.artefakt.form-kreis .rahmen,
+.artefakt.form-kreis .koerper,
+.artefakt.form-kreis .kern,
+.artefakt.form-kreis .glanz {
+  border-radius: 50%;
+}
+
+.artefakt.form-hexagon .rahmen,
+.artefakt.form-hexagon .koerper,
+.artefakt.form-hexagon .kern,
+.artefakt.form-hexagon .glanz {
+  clip-path: polygon(50% 0%, 94% 25%, 94% 75%, 50% 100%, 6% 75%, 6% 25%);
+}
+
+.artefakt.form-kristall .rahmen,
+.artefakt.form-kristall .koerper,
+.artefakt.form-kristall .kern,
+.artefakt.form-kristall .glanz {
+  clip-path: polygon(50% 0%, 100% 36%, 81% 100%, 19% 100%, 0% 36%);
+}
+
+.artefakt.form-orbit .rahmen,
+.artefakt.form-orbit .koerper,
+.artefakt.form-orbit .kern,
+.artefakt.form-orbit .glanz {
+  border-radius: 50%;
+}
+
+.artefakt.gesperrt {
+  animation: none;
+  filter: grayscale(1) brightness(0.4);
+}
+
+.artefakt-name {
+  font-size: 19px;
+  font-weight: bold;
+  text-align: center;
+  color: var(--text);
+}
+
+.artefakt-neu {
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--welt);
+  font-weight: bold;
+}
+
+/* Sammlung */
+.sammlung {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 14px;
+  max-height: 58vh;
+  overflow-y: auto;
+  padding: 6px 4px 14px;
+}
+
+.sammlung .stueck {
+  text-align: center;
+}
+
+.sammlung .artefakt {
+  --a-groesse: 76px;
+  animation: none;
+  transform: rotateX(8deg) rotateY(-14deg);
+  margin: 0 auto 10px;
+}
+
+.sammlung .stueck .beschriftung {
+  font-size: 12px;
+  line-height: 1.3;
+  min-height: 32px;
+}
+
+.sammlung .stueck .lvl {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
 /* ---------- Kleine Bildschirme ------------------------------------------ */
 
 @media (max-width: 560px) {

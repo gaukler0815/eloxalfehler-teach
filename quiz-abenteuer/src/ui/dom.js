@@ -6,7 +6,13 @@ export function el(tag, attrs = {}, kinder = []) {
     if (v === null || v === undefined || v === false) return;
     if (k === 'class') node.className = v;
     else if (k === 'text') node.textContent = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(node.style, v);
+    else if (k === 'style' && typeof v === 'object') {
+      // CSS-Variablen (--name) brauchen setProperty, normale Angaben nicht.
+      Object.entries(v).forEach(([eigenschaft, wert]) => {
+        if (eigenschaft.startsWith('--')) node.style.setProperty(eigenschaft, wert);
+        else node.style[eigenschaft] = wert;
+      });
+    }
     else if (k.startsWith('on') && typeof v === 'function') {
       node.addEventListener(k.slice(2).toLowerCase(), v);
     } else node.setAttribute(k, v);

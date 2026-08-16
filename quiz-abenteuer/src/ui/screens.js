@@ -9,6 +9,7 @@
 import { el, knopf, karte, zeigen, mischen, sterneText, weltFarbe } from './dom.js';
 import Spielstand from '../state/storage.js';
 import { tonSpielen } from '../audio/sfx.js';
+import { artefaktBild, artefaktBuehne, artefaktFuer } from './artefakt.js';
 import {
   WELTEN,
   LEVEL,
@@ -54,10 +55,50 @@ export function start() {
       ]),
       el('div', { class: 'knopf-reihe' }, [
         knopf('🗺 Welten & Level', welten, 'blau'),
+        knopf(`🏛 Meine Artefakte (${Spielstand.anzahlGeschafft()}/${ANZAHL_LEVEL})`, sammlung, 'gelb'),
+      ]),
+      el('div', { class: 'knopf-reihe' }, [
         knopf('🏅 Abzeichen', abzeichen, 'lila'),
         knopf('⚙ Einstellungen', einstellungen, 'grau'),
       ]),
     ])
+  );
+}
+
+// =============================================================== Sammlung
+
+export function sammlung() {
+  weltFarbe('#c9a227');
+  const gefunden = LEVEL.filter((l) => Spielstand.geschafft(l.nr));
+
+  zeigen(
+    karte(
+      [
+        el('h1', { text: '🏛 Meine Artefakte' }),
+        el('p', {
+          class: 'lead',
+          text: `${gefunden.length} von ${ANZAHL_LEVEL} gefunden. Für jedes geschaffte Level bekommst du ein Artefakt - mit drei Sternen sogar in Gold.`,
+        }),
+        el(
+          'div',
+          { class: 'sammlung' },
+          LEVEL.map((l) => {
+            const erg = Spielstand.ergebnis(l.nr);
+            const gesperrt = !erg?.bestanden;
+            return el('div', { class: 'stueck' }, [
+              artefaktBild(l, { sterne: erg?.sterne || 0, gesperrt, groesse: 76 }),
+              el('div', {
+                class: 'beschriftung',
+                text: gesperrt ? '???' : artefaktFuer(l).name,
+              }),
+              el('div', { class: 'lvl', text: `${l.welt.icon} Level ${l.nr}` }),
+            ]);
+          })
+        ),
+        el('div', { class: 'knopf-reihe' }, [knopf('↩ Zurück', start, 'grau')]),
+      ],
+      'breit'
+    )
   );
 }
 
@@ -300,6 +341,10 @@ function ergebnis(level, ergebnisse) {
     el('h1', { text: bestanden ? '🎉 Level geschafft!' : '💪 Fast geschafft' }),
     el('p', { class: 'lead', text: `${level.welt.icon} ${level.welt.name} — ${level.thema}` }),
     el('div', { class: 'sterne-gross', text: bestanden ? sterneText(sterne) : '☆☆☆' }),
+    // Belohnung: das Artefakt zum Thema des Levels
+    bestanden
+      ? artefaktBuehne(level, { sterne, neu: !warSchonBestanden })
+      : artefaktBuehne(level, { gesperrt: true, groesse: 130 }),
     el('div', { class: 'werte' }, [
       el('span', { text: `${richtig} von ${FRAGEN_PRO_LEVEL} richtig` }),
       el('span', { text: `${Math.round((richtig / FRAGEN_PRO_LEVEL) * 100)} %` }),
@@ -334,11 +379,13 @@ function ergebnis(level, ergebnisse) {
     );
   }
   knoepfe.push(knopf('🔁 Nochmal spielen', () => quizStarten(level.nr), bestanden ? 'gelb' : ''));
+  knoepfe.push(knopf('🏛 Meine Artefakte', sammlung, 'lila'));
   knoepfe.push(knopf('🗺 Level-Übersicht', () => levelListe(level.welt.id), 'blau'));
   knoepfe.push(knopf('🏠 Start', start, 'grau'));
 
   inhalt.push(el('div', { class: 'knopf-reihe' }, knoepfe.slice(0, 2)));
-  inhalt.push(el('div', { class: 'knopf-reihe' }, knoepfe.slice(2)));
+  inhalt.push(el('div', { class: 'knopf-reihe' }, knoepfe.slice(2, 4)));
+  if (knoepfe.length > 4) inhalt.push(el('div', { class: 'knopf-reihe' }, knoepfe.slice(4)));
 
   zeigen(karte(inhalt));
 }

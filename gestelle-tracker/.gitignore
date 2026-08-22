@@ -1,0 +1,6 @@
+# Laufzeit-Datenbank: gehoert nicht ins Repo.
+gestelle.db
+gestelle.db-journal
+__pycache__/
+*.pyc
+.streamlit/secrets.toml

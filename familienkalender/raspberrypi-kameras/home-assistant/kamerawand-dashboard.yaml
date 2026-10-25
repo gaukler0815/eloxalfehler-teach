@@ -1,0 +1,41 @@
+# 2x2-Kamera-Wand für Home Assistant (Weg B)
+#
+# So benutzt du diese Datei:
+# 1. In Home Assistant oben rechts auf dein Profil -> "Erweiterter Modus" an.
+# 2. Ein neues Dashboard anlegen (Einstellungen -> Dashboards -> Hinzufuegen),
+#    es "kamerawand" nennen.
+# 3. Im Dashboard oben rechts (Stift) -> "..." -> "Raw-Konfigurationseditor"
+#    und den Inhalt unten einfuegen.
+# 4. Die vier "url:"-Namen (garten, eingang, cam3, cam4) durch deine
+#    go2rtc-Stream-Namen ersetzen (stehen in der go2rtc-Add-on-Konfiguration).
+#
+# Die Karte "custom:webrtc-camera" kommt aus HACS ("WebRTC Camera", AlexxIT).
+# Sie startet den Stream erst, wenn die Kamera-Wand sichtbar ist -> akkuschonend.
+
+title: Kamerawand
+views:
+  - title: Kameras
+    path: kamerawand
+    type: custom:grid-layout   # aus HACS: "layout-card" (optional, sonst 'type: masonry')
+    layout:
+      grid-template-columns: 1fr 1fr
+      grid-template-rows: 1fr 1fr
+      grid-gap: 6px
+      margin: 0
+    cards:
+      - type: custom:webrtc-camera
+        url: garten
+        muted: true
+        ui: true
+      - type: custom:webrtc-camera
+        url: eingang
+        muted: true
+        ui: true
+      - type: custom:webrtc-camera
+        url: cam3
+        muted: true
+        ui: true
+      - type: custom:webrtc-camera
+        url: cam4
+        muted: true
+        ui: true

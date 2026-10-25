@@ -135,4 +135,18 @@ class SubscriptionIn(BaseModel):
     url: str = ""             # externer ICS-Link (z. B. Outlook), leer = aus
 
 
+# --- Kameras -------------------------------------------------------------
+class CameraIn(BaseModel):
+    name: str
+    url: str
+    mode: str = "live"        # "live" (Videostream) oder "snapshot" (Standbild)
+
+
+class CameraSettingsIn(BaseModel):
+    enabled: bool = False
+    start: str = "07:00"      # Zeitfenster von (HH:MM)
+    end: str = "22:00"        # Zeitfenster bis (HH:MM)
+    cams: list[CameraIn] = []
+
+
 TokenOut.model_rebuild()

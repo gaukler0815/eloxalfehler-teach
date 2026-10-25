@@ -12,6 +12,7 @@ const State = {
   occurrences: [],
   feiertage: [],
   ferien: [],
+  cameras: { enabled: false, start: "07:00", end: "22:00", cams: [] },
   vapidKey: null,
 };
 
@@ -214,6 +215,8 @@ function setPeriodLabel() {
   } else if (State.view === "day") {
     $("#period-label").textContent =
       `${WEEKDAYS[(a.getDay() + 6) % 7]}, ${a.getDate()}. ${MONTHS[a.getMonth()]}`;
+  } else if (State.view === "cameras") {
+    $("#period-label").textContent = "Kameras";
   } else {
     $("#period-label").textContent = "Kommende Termine";
   }
@@ -233,12 +236,73 @@ async function render() {
   setPeriodLabel();
   $$(".view-tab").forEach((t) => t.classList.toggle("active", t.dataset.view === State.view));
   const el = $("#calendar");
+  if (State.view === "cameras") { renderCameras(el); return; }
   el.innerHTML = '<div class="empty">Lädt…</div>';
   try { await loadData(); } catch (e) { el.innerHTML = `<div class="empty">${e.message}</div>`; return; }
   if (State.view === "month") renderMonth(el);
   else if (State.view === "week") renderWeek(el);
   else if (State.view === "day") renderDay(el);
   else renderAgenda(el);
+}
+
+function updateCameraTab() {
+  const tab = $("#view-cameras-tab");
+  if (tab) tab.classList.toggle("hidden", !(State.cameras && State.cameras.enabled));
+}
+
+function withinCameraWindow() {
+  const c = State.cameras || {};
+  const now = new Date();
+  const cur = pad(now.getHours()) + ":" + pad(now.getMinutes());
+  const s = c.start || "00:00", e = c.end || "23:59";
+  // Fenster über Mitternacht erlauben (z. B. 22:00–06:00)
+  return s <= e ? (cur >= s && cur <= e) : (cur >= s || cur <= e);
+}
+
+function renderCameras(el) {
+  const c = State.cameras || { cams: [] };
+  if (!c.cams || !c.cams.length) {
+    el.innerHTML = '<div class="empty">Noch keine Kameras eingerichtet.<br>Über ⚙️ Einstellungen → Kameras hinzufügen.</div>';
+    return;
+  }
+  const open = withinCameraWindow();
+  let html = '<div class="cam-grid">';
+  if (!open) {
+    html += `<div class="cam-note">Außerhalb des Zeitfensters (${escapeHtml(c.start)}–${escapeHtml(c.end)}).
+      <button class="btn-ghost" id="cam-force" style="margin-top:8px">Trotzdem anzeigen</button></div>`;
+  } else {
+    c.cams.forEach((cam) => {
+      const https = cam.url.startsWith("https://") || cam.url.startsWith("/");
+      let media;
+      if (cam.mode === "snapshot") {
+        media = `<img class="cam-media" src="${escapeHtml(cam.url)}" alt="${escapeHtml(cam.name)}"
+          onerror="this.replaceWith(camError())" />`;
+      } else if (https) {
+        media = `<iframe class="cam-media" src="${escapeHtml(cam.url)}" allow="autoplay; fullscreen"
+          allowfullscreen loading="lazy"></iframe>`;
+      } else {
+        // http-Stream im Heimnetz lässt sich in der https-App nicht einbetten
+        media = `<a class="cam-open" href="${escapeHtml(cam.url)}" target="_blank" rel="noopener">
+          <span>▶︎ Live öffnen</span><span class="cam-open-sub">(öffnet die Kamera im Heimnetz)</span></a>`;
+      }
+      html += `<div class="cam-card"><div class="cam-title">${escapeHtml(cam.name)}</div>${media}</div>`;
+    });
+  }
+  html += "</div>";
+  el.innerHTML = html;
+  const force = $("#cam-force", el);
+  if (force) force.addEventListener("click", () => {
+    State._camForce = true;
+    const c2 = State.cameras; const s = c2.start, e = c2.end;
+    c2.start = "00:00"; c2.end = "23:59"; renderCameras(el); c2.start = s; c2.end = e;
+  });
+}
+
+function camError() {
+  const d = document.createElement("div");
+  d.className = "cam-media cam-offline";
+  d.textContent = "Kamera nicht erreichbar";
+  return d;
 }
 
 function renderMonth(el) {
@@ -560,6 +624,20 @@ function reminderRow(minutes) {
     `<option value="${v}" ${v === minutes ? "selected" : ""}>${l}</option>`).join("");
   return `<div class="reminder-item"><select>${opts}</select>
     <button type="button" class="rm">✕</button></div>`;
+}
+
+function camRowHtml(c = {}) {
+  const live = (c.mode || "live") !== "snapshot";
+  return `<div class="cam-row">
+    <input class="cam-name" placeholder="Name (z. B. Vordertür)" value="${escapeHtml(c.name || "")}" />
+    <input class="cam-url" placeholder="Adresse (http…)" value="${escapeHtml(c.url || "")}" style="font-size:12px" />
+    <div class="cam-row2">
+      <select class="cam-mode"><option value="live" ${live ? "selected" : ""}>Live</option><option value="snapshot" ${!live ? "selected" : ""}>Standbild</option></select>
+      <button type="button" class="rm cam-rm">✕ entfernen</button>
+    </div></div>`;
+}
+function bindCamRemovers() {
+  $$("#s-cam-list .cam-rm").forEach((b) => b.onclick = () => b.closest(".cam-row").remove());
 }
 
 async function openEventForm(eventId, presetDate, opts = {}) {
@@ -928,6 +1006,9 @@ async function openSettings() {
   const feedUrl = feed.token ? `${location.origin}/api/calendar/${feed.token}.ics` : "";
   let sub = { url: "" };
   try { sub = await api("/settings/subscription"); } catch (e) {}
+  let cams = State.cameras || { enabled: false, start: "07:00", end: "22:00", cams: [] };
+  try { cams = await api("/settings/cameras"); } catch (e) {}
+  const camRows = (cams.cams || []).map((c) => camRowHtml(c)).join("");
   const body = `
     <div class="detail-row"><span class="ic">👤</span><span>${escapeHtml(State.user.name)}<br><span class="agenda-meta">${escapeHtml(State.user.email)}</span></span></div>
     <div class="field" style="margin-top:16px"><label>Push-Benachrichtigungen</label>
@@ -970,6 +1051,18 @@ async function openSettings() {
       <input id="s-suburl" placeholder="https://…/kalender.ics" value="${escapeHtml(sub.url || "")}" style="font-size:12px" />
       <button type="button" class="btn-ghost" id="s-sub-save" style="width:100%;margin-top:8px">Kalender-Abo speichern</button></div>
 
+    <div class="field"><label>📹 Kameras</label>
+      <div class="checkbox-row" style="margin-bottom:8px"><input type="checkbox" id="s-cam-on" ${cams.enabled ? "checked" : ""}/>
+        <label for="s-cam-on" style="margin:0">Kameras-Ansicht aktivieren</label></div>
+      <div class="row2">
+        <div class="field" style="margin-bottom:8px"><label>Zeitfenster von</label><input type="time" id="s-cam-start" value="${escapeHtml(cams.start || "07:00")}" /></div>
+        <div class="field" style="margin-bottom:8px"><label>bis</label><input type="time" id="s-cam-end" value="${escapeHtml(cams.end || "22:00")}" /></div>
+      </div>
+      <div id="s-cam-list">${camRows}</div>
+      <button type="button" class="btn-add-reminder" id="s-cam-add">＋ Kamera hinzufügen</button>
+      <div class="agenda-meta" style="margin-top:6px">Adresse = Live-Link vom Raspberry Pi (z. B. http://192.168.1.50:1984/stream.html?src=vordertuer). Standbild = Bild-Adresse.</div>
+      <button type="button" class="btn-ghost" id="s-cam-save" style="width:100%;margin-top:8px">Kameras speichern</button></div>
+
     <button class="btn-ghost" id="s-logout" style="width:100%;margin-top:10px">Abmelden</button>
     <div class="agenda-meta" style="text-align:center;margin-top:14px">Familienkalender · alle Geräte teilen denselben Kalender</div>`;
   openModal("Einstellungen", body, `<button class="btn-primary" id="s-close">Fertig</button>`);
@@ -1011,6 +1104,23 @@ async function openSettings() {
   $("#s-sub-save").addEventListener("click", async () => {
     try { await api("/settings/subscription", { method: "PUT", body: { url: $("#s-suburl").value } });
       toast("Kalender-Abo gespeichert"); render(); } catch (e) { toast(e.message); }
+  });
+  $("#s-cam-add").addEventListener("click", () => {
+    $("#s-cam-list").insertAdjacentHTML("beforeend", camRowHtml());
+    bindCamRemovers();
+  });
+  bindCamRemovers();
+  $("#s-cam-save").addEventListener("click", async () => {
+    const list = $$("#s-cam-list .cam-row").map((r) => ({
+      name: $(".cam-name", r).value, url: $(".cam-url", r).value, mode: $(".cam-mode", r).value,
+    })).filter((c) => c.url.trim());
+    try {
+      const saved = await api("/settings/cameras", { method: "PUT", body: {
+        enabled: $("#s-cam-on").checked, start: $("#s-cam-start").value,
+        end: $("#s-cam-end").value, cams: list } });
+      State.cameras = saved; updateCameraTab(); toast("Kameras gespeichert");
+      if (State.view === "cameras") render();
+    } catch (e) { toast(e.message); }
   });
   $("#s-logout").addEventListener("click", () => { closeModal(); logout(); });
   const on = $("#s-push-on"); if (on) on.addEventListener("click", async () => { await enablePush(); closeModal(); openSettings(); });
@@ -1086,6 +1196,12 @@ async function init() {
     State.vapidKey = cfg.vapid_public_key;
     $("#scan-btn").classList.toggle("hidden", !cfg.scan_enabled);
   } catch (e) {}
+  try { State.cameras = await api("/settings/cameras"); } catch (e) {}
+  updateCameraTab();
+  if (State.view === "cameras") {
+    if (!State.cameras.enabled) { State.view = "month"; localStorage.setItem("fk_view", "month"); }
+    render();
+  }
   // Bei bestehender Erlaubnis Abo im Hintergrund erneuern
   if ("Notification" in window && Notification.permission === "granted"
       && "serviceWorker" in navigator) {

@@ -161,6 +161,22 @@ button { font-family: inherit; cursor: pointer; }
 .agenda-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .empty { text-align: center; color: var(--muted); padding: 40px 20px; }
 
+/* ---------------- Kameras ---------------- */
+.cam-grid { padding: 12px; display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 640px) { .cam-grid { grid-template-columns: 1fr 1fr; } }
+.cam-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
+.cam-title { padding: 10px 12px; font-weight: 700; font-size: 15px; }
+.cam-media { width: 100%; aspect-ratio: 16 / 9; display: block; border: 0; background: #000; object-fit: cover; }
+.cam-offline { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; background: #1b1e26; }
+.cam-open { aspect-ratio: 16 / 9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: #11141b; color: #fff; text-decoration: none; font-weight: 600; }
+.cam-open-sub { font-size: 12px; color: #9aa1b4; font-weight: 400; }
+.cam-note { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 30px 16px; }
+.cam-row { border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+.cam-row input, .cam-row select { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--card); color: var(--text); }
+.cam-row2 { display: flex; gap: 8px; align-items: center; }
+.cam-row2 select { flex: 1; }
+.cam-row .cam-rm { border: none; background: var(--bg); border-radius: 8px; padding: 9px 12px; color: var(--danger); font-weight: 600; white-space: nowrap; }
+
 /* ---------------- Modals ---------------- */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(15,20,35,.5); z-index: 50;

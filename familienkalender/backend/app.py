@@ -499,6 +499,32 @@ def set_subscription(data: schemas.SubscriptionIn,
     return {"url": url}
 
 
+# --- Kameras (Anzeige-Einstellungen; keine Streams über den Server) ------
+@app.get("/api/settings/cameras")
+def get_cameras(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return _get_setting(db, "cameras",
+                        {"enabled": False, "start": "07:00", "end": "22:00", "cams": []})
+
+
+@app.put("/api/settings/cameras")
+def set_cameras(data: schemas.CameraSettingsIn,
+                user: User = Depends(current_user), db: Session = Depends(get_db)):
+    cams = []
+    for c in data.cams:
+        url = (c.url or "").strip()
+        if not url:
+            continue
+        if not (url.startswith("http://") or url.startswith("https://")):
+            raise HTTPException(400, f"Ungültige Kamera-Adresse: {c.name}")
+        cams.append({"name": (c.name or "Kamera").strip(), "url": url,
+                     "mode": "snapshot" if c.mode == "snapshot" else "live"})
+    obj = {"enabled": bool(data.enabled), "start": data.start or "07:00",
+           "end": data.end or "22:00", "cams": cams}
+    _set_setting(db, "cameras", obj)
+    db.commit()
+    return obj
+
+
 @app.get("/api/search")
 def search(q: str = Query(..., min_length=1), user: User = Depends(current_user),
            db: Session = Depends(get_db)):
